@@ -2,6 +2,7 @@
   "name": "react-async-iterators",
   "version": "0.0.1",
   "author": "Dor Shtaif <dorshtaif@gmail.com>",
+  "license": "MIT",
   "description": "The magic of JavaScript async iterators in React ⛓️ 🧬 🔃",
   "type": "module",
   "homepage": "https://github.com/shtaif/react-async-iterators",
