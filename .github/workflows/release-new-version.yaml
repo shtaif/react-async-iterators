@@ -1,0 +1,42 @@
+name: Release new version
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        type: boolean
+        default: false
+        description: Perform as a dry run
+
+jobs:
+  release_new_version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SEMANTIC_RELEASE_ACTION_PAT }} # Without providing any token here as well as if passing the built-in `secrets.GITHUB_TOKEN` - the semantic release action would end up unauthorized to push changes to master since it is set with branch protection, more reference for this issue on: https://github.com/semantic-release/semantic-release/issues/2636#issuecomment-1574476011
+
+      - uses: ./.github/actions/ci-common-setup
+        with:
+          node-version: v18
+
+      # The following action version, value of `semantic_version` and the versions of all the plugins specifically set here are a work around found for now to deal with the constant crush described here: https://github.com/cycjimmy/semantic-release-action/issues/159 (was hard to just go with the Node v14 suggestion said there since we use pnpm which outright doesn't support Node v14)
+      - name: Semantic Release
+        id: semantic_release
+        uses: cycjimmy/semantic-release-action@v3.4.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        with:
+          semantic_version: 19.0.5
+          dry_run: ${{ inputs.dry_run }}
+          extra_plugins: |
+            @semantic-release/commit-analyzer@9.0.2
+            @semantic-release/release-notes-generator@10.0.3
+            @semantic-release/changelog@6.0.2
+            @semantic-release/github@8.0.7
+            @semantic-release/npm@9.0.2
+            @semantic-release/git@10.0.1
+            conventional-changelog-conventionalcommits@^7.0.2

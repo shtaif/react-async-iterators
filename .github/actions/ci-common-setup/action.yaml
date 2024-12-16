@@ -1,0 +1,38 @@
+name: Common Setup for CI
+
+description: Reusable common setup for project's CI jobs
+
+inputs:
+  node-version:
+    description: Specific Node.js version to override the common one that's gonna be selected by default
+    required: false
+    default: v22.5.0
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Get Node.js version
+      id: node_version
+      run: |
+        echo "::set-output name=version::$(node -v)"
+      shell: bash
+
+    - name: Install pnpm
+      run: npm install -g pnpm@^9
+      shell: bash
+
+    - name: Restore possibly cached dependencies
+      id: cache-node-modules
+      uses: actions/cache@v3
+      with:
+        path: ./node_modules
+        key: node-modules-${{ runner.os }}-${{ steps.node_version.outputs.version }}-${{ hashFiles('./pnpm-lock.yaml') }}
+
+    - name: Install dependencies if weren't cached
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: pnpm install --frozen-lockfile
+      shell: bash
