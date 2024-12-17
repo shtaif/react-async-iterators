@@ -1,20 +1,20 @@
 import { it, describe, expect, afterEach, vi } from 'vitest';
 import { cleanup as cleanupMountedReactTrees, act, renderHook } from '@testing-library/react';
-import { useAsyncIterable } from '../../src/index.js';
+import { useAsyncIter } from '../../src/index.js';
 import { IterableChannelTestHelper } from '../utils/IterableChannelTestHelper.js';
 
 afterEach(() => {
   cleanupMountedReactTrees();
 });
 
-describe('`useAsyncIterable` hook', () => {
+describe('`useAsyncIter` hook', () => {
   it('When updated with non-iterable values consecutively will render correctly', async () => {
     let timesRerendered = 0;
 
     const renderedHook = renderHook(
       ({ value }) => {
         timesRerendered++;
-        return useAsyncIterable(value);
+        return useAsyncIter(value);
       },
       { initialProps: { value: '' } }
     );
@@ -36,7 +36,7 @@ describe('`useAsyncIterable` hook', () => {
 
     const renderedHook = renderHook(() => {
       timesRerendered++;
-      return useAsyncIterable('a');
+      return useAsyncIter('a');
     });
 
     expect(timesRerendered).toStrictEqual(1);
@@ -53,7 +53,7 @@ describe('`useAsyncIterable` hook', () => {
 
     const renderedHook = renderHook(() => {
       timesRerendered++;
-      return useAsyncIterable('a', '_');
+      return useAsyncIter('a', '_');
     });
 
     expect(timesRerendered).toStrictEqual(1);
@@ -68,7 +68,7 @@ describe('`useAsyncIterable` hook', () => {
   it('When given an iterable that yields a value will return correct results', async () => {
     const channel = new IterableChannelTestHelper<string>();
 
-    const renderedHook = renderHook(() => useAsyncIterable(channel));
+    const renderedHook = renderHook(() => useAsyncIter(channel));
 
     expect(renderedHook.result.current).toStrictEqual({
       value: undefined,
@@ -90,7 +90,7 @@ describe('`useAsyncIterable` hook', () => {
   it('When given an iterable that yields a value in conjunction with some initial value will return correct results', async () => {
     const channel = new IterableChannelTestHelper<string>();
 
-    const renderedHook = renderHook(() => useAsyncIterable(channel, '_'));
+    const renderedHook = renderHook(() => useAsyncIter(channel, '_'));
 
     expect(renderedHook.result.current).toStrictEqual({
       value: '_',
@@ -115,7 +115,7 @@ describe('`useAsyncIterable` hook', () => {
 
     const renderedHook = renderHook(() => {
       timesRerendered++;
-      return useAsyncIterable(channel);
+      return useAsyncIter(channel);
     });
 
     expect(timesRerendered).toStrictEqual(1);
@@ -144,7 +144,7 @@ describe('`useAsyncIterable` hook', () => {
 
     const renderedHook = renderHook(() => {
       timesRerendered++;
-      return useAsyncIterable(emptyIter);
+      return useAsyncIter(emptyIter);
     });
 
     await act(() => {}); // To take us past the initial render and right after the first iteration
@@ -164,7 +164,7 @@ describe('`useAsyncIterable` hook', () => {
 
     const renderedHook = renderHook(() => {
       timesRerendered++;
-      return useAsyncIterable(emptyIter, '_');
+      return useAsyncIter(emptyIter, '_');
     });
 
     await act(() => {}); // To take us past the initial render and right after the first iteration
@@ -184,7 +184,7 @@ describe('`useAsyncIterable` hook', () => {
 
     const renderedHook = renderHook(() => {
       timesRerendered++;
-      return useAsyncIterable(channel);
+      return useAsyncIter(channel);
     });
 
     await act(() => channel.put('a')); // To take us past the initial render and right after the first iteration
@@ -217,7 +217,7 @@ describe('`useAsyncIterable` hook', () => {
 
     const renderedHook = renderHook(() => {
       timesRerendered++;
-      return useAsyncIterable(erroringIter);
+      return useAsyncIter(erroringIter);
     });
 
     await act(() => {}); // To take us past the initial render and right after the first iteration
@@ -240,7 +240,7 @@ describe('`useAsyncIterable` hook', () => {
 
     const renderedHook = renderHook(() => {
       timesRerendered++;
-      return useAsyncIterable(erroringIter, '_');
+      return useAsyncIter(erroringIter, '_');
     });
 
     await act(() => {}); // To take us past the initial render and right after the first iteration
@@ -261,7 +261,7 @@ describe('`useAsyncIterable` hook', () => {
 
     const renderedHook = renderHook(() => {
       timesRerendered++;
-      return useAsyncIterable(channel);
+      return useAsyncIter(channel);
     });
 
     await act(() => channel.put('a'));
@@ -296,7 +296,7 @@ describe('`useAsyncIterable` hook', () => {
       vi.spyOn(channel2, 'return'),
     ];
 
-    const renderedHook = renderHook(({ value }) => useAsyncIterable(value), {
+    const renderedHook = renderHook(({ value }) => useAsyncIter(value), {
       initialProps: {
         value: (async function* () {})() as AsyncIterable<string>,
       },
@@ -364,7 +364,7 @@ describe('`useAsyncIterable` hook', () => {
     const channel = new IterableChannelTestHelper<string>();
     const channelIterCloseSpy = vi.spyOn(channel, 'return');
 
-    const renderedHook = renderHook(({ value }) => useAsyncIterable(value), {
+    const renderedHook = renderHook(({ value }) => useAsyncIter(value), {
       initialProps: {
         value: (async function* () {})() as AsyncIterable<string>,
       },
