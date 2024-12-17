@@ -16,7 +16,6 @@
     "async-iterable-utility",
     "async-iterator-hooks",
     "async-iterator-component",
-    "promise",
     "for-await-of",
     "async-await",
     "lazy",
