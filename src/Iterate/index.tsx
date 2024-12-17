@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { useAsyncIterable, type IterationResult } from '../useAsyncIterable/index.js';
+import { useAsyncIter, type IterationResult } from '../useAsyncIter/index.js';
 
 export { Iterate, type IterateProps };
 
@@ -8,12 +8,12 @@ function Iterate<TVal, TInitialVal = undefined>(props: IterateProps<TVal, TIniti
     typeof props.children === 'function'
       ? (() => {
           const propsBetterTyped = props as IteratePropsWithRenderFunction<TVal, TInitialVal>;
-          const next = useAsyncIterable(propsBetterTyped.value, propsBetterTyped.initialValue);
+          const next = useAsyncIter(propsBetterTyped.value, propsBetterTyped.initialValue);
           return propsBetterTyped.children(next);
         })()
       : (() => {
           const propsBetterTyped = props as IteratePropsWithIterableAsChildren;
-          const next = useAsyncIterable(propsBetterTyped.children, propsBetterTyped.initialValue);
+          const next = useAsyncIter(propsBetterTyped.children, propsBetterTyped.initialValue);
           return next.value;
         })();
 

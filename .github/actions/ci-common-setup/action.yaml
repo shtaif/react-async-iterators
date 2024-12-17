@@ -17,9 +17,8 @@ runs:
 
     - name: Get Node.js version
       id: node_version
-      run: |
-        echo "version=$(node -v)" >>$GITHUB_OUTPUT
       shell: bash
+      run: echo "version=$(node -v)" >>$GITHUB_OUTPUT
 
     - name: Get package manager type and version from `package.json`
       id: pkg_manager_value
@@ -29,8 +28,8 @@ runs:
         prop_path: 'packageManager'
 
     - name: Install pnpm
-      run: npm install -g ${{ steps.pkg_manager_value.outputs.value }}
       shell: bash
+      run: npm install -g ${{ steps.pkg_manager_value.outputs.value }}
 
     - name: Restore possibly cached dependencies
       id: cache-node-modules
@@ -41,5 +40,5 @@ runs:
 
     - name: Install dependencies if weren't cached
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
-      run: pnpm install --frozen-lockfile
       shell: bash
+      run: pnpm install --frozen-lockfile
