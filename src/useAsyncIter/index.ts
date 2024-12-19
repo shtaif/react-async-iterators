@@ -11,39 +11,9 @@ export { useAsyncIter, type IterationResult };
 /**
  * `useAsyncIter` hooks up a single async iterable value into your component and its lifecycle.
  *
- * Given an async iterable `input`, this hook will iterate it and rerender the host component upon
- * each new value that becomes available as well as any possible completion or error it may run into.
- * If `input` is a plain (non async iterable) value, it will simply be used to render once and
- * immediately.
+ * _Illustration:_
  *
- * The hook inits and maintains its current iteration process across renderings as long as its
- * `input` is passed the same object reference each time (similar to the behavior of a
- * `useEffect(() => {...}, [input])`), therefore care should be taken to avoid constantly recreating
- * the iterable every render, e.g; declaring it outside the component body or control __when__ it
- * should be recreated with React's [`useMemo`](https://react.dev/reference/react/useMemo).
- * Whenever `useAsyncIter` detects a different `input` value, it automatically closes a previous
- * `input` async iterable before proceeding to iterate any new `input` async iterable. The hook will
- * also ensure closing a currently iterated `input` on component unmount.
- *
- * The object returned from `useAsyncIter` holds all the state from the most recent iteration
- * of `input` (most recent value, whether is completed or still running, etc. - see
- * {@link IterationResult}).
- * In case `input` is given a plain value, it will be delivered as-is within the returned
- * result object's `value` property.
- *
- * @param input Any async iterable or plain value
- * @param initialValue Any initial value for the hook to return prior to resolving the  ___first
- * emission___ of the ___first given___ async iterable, defaults to `undefined`.
- *
- * @returns An object with properties reflecting the current state of the iterated async iterable
- * or plain value provided via `input` (see {@link IterationResult})
- *
- * @see {@link IterationResult}
- *
- * @example
  * ```tsx
- * // In its simplest:
- *
  * import { useAsyncIter } from 'react-async-iterators';
  *
  * function SelfUpdatingTodoList(props) {
@@ -57,6 +27,38 @@ export { useAsyncIter, type IterationResult };
  *   );
  * }
  * ```
+ *
+ * Given an async iterable `input`, this hook will iterate it and rerender the host component upon
+ * each new value that becomes available together with any possible completion or error it may run into.
+ * If `input` is a plain (non async iterable) value, it will simply be used to render once and
+ * immediately.
+ *
+ * The hook inits and maintains its current iteration process across re-renders as long as its
+ * `input` is passed the same object reference each time (similar to the behavior of a
+ * `useEffect(() => {...}, [input])`), therefore care should be taken to avoid constantly recreating
+ * the iterable every render, e.g; by declaring it outside the component body or control __when__ it
+ * should be recreated with React's [`useMemo`](https://react.dev/reference/react/useMemo).
+ * Whenever `useAsyncIter` detects a different `input` value, it automatically closes a previous
+ * `input` async iterable before proceeding to iterate any new `input` async iterable. The hook will
+ * also ensure closing a currently iterated `input` on component unmount.
+ *
+ * The object returned from `useAsyncIter` holds all the state from the most recent iteration
+ * of `input` (most recent value, whether is completed or still running, etc. - see
+ * {@link IterationResult `IterationResult`}).
+ * In case `input` is given a plain value, it will be delivered as-is within the returned
+ * result object's `value` property.
+ *
+ * @template TValue The type of values yielded by the passed iterable or otherwise type of the passed plain value itself.
+ * @template TInitValue The type of the initial value, defaults to `undefined`.
+ *
+ * @param input Any async iterable or plain value
+ * @param initialValue Any initial value for the hook to return prior to resolving the ___first
+ * emission___ of the ___first given___ async iterable, defaults to `undefined`.
+ *
+ * @returns An object with properties reflecting the current state of the iterated async iterable
+ * or plain value provided via `input` (see {@link IterationResult `IterationResult`})
+ *
+ * @see {@link IterationResult `IterationResult`}
  *
  * @example
  * ```tsx
@@ -204,10 +206,10 @@ type IterationResult<TVal, TInitVal = undefined> = {
   value: ExtractAsyncIterValue<TVal> | TInitVal;
 
   /**
-   * Indicates whether the iterated async iterable is still pending on its own first
-   * value to be resolved.
+   * Indicates whether the iterated async iterable is still pending its own first value to be
+   * resolved.
    * Will appear `false` for any iterations thereafter and reset back every time the iteratee
-   * is replaced with a new one.
+   * is changed to a new one.
    *
    * Can be used in certain cases for displaying _"loading" states_ metaphorically similar to
    * a how a pending state of a promise is thought of.
@@ -217,13 +219,15 @@ type IterationResult<TVal, TInitVal = undefined> = {
   pendingFirst: boolean;
 
   /**
-   * Indicates whether the iterated async iterable is done; meaning had either completed (by
-   * resolving a `{ done: true }` object
-   * [MDN docs](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#done))
-   * or threw an error (in which case the escorting `error` property will be set to it).
+   * Indicates whether the iterated async iterable has ended having no further values to yield,
+   * meaning either of:
+   * - it has completed (by resolving a `{ done: true }` object
+   * ([MDN docs](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#done)))
+   * - it had thrown an error (in which case the escorting `error` property will be set to
+   * that error).
    *
    * When `true`, the adjacent `value` property will __still be set__ to the last value seen
-   * until the moment of completing/erroring.
+   * before the moment of completing/erroring.
    *
    * Is always `false` for any plain value given instead of an async iterable.
    */
