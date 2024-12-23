@@ -488,7 +488,7 @@ describe('`Iterate` component', () => {
 
   it(
     gray(
-      "When consequtively updated with new iterables will close the previous one's iterator every time and render accordingly"
+      "When consecutively updated with new iterables will close the previous one's iterator every time and render accordingly"
     ),
     async () => {
       let lastRenderFnInput: undefined | IterationResult<string>;
@@ -498,7 +498,7 @@ describe('`Iterate` component', () => {
         new IterableChannelTestHelper<string>(),
       ];
 
-      const [channel1IterCloseSpy, channel2IterCloseSpy] = [
+      const [channelReturnSpy1, channelReturnSpy2] = [
         vi.spyOn(channel1, 'return'),
         vi.spyOn(channel2, 'return'),
       ];
@@ -519,8 +519,8 @@ describe('`Iterate` component', () => {
       {
         rendered.rerender(buildTestContent(channel1));
 
-        expect(channel1IterCloseSpy).not.toHaveBeenCalled();
-        expect(channel2IterCloseSpy).not.toHaveBeenCalled();
+        expect(channelReturnSpy1).not.toHaveBeenCalled();
+        expect(channelReturnSpy2).not.toHaveBeenCalled();
         expect(lastRenderFnInput).toStrictEqual({
           value: undefined,
           pendingFirst: true,
@@ -543,8 +543,8 @@ describe('`Iterate` component', () => {
       {
         rendered.rerender(buildTestContent(channel2));
 
-        expect(channel1IterCloseSpy).toHaveBeenCalledOnce();
-        expect(channel2IterCloseSpy).not.toHaveBeenCalled();
+        expect(channelReturnSpy1).toHaveBeenCalledOnce();
+        expect(channelReturnSpy2).not.toHaveBeenCalled();
         expect(lastRenderFnInput).toStrictEqual({
           value: 'a',
           pendingFirst: true,
@@ -567,8 +567,8 @@ describe('`Iterate` component', () => {
       {
         rendered.rerender(buildTestContent((async function* () {})()));
 
-        expect(channel1IterCloseSpy).toHaveBeenCalledOnce();
-        expect(channel2IterCloseSpy).toHaveBeenCalledOnce();
+        expect(channelReturnSpy1).toHaveBeenCalledOnce();
+        expect(channelReturnSpy2).toHaveBeenCalledOnce();
         expect(lastRenderFnInput).toStrictEqual({
           value: 'b',
           pendingFirst: true,
@@ -584,7 +584,7 @@ describe('`Iterate` component', () => {
     let lastRenderFnInput: undefined | IterationResult<string>;
 
     const channel = new IterableChannelTestHelper<string>();
-    const channelIterCloseSpy = vi.spyOn(channel, 'return');
+    const channelReturnSpy = vi.spyOn(channel, 'return');
 
     const buildTestContent = (value: AsyncIterable<string>) => {
       return (
@@ -602,7 +602,7 @@ describe('`Iterate` component', () => {
     {
       rendered.rerender(buildTestContent(channel));
 
-      expect(channelIterCloseSpy).not.toHaveBeenCalled();
+      expect(channelReturnSpy).not.toHaveBeenCalled();
       expect(lastRenderFnInput).toStrictEqual({
         value: undefined,
         pendingFirst: true,
@@ -624,7 +624,7 @@ describe('`Iterate` component', () => {
 
     {
       rendered.unmount();
-      expect(channelIterCloseSpy).toHaveBeenCalledOnce();
+      expect(channelReturnSpy).toHaveBeenCalledOnce();
     }
   });
 });

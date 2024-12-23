@@ -3,6 +3,12 @@ import { useLatest } from '../common/hooks/useLatest.js';
 import { isAsyncIter } from '../common/isAsyncIter.js';
 import { useSimpleRerender } from '../common/hooks/useSimpleRerender.js';
 import { type ExtractAsyncIterValue } from '../common/ExtractAsyncIterValue.js';
+import {
+  reactAsyncIterSpecialInfoSymbol,
+  type ReactAsyncIterSpecialInfo,
+} from '../common/reactAsyncIterSpecialInfoSymbol.js';
+import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { type iterateFormatted } from '../iterateFormatted/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export { useAsyncIter, type IterationResult };
 
@@ -33,11 +39,13 @@ export { useAsyncIter, type IterationResult };
  * If `input` is a plain (non async iterable) value, it will simply be used to render once and
  * immediately.
  *
- * The hook inits and maintains its current iteration process across re-renders as long as its
- * `input` is passed the same object reference each time (similar to the behavior of a
- * `useEffect(() => {...}, [input])`), therefore care should be taken to avoid constantly recreating
- * the iterable every render, e.g; by declaring it outside the component body or control __when__ it
- * should be recreated with React's [`useMemo`](https://react.dev/reference/react/useMemo).
+ * The hook inits and maintains its current iteration process with its given `input` async iterable
+ * across re-renders as long as `input` is passed the same object reference each time (similar to
+ * the behavior of a `useEffect(() => {...}, [input])`), therefore care should be taken to avoid
+ * constantly recreating the iterable every render, e.g; by declaring it outside the component body,
+ * control __when__ it should be recreated with React's
+ * [`useMemo`](https://react.dev/reference/react/useMemo) or alternatively the library's
+ * {@link iterateFormatted `iterateFormatted`} util for only formatting the values.
  * Whenever `useAsyncIter` detects a different `input` value, it automatically closes a previous
  * `input` async iterable before proceeding to iterate any new `input` async iterable. The hook will
  * also ensure closing a currently iterated `input` on component unmount.
@@ -48,11 +56,11 @@ export { useAsyncIter, type IterationResult };
  * In case `input` is given a plain value, it will be delivered as-is within the returned
  * result object's `value` property.
  *
- * @template TValue The type of values yielded by the passed iterable or otherwise type of the passed plain value itself.
- * @template TInitValue The type of the initial value, defaults to `undefined`.
+ * @template TVal The type of values yielded by the passed iterable or of a plain value passed otherwise.
+ * @template TInitVal The type of the initial value, defaults to `undefined`.
  *
  * @param input Any async iterable or plain value
- * @param initialValue Any initial value for the hook to return prior to resolving the ___first
+ * @param initialVal Any initial value for the hook to return prior to resolving the ___first
  * emission___ of the ___first given___ async iterable, defaults to `undefined`.
  *
  * @returns An object with properties reflecting the current state of the iterated async iterable
@@ -62,10 +70,10 @@ export { useAsyncIter, type IterationResult };
  *
  * @example
  * ```tsx
- * // With an `initialValue` and showing usage of all properties of the returned iteration object:
+ * // With an `initialVal` and showing usage of all properties of the returned iteration object:
  *
  * import { useAsyncIter } from 'react-async-iterators';
- *
+
  * function SelfUpdatingTodoList(props) {
  *   const todosNext = useAsyncIter(props.todosAsyncIter, []);
  *   return (
@@ -91,23 +99,28 @@ export { useAsyncIter, type IterationResult };
  * ```
  */
 const useAsyncIter: {
-  <TValue>(
-    input: AsyncIterable<TValue>,
-    initialValue?: undefined
-  ): IterationResult<TValue, undefined>;
-
-  <TValue, TInitValue = undefined>(
-    input: TValue,
-    initialValue?: TInitValue
-  ): IterationResult<TValue, TInitValue>;
-} = <TValue, TInitValue = undefined>(
-  input: TValue,
-  initialValue: TInitValue
-): IterationResult<TValue, TInitValue> => {
+  <TVal>(input: TVal, initialVal?: undefined): IterationResult<TVal, undefined>;
+  <TVal, TInitVal = undefined>(input: TVal, initialVal?: TInitVal): IterationResult<TVal, TInitVal>;
+} = <
+  TVal extends
+    | undefined
+    | null
+    | {
+        [Symbol.asyncIterator]?: () => AsyncIterator<ExtractAsyncIterValue<TVal>, unknown, unknown>;
+        [reactAsyncIterSpecialInfoSymbol]?: ReactAsyncIterSpecialInfo<
+          unknown,
+          ExtractAsyncIterValue<TVal>
+        >;
+      },
+  TInitVal = undefined,
+>(
+  input: TVal,
+  initialVal: TInitVal
+): IterationResult<TVal, TInitVal> => {
   const rerender = useSimpleRerender();
 
-  const stateRef = useRef<IterationResult<TValue, TInitValue>>({
-    value: initialValue,
+  const stateRef = useRef<IterationResult<TVal, TInitVal>>({
+    value: initialVal,
     pendingFirst: true,
     done: false,
     error: undefined,
@@ -119,34 +132,45 @@ const useAsyncIter: {
     useMemo(() => {}, [undefined]);
     useEffect(() => {}, [undefined]);
 
-    return (stateRef.current = {
-      value: latestInputRef.current as ExtractAsyncIterValue<TValue>,
+    stateRef.current = {
+      value: latestInputRef.current as ExtractAsyncIterValue<TVal>,
       pendingFirst: false,
       done: false,
       error: undefined,
-    });
+    };
+
+    return stateRef.current;
   } else {
-    useMemo(() => {
+    const iterSourceRefToUse =
+      latestInputRef.current[reactAsyncIterSpecialInfoSymbol]?.origSource ?? latestInputRef.current;
+
+    useMemo((): void => {
       stateRef.current = {
         value: stateRef.current.value,
         pendingFirst: true,
         done: false,
         error: undefined,
       };
-    }, [latestInputRef.current]);
+    }, [iterSourceRefToUse]);
 
     useEffect(() => {
-      const iterator = (latestInputRef.current as AsyncIterable<ExtractAsyncIterValue<TValue>>)[
-        Symbol.asyncIterator
-      ]();
-      let iteratorClosedAbruptly = false;
+      const iterator = iterSourceRefToUse[Symbol.asyncIterator]();
+      let iteratorClosedByConsumer = false;
 
       (async () => {
+        let iterationIdx = 0;
+
         try {
           for await (const value of { [Symbol.asyncIterator]: () => iterator }) {
-            if (!iteratorClosedAbruptly) {
+            if (!iteratorClosedByConsumer) {
+              const formattedValue =
+                latestInputRef.current?.[reactAsyncIterSpecialInfoSymbol]?.formatFn(
+                  value,
+                  iterationIdx++
+                ) ?? (value as ExtractAsyncIterValue<TVal>);
+
               stateRef.current = {
-                value,
+                value: formattedValue,
                 pendingFirst: false,
                 done: false,
                 error: undefined,
@@ -154,7 +178,7 @@ const useAsyncIter: {
               rerender();
             }
           }
-          if (!iteratorClosedAbruptly) {
+          if (!iteratorClosedByConsumer) {
             stateRef.current = {
               value: stateRef.current.value,
               pendingFirst: false,
@@ -164,7 +188,7 @@ const useAsyncIter: {
             rerender();
           }
         } catch (err) {
-          if (!iteratorClosedAbruptly) {
+          if (!iteratorClosedByConsumer) {
             stateRef.current = {
               value: stateRef.current.value,
               pendingFirst: false,
@@ -177,10 +201,10 @@ const useAsyncIter: {
       })();
 
       return () => {
-        iteratorClosedAbruptly = true;
+        iteratorClosedByConsumer = true;
         iterator.return?.();
       };
-    }, [latestInputRef.current]);
+    }, [iterSourceRefToUse]);
 
     return stateRef.current;
   }
@@ -190,15 +214,16 @@ const useAsyncIter: {
  * The `iterationResult` object holds all the state from the most recent iteration of a currently
  * hooked async iterable object (or plain value).
  *
- * Returned from the {@link useAsyncIter} hook and also injected into `<Iterate>` component's render function.
+ * Returned from the {@link useAsyncIter `useAsyncIter`} hook and also injected into
+ * {@link Iterate `<Iterate>`} component's render function.
  *
- * @see {@link useAsyncIter}
- * @see {@link Iterate}
+ * @see {@link useAsyncIter `useAsyncIter`}
+ * @see {@link Iterate `<Iterate>`}
  */
 type IterationResult<TVal, TInitVal = undefined> = {
   /**
-   * The most recent value received from iterating an async iterable, starting as {@link TInitVal}.
-   * If iterating a plain value, it will simply be it.
+   * The most recent value received from the async iterable iteration, starting as {@link TInitVal}.
+   * If the source was instead a plain value, it will simply be it.
    *
    * Starting to iterate a new async iterable at any future point on itself doesn't reset this;
    * only some newly resolved next value will.
