@@ -38,11 +38,11 @@ export { Iterate, type IterateProps };
  * }
  * ```
  *
- * `<Iterate>` may be preferable over {@link useAsyncIter `useAsyncIter`} typically as the UI area it
- * controls the rendering for is constrainable down to the essential, saving some React elements from
- * unnecessary re-renderings while placable clearly and elegantly within some larger component's UI
- * output. In regard to {@link useAsyncIter `useAsyncIter`} being a hook though, it has to
- * re-render the entire component output for every new value.
+ * `<Iterate>` may be preferable over {@link useAsyncIter `useAsyncIter`} typically as the UI area
+ * it re-renders can be expressively confined to the minimum necessary, saving unrelated elements
+ * within UI of a larger component from re-evaluating. On the other hand, the
+ * counterpart {@link useAsyncIter `useAsyncIter`} being a hook has to re-render the entire
+ * component output for every new value.
  *
  * Given an async iterable as the `value` prop, this component will iterate it and render each new
  * value that becomes available together with any possible completion or error it may run into.
