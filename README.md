@@ -5,6 +5,9 @@
 <br />
 
 <p>
+  <a href="https://www.npmjs.com/package/react-async-iterators">
+    <img alt="npm version" src="https://img.shields.io/npm/v/react-async-iterators.svg?logo=npm" />
+  </a>
   <a href="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-tests.yaml">
     <img alt="" src="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-tests.yaml/badge.svg" />
   </a>
