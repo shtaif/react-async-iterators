@@ -6,7 +6,7 @@ on:
       dry_run:
         type: boolean
         default: false
-        description: Perform as a dry run
+        description: Perform as dry run
 
 jobs:
   release_new_version:
