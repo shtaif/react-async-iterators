@@ -1,9 +1,9 @@
 export { asyncIterToArray };
 
 async function asyncIterToArray<T>(source: AsyncIterable<T>): Promise<T[]> {
-  const values: T[] = [];
+  const collected: T[] = [];
   for await (const value of source) {
-    values.push(value);
+    collected.push(value);
   }
-  return values;
+  return collected;
 }
