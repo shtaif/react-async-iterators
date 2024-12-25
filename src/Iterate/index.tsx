@@ -59,8 +59,8 @@ export { Iterate, type IterateProps };
  *
  * @param props Props for `<Iterate>`. See {@link IterateProps `IterateProps`}.
  *
- * @returns A renderable output that's re-rendered as consequent values become available and
- * formatted by the function passed as `children` (or otherwise the resolved values as-are).
+ * @returns A React node that updates its contents in response to each next yielded value automatically as
+ * formatted by the function passed as `children` (or in the absent of, just the yielded values as-are).
  *
  * @see {@link IterationResult}
  *
