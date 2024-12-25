@@ -1,3 +1,10 @@
+## [0.2.0](https://github.com/shtaif/react-async-iterators/compare/v0.1.0...v0.2.0) (2024-12-25)
+
+
+### Features
+
+* add new `useAsyncIterState` hook ([#16](https://github.com/shtaif/react-async-iterators/issues/16)) ([f87bb48](https://github.com/shtaif/react-async-iterators/commit/f87bb488c3f3d659e6639b5ed01a20d0f9340aab))
+
 ## [0.1.0](https://github.com/shtaif/react-async-iterators/compare/v0.0.1...v0.1.0) (2024-12-24)
 
 
