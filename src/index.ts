@@ -7,6 +7,7 @@ export {
   useAsyncIter,
   type IterationResult,
   Iterate,
+  Iterate as It,
   type IterateProps,
   iterateFormatted,
   type FixedRefFormattedIterable,

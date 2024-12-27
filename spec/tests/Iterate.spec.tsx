@@ -1,7 +1,7 @@
 import { it, describe, expect, afterEach, vi } from 'vitest';
 import { gray } from 'colorette';
 import { render, cleanup as cleanupMountedReactTrees, act } from '@testing-library/react';
-import { Iterate, type IterationResult } from '../../src/index.js';
+import { Iterate, It, type IterationResult } from '../../src/index.js';
 import { IterableChannelTestHelper } from '../utils/IterableChannelTestHelper.js';
 
 afterEach(() => {
@@ -9,6 +9,10 @@ afterEach(() => {
 });
 
 describe('`Iterate` component', () => {
+  it(gray('Importable also as `<It>`'), () => {
+    expect(Iterate).toStrictEqual(It);
+  });
+
   it(
     gray(
       'When used in the no-render-function form and given an iterable that yields a value will render correctly'
