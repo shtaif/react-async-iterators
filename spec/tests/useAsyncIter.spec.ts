@@ -444,6 +444,33 @@ describe('`useAsyncIter` hook', () => {
       expect(channelReturnSpy).toHaveBeenCalledOnce();
     }
   });
+
+  it(
+    gray(
+      'When given a rapid yielding iterable, consecutive values are batched into a single render that takes only the last value'
+    ),
+    async () => {
+      let timesRerendered = 0;
+      const iter = (async function* () {
+        yield* ['a', 'b', 'c'];
+      })();
+
+      const renderedHook = renderHook(() => {
+        timesRerendered++;
+        return useAsyncIter(iter);
+      });
+
+      await act(() => {});
+
+      expect(timesRerendered).toStrictEqual(2);
+      expect(renderedHook.result.current).toStrictEqual({
+        value: 'c',
+        pendingFirst: false,
+        done: true,
+        error: undefined,
+      });
+    }
+  );
 });
 
 const simulatedError = new Error('🚨 Simulated Error 🚨');

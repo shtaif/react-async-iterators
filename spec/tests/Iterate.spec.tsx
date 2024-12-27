@@ -631,6 +631,42 @@ describe('`Iterate` component', () => {
       expect(channelReturnSpy).toHaveBeenCalledOnce();
     }
   });
+
+  it(
+    gray(
+      'When given a rapid yielding iterable, consecutive values are batched into a single render that takes only the last value'
+    ),
+    async () => {
+      const iter = (async function* () {
+        yield* ['a', 'b', 'c'];
+      })();
+      let timesRerendered = 0;
+      let lastRenderFnInput: undefined | IterationResult<string>;
+
+      const rendered = render(
+        <Iterate value={iter}>
+          {next => {
+            timesRerendered++;
+            lastRenderFnInput = next;
+            return <div id="test-created-elem">Render count: {timesRerendered}</div>;
+          }}
+        </Iterate>
+      );
+
+      await act(() => {});
+
+      expect(lastRenderFnInput).toStrictEqual({
+        value: 'c',
+        pendingFirst: false,
+        done: true,
+        error: undefined,
+      });
+      expect(timesRerendered).toStrictEqual(2);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        '<div id="test-created-elem">Render count: 2</div>'
+      );
+    }
+  );
 });
 
 const simulatedError = new Error('🚨 Simulated Error 🚨');
