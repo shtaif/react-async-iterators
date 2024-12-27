@@ -4,8 +4,8 @@ import { useAsyncIter, type IterationResult } from '../useAsyncIter/index.js';
 export { Iterate, type IterateProps };
 
 /**
- * The `<Iterate>` helper component is used to format and render an async iterable (or a plain non-iterable value)
- * directly onto a piece of UI.
+ * The `<Iterate>` helper component (importable also as `<It>`) is used to format and render an async iterable
+ * (or a plain non-iterable value) directly onto a piece of UI.
  *
  * Essentially wraps a single {@link useAsyncIter `useAsyncIter`} hook call into a component
  * conveniently.
