@@ -471,6 +471,33 @@ describe('`useAsyncIter` hook', () => {
       });
     }
   );
+
+  it(
+    gray(
+      'When given iterable yields consecutive identical values the hook will not consequently re-render'
+    ),
+    async () => {
+      let timesRerendered = 0;
+      const channel = new IterableChannelTestHelper<string>();
+
+      const renderedHook = renderHook(() => {
+        timesRerendered++;
+        return useAsyncIter(channel);
+      });
+
+      for (let i = 0; i < 3; ++i) {
+        await act(() => channel.put('a'));
+      }
+
+      expect(timesRerendered).toStrictEqual(2);
+      expect(renderedHook.result.current).toStrictEqual({
+        value: 'a',
+        pendingFirst: false,
+        done: false,
+        error: undefined,
+      });
+    }
+  );
 });
 
 const simulatedError = new Error('🚨 Simulated Error 🚨');
