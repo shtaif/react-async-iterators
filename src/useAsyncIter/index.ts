@@ -169,13 +169,15 @@ const useAsyncIter: {
                   iterationIdx++
                 ) ?? (value as ExtractAsyncIterValue<TVal>);
 
-              stateRef.current = {
-                value: formattedValue,
-                pendingFirst: false,
-                done: false,
-                error: undefined,
-              };
-              rerender();
+              if (!Object.is(formattedValue, stateRef.current.value)) {
+                stateRef.current = {
+                  value: formattedValue,
+                  pendingFirst: false,
+                  done: false,
+                  error: undefined,
+                };
+                rerender();
+              }
             }
           }
           if (!iteratorClosedByConsumer) {

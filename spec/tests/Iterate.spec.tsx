@@ -667,6 +667,42 @@ describe('`Iterate` component', () => {
       );
     }
   );
+
+  it(
+    gray(
+      'When given iterable yields consecutive identical values the hook will not consequently re-render'
+    ),
+    async () => {
+      let timesRerendered = 0;
+      let lastRenderFnInput: undefined | IterationResult<string>;
+      const channel = new IterableChannelTestHelper<string>();
+
+      const rendered = render(
+        <Iterate value={channel}>
+          {next => {
+            timesRerendered++;
+            lastRenderFnInput = next;
+            return <div id="test-created-elem">Render count: {timesRerendered}</div>;
+          }}
+        </Iterate>
+      );
+
+      for (let i = 0; i < 3; ++i) {
+        await act(() => channel.put('a'));
+      }
+
+      expect(timesRerendered).toStrictEqual(2);
+      expect(lastRenderFnInput).toStrictEqual({
+        value: 'a',
+        pendingFirst: false,
+        done: false,
+        error: undefined,
+      });
+      expect(rendered.container.innerHTML).toStrictEqual(
+        '<div id="test-created-elem">Render count: 2</div>'
+      );
+    }
+  );
 });
 
 const simulatedError = new Error('🚨 Simulated Error 🚨');
