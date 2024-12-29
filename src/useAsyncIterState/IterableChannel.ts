@@ -5,11 +5,6 @@ export { IterableChannel };
 class IterableChannel<TVal> {
   #isClosed = false;
   #nextIteration = promiseWithResolvers<IteratorResult<TVal, void>>();
-  iterable = {
-    [Symbol.asyncIterator]: () => ({
-      next: () => this.#nextIteration.promise,
-    }),
-  };
 
   put(value: TVal): void {
     if (!this.#isClosed) {
@@ -22,4 +17,21 @@ class IterableChannel<TVal> {
     this.#isClosed = true;
     this.#nextIteration.resolve({ done: true, value: undefined });
   }
+
+  iterable = {
+    [Symbol.asyncIterator]: () => {
+      const whenIteratorClosed = promiseWithResolvers<IteratorReturnResult<undefined>>();
+
+      return {
+        next: () => {
+          return Promise.race([this.#nextIteration.promise, whenIteratorClosed.promise]);
+        },
+
+        return: async () => {
+          whenIteratorClosed.resolve({ done: true, value: undefined });
+          return { done: true as const, value: undefined };
+        },
+      };
+    },
+  } satisfies AsyncIterable<TVal, void, void>;
 }

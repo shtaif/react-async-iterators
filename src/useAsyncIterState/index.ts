@@ -54,13 +54,13 @@ function useAsyncIterState<TVal>(): AsyncIterStateResult<TVal> {
     result: AsyncIterStateResult<TVal>;
   }>();
 
-  if (!ref.current) {
+  ref.current ??= (() => {
     const channel = new IterableChannel<TVal>();
-    ref.current = {
+    return {
       channel,
       result: [channel.iterable, newVal => channel.put(newVal)],
     };
-  }
+  })();
 
   const { channel, result } = ref.current;
 
