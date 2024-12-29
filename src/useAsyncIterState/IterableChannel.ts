@@ -18,7 +18,12 @@ class IterableChannel<TVal> {
     this.#nextIteration.resolve({ done: true, value: undefined });
   }
 
-  iterable = {
+  iterable: {
+    [Symbol.asyncIterator](): {
+      next(): Promise<IteratorResult<TVal, void>>;
+      return(): Promise<IteratorReturnResult<void>>;
+    };
+  } = {
     [Symbol.asyncIterator]: () => {
       const whenIteratorClosed = promiseWithResolvers<IteratorReturnResult<undefined>>();
 
@@ -33,5 +38,5 @@ class IterableChannel<TVal> {
         },
       };
     },
-  } satisfies AsyncIterable<TVal, void, void>;
+  };
 }

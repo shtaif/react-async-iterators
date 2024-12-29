@@ -39,7 +39,7 @@ describe('`useAsyncIterState` hook', () => {
       const yieldPromise1 = iterator1.next();
       const yieldPromise2 = iterator2.next();
 
-      await iterator1.return!();
+      await iterator1.return();
 
       {
         const promiseStates = await Promise.all(
@@ -51,7 +51,7 @@ describe('`useAsyncIterState` hook', () => {
         ]);
       }
 
-      await iterator2.return!();
+      await iterator2.return();
 
       {
         const promiseStates = await Promise.all(

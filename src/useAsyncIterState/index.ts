@@ -77,4 +77,4 @@ function useAsyncIterState<TVal>(): AsyncIterStateResult<TVal> {
  *
  * @see {@link useAsyncIterState `useAsyncIterState`}
  */
-type AsyncIterStateResult<TVal> = [AsyncIterable<TVal, void, void>, (newValue: TVal) => void];
+type AsyncIterStateResult<TVal> = [IterableChannel<TVal>['iterable'], (newValue: TVal) => void];
