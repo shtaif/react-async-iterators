@@ -99,8 +99,8 @@ export { useAsyncIter, type IterationResult };
  * ```
  */
 const useAsyncIter: {
-  <TVal>(input: TVal, initialVal?: undefined): IterationResult<TVal, undefined>;
-  <TVal, TInitVal = undefined>(input: TVal, initialVal?: TInitVal): IterationResult<TVal, TInitVal>;
+  <TVal>(input: TVal, initialVal?: undefined): IterationResult<TVal>;
+  <TVal, TInitVal>(input: TVal, initialVal: TInitVal): IterationResult<TVal, TInitVal>;
 } = <
   TVal extends
     | undefined
@@ -120,7 +120,7 @@ const useAsyncIter: {
   const rerender = useSimpleRerender();
 
   const stateRef = useRef<IterationResult<TVal, TInitVal>>({
-    value: initialVal,
+    value: initialVal as any,
     pendingFirst: true,
     done: false,
     error: undefined,
@@ -225,12 +225,12 @@ const useAsyncIter: {
 type IterationResult<TVal, TInitVal = undefined> = {
   /**
    * The most recent value received from the async iterable iteration, starting as {@link TInitVal}.
-   * If the source was instead a plain value, it will simply be it.
+   * If the source was a plain value instead, it will simply be it, ignoring any {@link TInitVal}.
    *
-   * Starting to iterate a new async iterable at any future point on itself doesn't reset this;
-   * only some newly resolved next value will.
+   * When the source iterable changes and an iteration restarts with a new iterable, the same last
+   * `value` is carried over and reflected until the new iterable resolves its first value.
    * */
-  value: ExtractAsyncIterValue<TVal> | TInitVal;
+  value: TVal extends AsyncIterable<infer J> ? J | TInitVal : TVal;
 
   /**
    * Indicates whether the iterated async iterable is still pending its own first value to be
