@@ -107,7 +107,10 @@ function Iterate<TVal, TInitialVal = undefined>(props: IterateProps<TVal, TIniti
     typeof props.children === 'function'
       ? (() => {
           const propsBetterTyped = props as IteratePropsWithRenderFunction<TVal, TInitialVal>;
-          const next = useAsyncIter(propsBetterTyped.value, propsBetterTyped.initialValue);
+          const next = useAsyncIter(
+            propsBetterTyped.value,
+            propsBetterTyped.initialValue as TInitialVal
+          );
           return propsBetterTyped.children(next);
         })()
       : (() => {

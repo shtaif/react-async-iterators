@@ -138,7 +138,7 @@ describe('`Iterate` component', () => {
   it(gray('When given an iterable that yields a value will render correctly'), async () => {
     const channel = new IterableChannelTestHelper<string>();
     let timesRerendered = 0;
-    let lastRenderFnInput: undefined | IterationResult<string>;
+    let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
     const rendered = render(
       <Iterate value={channel}>
@@ -223,7 +223,7 @@ describe('`Iterate` component', () => {
   it(gray('When given an iterable that yields multiple values will render correctly'), async () => {
     const channel = new IterableChannelTestHelper<string>();
     let timesRerendered = 0;
-    let lastRenderFnInput: undefined | IterationResult<string>;
+    let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
     const rendered = render(
       <Iterate value={channel}>
@@ -267,7 +267,7 @@ describe('`Iterate` component', () => {
     async () => {
       const emptyIter = (async function* () {})();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
       const rendered = render(
         <Iterate value={emptyIter}>
@@ -333,7 +333,7 @@ describe('`Iterate` component', () => {
     async () => {
       const channel = new IterableChannelTestHelper<string>();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
       const rendered = render(
         <Iterate value={channel}>
@@ -380,7 +380,7 @@ describe('`Iterate` component', () => {
         throw simulatedError;
       })();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
       const rendered = render(
         <Iterate value={erroringIter}>
@@ -448,7 +448,7 @@ describe('`Iterate` component', () => {
     async () => {
       const channel = new IterableChannelTestHelper<string>();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
       const simulatedErr = new Error('...');
 
@@ -495,7 +495,7 @@ describe('`Iterate` component', () => {
       "When consecutively updated with new iterables will close the previous one's iterator every time and render accordingly"
     ),
     async () => {
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
       const [channel1, channel2] = [
         new IterableChannelTestHelper<string>(),
@@ -585,7 +585,7 @@ describe('`Iterate` component', () => {
   );
 
   it(gray('When unmounted will close the last active iterator it held'), async () => {
-    let lastRenderFnInput: undefined | IterationResult<string>;
+    let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
     const channel = new IterableChannelTestHelper<string>();
     const channelReturnSpy = vi.spyOn(channel, 'return');
@@ -641,7 +641,7 @@ describe('`Iterate` component', () => {
         yield* ['a', 'b', 'c'];
       })();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
       const rendered = render(
         <Iterate value={iter}>
@@ -674,7 +674,7 @@ describe('`Iterate` component', () => {
     ),
     async () => {
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
       const channel = new IterableChannelTestHelper<string>();
 
       const rendered = render(
