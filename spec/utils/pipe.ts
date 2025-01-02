@@ -1,10 +1,6 @@
 export { pipe };
 
-const pipe: PipeFunction = (initVal: unknown, ...funcs: ((...args: any[]) => any)[]) => {
-  return funcs.reduce((currVal, nextFunc) => nextFunc(currVal), initVal);
-};
-
-interface PipeFunction {
+const pipe: {
   <const TInitVal>(initVal: TInitVal): TInitVal;
 
   <const TInitVal, A>(initVal: TInitVal, ...funcs: [(arg: TInitVal) => A]): A;
@@ -95,4 +91,6 @@ interface PipeFunction {
       (arg: I) => J,
     ]
   ): J;
-}
+} = (initVal: unknown, ...funcs: ((...args: unknown[]) => unknown)[]) => {
+  return funcs.reduce((currVal, fn) => fn(currVal), initVal);
+};

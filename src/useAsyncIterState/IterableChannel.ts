@@ -34,7 +34,7 @@ class IterableChannel<TVal> {
 
         return: async () => {
           whenIteratorClosed.resolve({ done: true, value: undefined });
-          return { done: true as const, value: undefined };
+          return { done: true, value: undefined };
         },
       };
     },

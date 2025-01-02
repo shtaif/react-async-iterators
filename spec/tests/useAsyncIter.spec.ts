@@ -2,7 +2,7 @@ import { it, describe, expect, afterEach, vi } from 'vitest';
 import { gray } from 'colorette';
 import { cleanup as cleanupMountedReactTrees, act, renderHook } from '@testing-library/react';
 import { useAsyncIter } from '../../src/index.js';
-import { IterableChannelTestHelper } from '../utils/IterableChannelTestHelper.js';
+import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
 
 afterEach(() => {
   cleanupMountedReactTrees();
@@ -75,7 +75,7 @@ describe('`useAsyncIter` hook', () => {
   );
 
   it(gray('When given an iterable that yields a value will return correct results'), async () => {
-    const channel = new IterableChannelTestHelper<string>();
+    const channel = new IteratorChannelTestHelper<string>();
 
     const renderedHook = renderHook(() => useAsyncIter(channel));
 
@@ -101,7 +101,7 @@ describe('`useAsyncIter` hook', () => {
       'When given an iterable that yields a value in conjunction with some initial value will return correct results'
     ),
     async () => {
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
 
       const renderedHook = renderHook(() => useAsyncIter(channel, '_'));
 
@@ -127,7 +127,7 @@ describe('`useAsyncIter` hook', () => {
     gray('When given an iterable that yields multiple values will return correct results'),
     async () => {
       let timesRerendered = 0;
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
 
       const renderedHook = renderHook(() => {
         timesRerendered++;
@@ -211,7 +211,7 @@ describe('`useAsyncIter` hook', () => {
     ),
     async () => {
       let timesRerendered = 0;
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
 
       const renderedHook = renderHook(() => {
         timesRerendered++;
@@ -298,7 +298,7 @@ describe('`useAsyncIter` hook', () => {
     gray('When given an iterable that yields a value and then errors will return correct results'),
     async () => {
       let timesRerendered = 0;
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
       const simulatedErr = new Error('...');
 
       const renderedHook = renderHook(() => {
@@ -334,8 +334,8 @@ describe('`useAsyncIter` hook', () => {
     ),
     async () => {
       const [channel1, channel2] = [
-        new IterableChannelTestHelper<string>(),
-        new IterableChannelTestHelper<string>(),
+        new IteratorChannelTestHelper<string>(),
+        new IteratorChannelTestHelper<string>(),
       ];
 
       const [channelReturnSpy1, channelReturnSpy2] = [
@@ -409,7 +409,7 @@ describe('`useAsyncIter` hook', () => {
   );
 
   it(gray('When unmounted will close the last active iterator it held'), async () => {
-    const channel = new IterableChannelTestHelper<string>();
+    const channel = new IteratorChannelTestHelper<string>();
     const channelReturnSpy = vi.spyOn(channel, 'return');
 
     const renderedHook = renderHook(({ value }) => useAsyncIter(value), {
@@ -478,7 +478,7 @@ describe('`useAsyncIter` hook', () => {
     ),
     async () => {
       let timesRerendered = 0;
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
 
       const renderedHook = renderHook(() => {
         timesRerendered++;

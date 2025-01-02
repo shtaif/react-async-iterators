@@ -4,7 +4,7 @@ import { render, cleanup as cleanupMountedReactTrees, act } from '@testing-libra
 import { iterateFormatted, Iterate } from '../../src/index.js';
 import { pipe } from '../utils/pipe.js';
 import { asyncIterToArray } from '../utils/asyncIterToArray.js';
-import { IterableChannelTestHelper } from '../utils/IterableChannelTestHelper.js';
+import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
 
 afterEach(() => {
   cleanupMountedReactTrees();
@@ -50,7 +50,7 @@ describe('`iterateFormatted` function', () => {
       'When the wrapped source is used normally with library tools it is rendered and formatted correctly'
     ),
     async () => {
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
 
       const rendered = render(
         <Iterate
@@ -81,8 +81,8 @@ describe('`iterateFormatted` function', () => {
     ),
     async () => {
       const [channel1, channel2] = [
-        new IterableChannelTestHelper<string>(),
-        new IterableChannelTestHelper<string>(),
+        new IteratorChannelTestHelper<string>(),
+        new IteratorChannelTestHelper<string>(),
       ];
 
       const [channelReturnSpy1, channelReturnSpy2] = [
@@ -124,7 +124,7 @@ describe('`iterateFormatted` function', () => {
       'Always the latest closure passed in as the format function will be the one to format the next-arriving source value'
     ),
     async () => {
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
 
       const Wrapper = (props: { outerValue: string }) => (
         <Iterate

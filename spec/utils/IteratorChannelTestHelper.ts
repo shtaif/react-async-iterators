@@ -1,6 +1,6 @@
-export { IterableChannelTestHelper };
+export { IteratorChannelTestHelper };
 
-class IterableChannelTestHelper<T> implements AsyncIterableIterator<T>, AsyncDisposable {
+class IteratorChannelTestHelper<T> implements AsyncIterableIterator<T>, AsyncDisposable {
   #isChannelClosed = false;
   #nextIteration = Promise.withResolvers<IteratorResult<T>>();
 
