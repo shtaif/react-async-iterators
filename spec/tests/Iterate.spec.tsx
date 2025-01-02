@@ -2,7 +2,7 @@ import { it, describe, expect, afterEach, vi } from 'vitest';
 import { gray } from 'colorette';
 import { render, cleanup as cleanupMountedReactTrees, act } from '@testing-library/react';
 import { Iterate, It, type IterationResult } from '../../src/index.js';
-import { IterableChannelTestHelper } from '../utils/IterableChannelTestHelper.js';
+import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
 
 afterEach(() => {
   cleanupMountedReactTrees();
@@ -18,7 +18,7 @@ describe('`Iterate` component', () => {
       'When used in the no-render-function form and given an iterable that yields a value will render correctly'
     ),
     async () => {
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
 
       const rendered = render(<Iterate>{channel}</Iterate>);
 
@@ -47,7 +47,7 @@ describe('`Iterate` component', () => {
       'When used in the no-render-function form and given an iterable that yields a value in conjunction with some initial value will render correctly'
     ),
     async () => {
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
 
       const rendered = render(<Iterate initialValue="_">{channel}</Iterate>);
 
@@ -136,7 +136,7 @@ describe('`Iterate` component', () => {
   );
 
   it(gray('When given an iterable that yields a value will render correctly'), async () => {
-    const channel = new IterableChannelTestHelper<string>();
+    const channel = new IteratorChannelTestHelper<string>();
     let timesRerendered = 0;
     let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
@@ -180,7 +180,7 @@ describe('`Iterate` component', () => {
       'When given an iterable that yields a value in conjunction with some initial value will render correctly'
     ),
     async () => {
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
       let timesRerendered = 0;
       let lastRenderFnInput: undefined | IterationResult<string>;
 
@@ -221,7 +221,7 @@ describe('`Iterate` component', () => {
   );
 
   it(gray('When given an iterable that yields multiple values will render correctly'), async () => {
-    const channel = new IterableChannelTestHelper<string>();
+    const channel = new IteratorChannelTestHelper<string>();
     let timesRerendered = 0;
     let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
@@ -331,7 +331,7 @@ describe('`Iterate` component', () => {
   it(
     gray('When given an iterable that yields a value and then completes will render correctly'),
     async () => {
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
       let timesRerendered = 0;
       let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
@@ -446,7 +446,7 @@ describe('`Iterate` component', () => {
   it(
     gray('When given an iterable that yields a value and then errors will render correctly'),
     async () => {
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
       let timesRerendered = 0;
       let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
@@ -498,8 +498,8 @@ describe('`Iterate` component', () => {
       let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
       const [channel1, channel2] = [
-        new IterableChannelTestHelper<string>(),
-        new IterableChannelTestHelper<string>(),
+        new IteratorChannelTestHelper<string>(),
+        new IteratorChannelTestHelper<string>(),
       ];
 
       const [channelReturnSpy1, channelReturnSpy2] = [
@@ -587,7 +587,7 @@ describe('`Iterate` component', () => {
   it(gray('When unmounted will close the last active iterator it held'), async () => {
     let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
-    const channel = new IterableChannelTestHelper<string>();
+    const channel = new IteratorChannelTestHelper<string>();
     const channelReturnSpy = vi.spyOn(channel, 'return');
 
     const buildTestContent = (value: AsyncIterable<string>) => {
@@ -675,7 +675,7 @@ describe('`Iterate` component', () => {
     async () => {
       let timesRerendered = 0;
       let lastRenderFnInput: undefined | IterationResult<string | undefined>;
-      const channel = new IterableChannelTestHelper<string>();
+      const channel = new IteratorChannelTestHelper<string>();
 
       const rendered = render(
         <Iterate value={channel}>

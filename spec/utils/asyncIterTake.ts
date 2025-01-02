@@ -2,6 +2,15 @@ export { asyncIterTake };
 
 function asyncIterTake<T>(count: number): (src: AsyncIterable<T>) => AsyncIterable<T> {
   return sourceIter => {
+    if (count === 0) {
+      return {
+        [Symbol.asyncIterator]: () => ({
+          next: async () => ({ done: true, value: undefined }),
+          return: async () => ({ done: true, value: undefined }),
+        }),
+      };
+    }
+
     let iterator: AsyncIterator<T>;
     let remainingCount = count;
     let closed = false;
