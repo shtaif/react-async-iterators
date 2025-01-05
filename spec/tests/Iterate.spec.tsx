@@ -2,6 +2,7 @@ import { it, describe, expect, afterEach, vi } from 'vitest';
 import { gray } from 'colorette';
 import { render, cleanup as cleanupMountedReactTrees, act } from '@testing-library/react';
 import { Iterate, It, type IterationResult } from '../../src/index.js';
+import { asyncIterOf } from '../utils/asyncIterOf.js';
 import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
 
 afterEach(() => {
@@ -634,12 +635,10 @@ describe('`Iterate` component', () => {
 
   it(
     gray(
-      'When given a rapid yielding iterable, consecutive values are batched into a single render that takes only the last value'
+      'When given a rapid-yielding iterable, consecutive values are batched into a single render that takes only the last value'
     ),
     async () => {
-      const iter = (async function* () {
-        yield* ['a', 'b', 'c'];
-      })();
+      const iter = asyncIterOf('a', 'b', 'c');
       let timesRerendered = 0;
       let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
@@ -669,9 +668,7 @@ describe('`Iterate` component', () => {
   );
 
   it(
-    gray(
-      'When given iterable yields consecutive identical values the hook will not consequently re-render'
-    ),
+    gray('When given iterable yields consecutive identical values the hook will not re-render'),
     async () => {
       let timesRerendered = 0;
       let lastRenderFnInput: undefined | IterationResult<string | undefined>;

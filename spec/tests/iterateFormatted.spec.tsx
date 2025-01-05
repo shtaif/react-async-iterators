@@ -3,6 +3,7 @@ import { gray } from 'colorette';
 import { render, cleanup as cleanupMountedReactTrees, act } from '@testing-library/react';
 import { iterateFormatted, Iterate } from '../../src/index.js';
 import { pipe } from '../utils/pipe.js';
+import { asyncIterOf } from '../utils/asyncIterOf.js';
 import { asyncIterToArray } from '../utils/asyncIterToArray.js';
 import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
 
@@ -28,9 +29,7 @@ describe('`iterateFormatted` function', () => {
     ),
     async () => {
       const multiFormattedIter = pipe(
-        (async function* () {
-          yield* ['a', 'b', 'c'];
-        })(),
+        asyncIterOf('a', 'b', 'c'),
         $ => iterateFormatted($, (value, i) => `${value} formatted once (idx: ${i})`),
         $ => iterateFormatted($, (value, i) => `${value} and formatted twice (idx: ${i})`)
       );
