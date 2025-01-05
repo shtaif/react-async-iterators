@@ -1,4 +1,4 @@
-import { it, describe, expect, afterEach, vi } from 'vitest';
+import { it, describe, expect, afterEach } from 'vitest';
 import { gray } from 'colorette';
 import { range } from 'lodash-es';
 import { cleanup as cleanupMountedReactTrees, act, renderHook } from '@testing-library/react';
@@ -352,8 +352,8 @@ describe('`useAsyncIterMulti` hook', () => {
     async () => {
       let channel1 = new IteratorChannelTestHelper<'a' | 'b' | 'c'>();
       let channel2 = new IteratorChannelTestHelper<'a' | 'b' | 'c'>();
-      const channel1ReturnSpy = vi.spyOn(channel1, 'return');
-      const channel2ReturnSpy = vi.spyOn(channel2, 'return');
+      const origChannel1ReturnSpy = channel1.return;
+      const origChannel2ReturnSpy = channel2.return;
       let timesRerendered = 0;
 
       const renderedHook = renderHook(
@@ -366,8 +366,8 @@ describe('`useAsyncIterMulti` hook', () => {
 
       await act(() => {});
       expect(timesRerendered).toStrictEqual(1);
-      expect(channel1ReturnSpy).not.toHaveBeenCalled();
-      expect(channel2ReturnSpy).not.toHaveBeenCalled();
+      expect(origChannel1ReturnSpy).not.toHaveBeenCalled();
+      expect(origChannel2ReturnSpy).not.toHaveBeenCalled();
       expect(renderedHook.result.current).toStrictEqual([
         { value: undefined, pendingFirst: true, done: false, error: undefined },
         { value: undefined, pendingFirst: true, done: false, error: undefined },
@@ -375,8 +375,8 @@ describe('`useAsyncIterMulti` hook', () => {
 
       await act(() => channel1.put('a'));
       expect(timesRerendered).toStrictEqual(2);
-      expect(channel1ReturnSpy).not.toHaveBeenCalled();
-      expect(channel2ReturnSpy).not.toHaveBeenCalled();
+      expect(origChannel1ReturnSpy).not.toHaveBeenCalled();
+      expect(origChannel2ReturnSpy).not.toHaveBeenCalled();
       expect(renderedHook.result.current).toStrictEqual([
         { value: 'a', pendingFirst: false, done: false, error: undefined },
         { value: undefined, pendingFirst: true, done: false, error: undefined },
@@ -387,8 +387,8 @@ describe('`useAsyncIterMulti` hook', () => {
         renderedHook.rerender({ values: [channel1, channel2] as const });
       });
       expect(timesRerendered).toStrictEqual(3);
-      expect(channel1ReturnSpy).toHaveBeenCalled();
-      expect(channel2ReturnSpy).not.toHaveBeenCalled();
+      expect(origChannel1ReturnSpy).toHaveBeenCalledOnce();
+      expect(origChannel2ReturnSpy).not.toHaveBeenCalled();
       expect(renderedHook.result.current).toStrictEqual([
         { value: 'a', pendingFirst: true, done: false, error: undefined },
         { value: undefined, pendingFirst: true, done: false, error: undefined },
@@ -399,8 +399,8 @@ describe('`useAsyncIterMulti` hook', () => {
         renderedHook.rerender({ values: [channel1, channel2] as const });
       });
       expect(timesRerendered).toStrictEqual(4);
-      expect(channel1ReturnSpy).toHaveBeenCalled();
-      expect(channel2ReturnSpy).toHaveBeenCalled();
+      expect(origChannel1ReturnSpy).toHaveBeenCalledOnce();
+      expect(origChannel2ReturnSpy).toHaveBeenCalledOnce();
       expect(renderedHook.result.current).toStrictEqual([
         { value: 'a', pendingFirst: true, done: false, error: undefined },
         { value: undefined, pendingFirst: true, done: false, error: undefined },
@@ -418,8 +418,6 @@ describe('`useAsyncIterMulti` hook', () => {
   it(gray('When unmounted will close all the last held active iterators'), async () => {
     const channel1 = new IteratorChannelTestHelper<'a' | 'b' | 'c'>();
     const channel2 = new IteratorChannelTestHelper<'a' | 'b' | 'c'>();
-    const channel1ReturnSpy = vi.spyOn(channel1, 'return');
-    const channel2ReturnSpy = vi.spyOn(channel2, 'return');
 
     const renderedHook = renderHook(props => useAsyncIterMulti(props.values), {
       initialProps: {
@@ -432,8 +430,8 @@ describe('`useAsyncIterMulti` hook', () => {
 
     {
       await act(() => renderedHook.rerender({ values: [channel1, channel2] }));
-      expect(channel1ReturnSpy).not.toHaveBeenCalled();
-      expect(channel2ReturnSpy).not.toHaveBeenCalled();
+      expect(channel1.return).not.toHaveBeenCalled();
+      expect(channel2.return).not.toHaveBeenCalled();
       expect(renderedHook.result.current).toStrictEqual([
         { value: undefined, pendingFirst: true, done: false, error: undefined },
         { value: undefined, pendingFirst: true, done: false, error: undefined },
@@ -448,8 +446,8 @@ describe('`useAsyncIterMulti` hook', () => {
 
     {
       renderedHook.unmount();
-      expect(channel1ReturnSpy).toHaveBeenCalledOnce();
-      expect(channel2ReturnSpy).toHaveBeenCalledOnce();
+      expect(channel1.return).toHaveBeenCalledOnce();
+      expect(channel2.return).toHaveBeenCalledOnce();
     }
   });
 
@@ -463,12 +461,6 @@ describe('`useAsyncIterMulti` hook', () => {
       const channelA = new IteratorChannelTestHelper<string>();
       const channelB = new IteratorChannelTestHelper<string>();
       const channelC = new IteratorChannelTestHelper<string>();
-
-      const [channelReturnSpyA, channelReturnSpyB, channelReturnSpyC] = [
-        channelA,
-        channelB,
-        channelC,
-      ].map(ch => vi.spyOn(ch, 'return'));
 
       const renderedHook = await act(() =>
         renderHook(({ values }) => useAsyncIterMulti(values), {
@@ -555,9 +547,9 @@ describe('`useAsyncIterMulti` hook', () => {
         values.splice(0, 3);
         renderedHook.rerender({ values });
       });
-      expect(channelReturnSpyC).not.toHaveBeenCalled();
-      expect(channelReturnSpyB).not.toHaveBeenCalled();
-      expect(channelReturnSpyA).not.toHaveBeenCalled();
+      expect(channelC.return).not.toHaveBeenCalled();
+      expect(channelB.return).not.toHaveBeenCalled();
+      expect(channelA.return).not.toHaveBeenCalled();
       expect(renderedHook.result.current).toStrictEqual([
         { value: 'c_from_iter', pendingFirst: false, done: false, error: undefined },
         { value: 'b_from_iter', pendingFirst: false, done: false, error: undefined },
@@ -568,9 +560,9 @@ describe('`useAsyncIterMulti` hook', () => {
         values.shift();
         renderedHook.rerender({ values });
       });
-      expect(channelReturnSpyC).toHaveBeenCalledOnce();
-      expect(channelReturnSpyB).not.toHaveBeenCalled();
-      expect(channelReturnSpyA).not.toHaveBeenCalled();
+      expect(channelC.return).toHaveBeenCalledOnce();
+      expect(channelB.return).not.toHaveBeenCalled();
+      expect(channelA.return).not.toHaveBeenCalled();
       expect(renderedHook.result.current).toStrictEqual([
         { value: 'b_from_iter', pendingFirst: false, done: false, error: undefined },
         { value: 'a_from_iter', pendingFirst: false, done: false, error: undefined },
@@ -580,9 +572,9 @@ describe('`useAsyncIterMulti` hook', () => {
         values.shift();
         renderedHook.rerender({ values });
       });
-      expect(channelReturnSpyC).toHaveBeenCalledOnce();
-      expect(channelReturnSpyB).toHaveBeenCalledOnce();
-      expect(channelReturnSpyA).not.toHaveBeenCalled();
+      expect(channelC.return).toHaveBeenCalledOnce();
+      expect(channelB.return).toHaveBeenCalledOnce();
+      expect(channelA.return).not.toHaveBeenCalled();
       expect(renderedHook.result.current).toStrictEqual([
         { value: 'a_from_iter', pendingFirst: false, done: false, error: undefined },
       ]);
@@ -591,9 +583,9 @@ describe('`useAsyncIterMulti` hook', () => {
         values.shift();
         renderedHook.rerender({ values });
       });
-      expect(channelReturnSpyC).toHaveBeenCalledOnce();
-      expect(channelReturnSpyB).toHaveBeenCalledOnce();
-      expect(channelReturnSpyA).toHaveBeenCalledOnce();
+      expect(channelC.return).toHaveBeenCalledOnce();
+      expect(channelB.return).toHaveBeenCalledOnce();
+      expect(channelA.return).toHaveBeenCalledOnce();
       expect(renderedHook.result.current).toStrictEqual([]);
     }
   );
@@ -665,8 +657,6 @@ describe('`useAsyncIterMulti` hook', () => {
     async () => {
       const channel1 = new IteratorChannelTestHelper<string>();
       const channel2 = new IteratorChannelTestHelper<string>();
-      const channel1ReturnSpy = vi.spyOn(channel1, 'return');
-      const channel2ReturnSpy = vi.spyOn(channel2, 'return');
 
       const renderedHook = await act(() =>
         renderHook(() =>
@@ -685,8 +675,8 @@ describe('`useAsyncIterMulti` hook', () => {
       for (let i = 0; i < 3; ++i) {
         await act(() => renderedHook.rerender());
       }
-      expect(channel1ReturnSpy).not.toHaveBeenCalled();
-      expect(channel2ReturnSpy).not.toHaveBeenCalled();
+      expect(channel1.return).not.toHaveBeenCalled();
+      expect(channel2.return).not.toHaveBeenCalled();
 
       await act(() => channel1.put('a'));
       expect(renderedHook.result.current).toStrictEqual([

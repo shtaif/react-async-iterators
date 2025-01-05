@@ -1,4 +1,4 @@
-import { it, describe, expect, afterEach, vi } from 'vitest';
+import { it, describe, expect, afterEach } from 'vitest';
 import { gray } from 'colorette';
 import { cleanup as cleanupMountedReactTrees, act, renderHook } from '@testing-library/react';
 import { useAsyncIter } from '../../src/index.js';
@@ -339,11 +339,6 @@ describe('`useAsyncIter` hook', () => {
         new IteratorChannelTestHelper<string>(),
       ];
 
-      const [channelReturnSpy1, channelReturnSpy2] = [
-        vi.spyOn(channel1, 'return'),
-        vi.spyOn(channel2, 'return'),
-      ];
-
       const renderedHook = renderHook(({ value }) => useAsyncIter(value), {
         initialProps: {
           value: (async function* () {})() as AsyncIterable<string>,
@@ -353,8 +348,8 @@ describe('`useAsyncIter` hook', () => {
       {
         renderedHook.rerender({ value: channel1 });
 
-        expect(channelReturnSpy1).not.toHaveBeenCalled();
-        expect(channelReturnSpy2).not.toHaveBeenCalled();
+        expect(channel1.return).not.toHaveBeenCalled();
+        expect(channel2.return).not.toHaveBeenCalled();
         expect(renderedHook.result.current).toStrictEqual({
           value: undefined,
           pendingFirst: true,
@@ -375,8 +370,8 @@ describe('`useAsyncIter` hook', () => {
       {
         renderedHook.rerender({ value: channel2 });
 
-        expect(channelReturnSpy1).toHaveBeenCalledOnce();
-        expect(channelReturnSpy2).not.toHaveBeenCalled();
+        expect(channel1.return).toHaveBeenCalledOnce();
+        expect(channel2.return).not.toHaveBeenCalled();
         expect(renderedHook.result.current).toStrictEqual({
           value: 'a',
           pendingFirst: true,
@@ -397,8 +392,8 @@ describe('`useAsyncIter` hook', () => {
       {
         renderedHook.rerender({ value: (async function* () {})() });
 
-        expect(channelReturnSpy1).toHaveBeenCalledOnce();
-        expect(channelReturnSpy2).toHaveBeenCalledOnce();
+        expect(channel1.return).toHaveBeenCalledOnce();
+        expect(channel2.return).toHaveBeenCalledOnce();
         expect(renderedHook.result.current).toStrictEqual({
           value: 'b',
           pendingFirst: true,
@@ -411,7 +406,6 @@ describe('`useAsyncIter` hook', () => {
 
   it(gray('When unmounted will close the last active iterator it held'), async () => {
     const channel = new IteratorChannelTestHelper<string>();
-    const channelReturnSpy = vi.spyOn(channel, 'return');
 
     const renderedHook = renderHook(({ value }) => useAsyncIter(value), {
       initialProps: {
@@ -422,7 +416,7 @@ describe('`useAsyncIter` hook', () => {
     {
       renderedHook.rerender({ value: channel });
 
-      expect(channelReturnSpy).not.toHaveBeenCalled();
+      expect(channel.return).not.toHaveBeenCalled();
       expect(renderedHook.result.current).toStrictEqual({
         value: undefined,
         pendingFirst: true,
@@ -442,7 +436,7 @@ describe('`useAsyncIter` hook', () => {
 
     {
       renderedHook.unmount();
-      expect(channelReturnSpy).toHaveBeenCalledOnce();
+      expect(channel.return).toHaveBeenCalledOnce();
     }
   });
 
