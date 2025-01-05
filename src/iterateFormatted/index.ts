@@ -1,14 +1,15 @@
 import {
   reactAsyncIterSpecialInfoSymbol,
+  type ReactAsyncIterable,
   type ReactAsyncIterSpecialInfo,
-} from '../common/reactAsyncIterSpecialInfoSymbol.js';
+} from '../common/ReactAsyncIterable.js';
 import { asyncIterSyncMap } from '../common/asyncIterSyncMap.js';
 import { isAsyncIter } from '../common/isAsyncIter.js';
 import { type ExtractAsyncIterValue } from '../common/ExtractAsyncIterValue.js';
 import { type useAsyncIter } from '../useAsyncIter/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
-export { iterateFormatted, type FixedRefFormattedIterable };
+export { iterateFormatted };
 
 /**
  * An optional utility to format an async iterable's values inline right where its passing into
@@ -75,9 +76,7 @@ export { iterateFormatted, type FixedRefFormattedIterable };
 function iterateFormatted<TIn, TOut>(
   source: TIn,
   formatFn: (value: ExtractAsyncIterValue<TIn>, i: number) => TOut
-): TIn extends AsyncIterable<unknown>
-  ? FixedRefFormattedIterable<ExtractAsyncIterValue<TIn>, TOut>
-  : TOut;
+): TIn extends AsyncIterable<unknown> ? ReactAsyncIterable<ExtractAsyncIterValue<TIn>, TOut> : TOut;
 
 function iterateFormatted(
   source: unknown,
@@ -107,7 +106,3 @@ function iterateFormatted(
         },
   };
 }
-
-type FixedRefFormattedIterable<TVal, TValFormatted> = AsyncIterable<TValFormatted, void, void> & {
-  [reactAsyncIterSpecialInfoSymbol]: ReactAsyncIterSpecialInfo<TVal, TValFormatted>;
-};
