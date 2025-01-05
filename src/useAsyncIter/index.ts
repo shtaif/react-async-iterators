@@ -6,13 +6,13 @@ import { type ExtractAsyncIterValue } from '../common/ExtractAsyncIterValue.js';
 import {
   reactAsyncIterSpecialInfoSymbol,
   type ReactAsyncIterSpecialInfo,
-} from '../common/reactAsyncIterSpecialInfoSymbol.js';
+} from '../common/ReactAsyncIterable.js';
 import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { type iterateFormatted } from '../iterateFormatted/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export { useAsyncIter, type IterationResult };
 
-// TODO: The initial value can be given as a function, which the internal `useState` would invoke as it's defined to do. So the typings should take into account it possibly being a function and if that's the case then to extract its return type instead of using the function type itself
+// TODO: The initial values should be able to be given as functions, having them called once on mount
 
 /**
  * `useAsyncIter` hooks up a single async iterable value into your component and its lifecycle.
@@ -145,8 +145,9 @@ const useAsyncIter: {
       latestInputRef.current[reactAsyncIterSpecialInfoSymbol]?.origSource ?? latestInputRef.current;
 
     useMemo((): void => {
+      const prevSourceLastestVal = stateRef.current.value;
       stateRef.current = {
-        value: stateRef.current.value,
+        value: prevSourceLastestVal,
         pendingFirst: true,
         done: false,
         error: undefined,
