@@ -1,4 +1,4 @@
-import { it, describe, expect, afterEach, vi } from 'vitest';
+import { it, describe, expect, afterEach } from 'vitest';
 import { gray } from 'colorette';
 import { render, cleanup as cleanupMountedReactTrees, act } from '@testing-library/react';
 import { Iterate, It, type IterationResult } from '../../src/index.js';
@@ -503,11 +503,6 @@ describe('`Iterate` component', () => {
         new IteratorChannelTestHelper<string>(),
       ];
 
-      const [channelReturnSpy1, channelReturnSpy2] = [
-        vi.spyOn(channel1, 'return'),
-        vi.spyOn(channel2, 'return'),
-      ];
-
       const buildTestContent = (value: AsyncIterable<string>) => {
         return (
           <Iterate value={value}>
@@ -524,8 +519,8 @@ describe('`Iterate` component', () => {
       {
         rendered.rerender(buildTestContent(channel1));
 
-        expect(channelReturnSpy1).not.toHaveBeenCalled();
-        expect(channelReturnSpy2).not.toHaveBeenCalled();
+        expect(channel1.return).not.toHaveBeenCalled();
+        expect(channel2.return).not.toHaveBeenCalled();
         expect(lastRenderFnInput).toStrictEqual({
           value: undefined,
           pendingFirst: true,
@@ -548,8 +543,8 @@ describe('`Iterate` component', () => {
       {
         rendered.rerender(buildTestContent(channel2));
 
-        expect(channelReturnSpy1).toHaveBeenCalledOnce();
-        expect(channelReturnSpy2).not.toHaveBeenCalled();
+        expect(channel1.return).toHaveBeenCalledOnce();
+        expect(channel2.return).not.toHaveBeenCalled();
         expect(lastRenderFnInput).toStrictEqual({
           value: 'a',
           pendingFirst: true,
@@ -572,8 +567,8 @@ describe('`Iterate` component', () => {
       {
         rendered.rerender(buildTestContent((async function* () {})()));
 
-        expect(channelReturnSpy1).toHaveBeenCalledOnce();
-        expect(channelReturnSpy2).toHaveBeenCalledOnce();
+        expect(channel1.return).toHaveBeenCalledOnce();
+        expect(channel2.return).toHaveBeenCalledOnce();
         expect(lastRenderFnInput).toStrictEqual({
           value: 'b',
           pendingFirst: true,
@@ -589,7 +584,6 @@ describe('`Iterate` component', () => {
     let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 
     const channel = new IteratorChannelTestHelper<string>();
-    const channelReturnSpy = vi.spyOn(channel, 'return');
 
     const buildTestContent = (value: AsyncIterable<string>) => {
       return (
@@ -607,7 +601,7 @@ describe('`Iterate` component', () => {
     {
       rendered.rerender(buildTestContent(channel));
 
-      expect(channelReturnSpy).not.toHaveBeenCalled();
+      expect(channel.return).not.toHaveBeenCalled();
       expect(lastRenderFnInput).toStrictEqual({
         value: undefined,
         pendingFirst: true,
@@ -629,7 +623,7 @@ describe('`Iterate` component', () => {
 
     {
       rendered.unmount();
-      expect(channelReturnSpy).toHaveBeenCalledOnce();
+      expect(channel.return).toHaveBeenCalledOnce();
     }
   });
 
