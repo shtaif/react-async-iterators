@@ -15,10 +15,9 @@ export { useAsyncIter, type IterationResult };
 // TODO: The initial values should be able to be given as functions, having them called once on mount
 
 /**
- * `useAsyncIter` hooks up a single async iterable value into your component and its lifecycle.
+ * `useAsyncIter` hooks up a single async iterable value to your component and its lifecycle.
  *
- * _Illustration:_
- *
+ * @example
  * ```tsx
  * import { useAsyncIter } from 'react-async-iterators';
  *
@@ -34,21 +33,23 @@ export { useAsyncIter, type IterationResult };
  * }
  * ```
  *
- * Given an async iterable `input`, this hook will iterate it and rerender the host component upon
- * each new value that becomes available together with any possible completion or error it may run into.
- * If `input` is a plain (non async iterable) value, it will simply be used to render once and
- * immediately.
+ * Given an async iterable `input`, this hook will iterate it value-by-value and update (re-render) the
+ * host component upon each yielded value, along with any possible completion or error it may run into.
+ * `input` may also be given a plain (non async iterable) value, in which case it will simply be used
+ * to render once and immediately, thus enabling components that can handle _"static"_ as well as
+ * _"changing"_ values and props seamlessly.
  *
- * The hook inits and maintains its current iteration process with its given `input` async iterable
- * across re-renders as long as `input` is passed the same object reference each time (similar to
- * the behavior of a `useEffect(() => {...}, [input])`), therefore care should be taken to avoid
- * constantly recreating the iterable every render, e.g; by declaring it outside the component body,
- * control __when__ it should be recreated with React's
- * [`useMemo`](https://react.dev/reference/react/useMemo) or alternatively the library's
- * {@link iterateFormatted `iterateFormatted`} util for only formatting the values.
- * Whenever `useAsyncIter` detects a different `input` value, it automatically closes a previous
- * `input` async iterable before proceeding to iterate any new `input` async iterable. The hook will
- * also ensure closing a currently iterated `input` on component unmount.
+ * The hook initializes and maintains its iteration process with its given async iterable `input`
+ * across component updates as long as `input` keeps getting passed the same object reference every
+ * time (similar to the behavior of a `useEffect(() => {...}, [input])`), therefore care should be taken
+ * to avoid constantly recreating the iterable on every render, by e.g; declaring it outside the component
+ * body, control __when__ it should be recreated with React's
+ * [`useMemo`](https://react.dev/reference/react/useMemo) or alternatively use the library's
+ * {@link iterateFormatted `iterateFormatted`} util for a formatted version of an iterable which
+ * preserves its identity.
+ * Whenever `useAsyncIter` detects a different `input` value, it automatically closes the previous
+ * active async iterable and proceeds to start iteration with the new `input` async iterable. On
+ * component unmount, the hook will also ensure closing any currently iterated `input`.
  *
  * The object returned from `useAsyncIter` holds all the state from the most recent iteration
  * of `input` (most recent value, whether is completed or still running, etc. - see
@@ -56,15 +57,13 @@ export { useAsyncIter, type IterationResult };
  * In case `input` is given a plain value, it will be delivered as-is within the returned
  * result object's `value` property.
  *
- * @template TVal The type of values yielded by the passed iterable or of a plain value passed otherwise.
+ * @template TVal The type of values yielded by the passed iterable or type of plain value if otherwise passed.
  * @template TInitVal The type of the initial value, defaults to `undefined`.
  *
- * @param input Any async iterable or plain value
- * @param initialVal Any initial value for the hook to return prior to resolving the ___first
- * emission___ of the ___first given___ async iterable, defaults to `undefined`.
+ * @param input Any async iterable or plain value.
+ * @param initialVal Any initial value for the hook to return prior to resolving the ___first emission___ of the ___first given___ async iterable, defaults to `undefined`.
  *
- * @returns An object with properties reflecting the current state of the iterated async iterable
- * or plain value provided via `input` (see {@link IterationResult `IterationResult`})
+ * @returns An object with properties reflecting the current state of the iterated async iterable or plain value provided via `input` (see {@link IterationResult `IterationResult`}).
  *
  * @see {@link IterationResult `IterationResult`}
  *
