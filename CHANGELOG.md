@@ -1,3 +1,21 @@
+## [0.4.0](https://github.com/shtaif/react-async-iterators/compare/v0.3.0...v0.4.0) (2025-01-06)
+
+
+### Features
+
+* add to package exports the `IterationResultSet` type returned from `useAsyncIterMulti` ([#33](https://github.com/shtaif/react-async-iterators/issues/33)) ([b0c8899](https://github.com/shtaif/react-async-iterators/commit/b0c889982948277f9520e02fadb2a3d6c4797855))
+* implement the new `useAsyncIterMulti` hook ([#28](https://github.com/shtaif/react-async-iterators/issues/28)) ([d813fa0](https://github.com/shtaif/react-async-iterators/commit/d813fa0afbcccc89ffc1eec414d9c474e0f3f977))
+
+
+### Bug Fixes
+
+* `ReactAsyncIterable`s wrapping iters which yield non-nullable values are having the format function's result ignored if it returned `undefined` or `null` ([#32](https://github.com/shtaif/react-async-iterators/issues/32)) ([828d872](https://github.com/shtaif/react-async-iterators/commit/828d87239f3d9a634a48d40f615ad77c70e6e02c))
+
+
+### Documentation
+
+* various docs edits ([#31](https://github.com/shtaif/react-async-iterators/issues/31)) ([3f08461](https://github.com/shtaif/react-async-iterators/commit/3f08461bab91fe5700f41267b772c2f8f149425b))
+
 ## [0.3.0](https://github.com/shtaif/react-async-iterators/compare/v0.2.0...v0.3.0) (2025-01-05)
 
 
