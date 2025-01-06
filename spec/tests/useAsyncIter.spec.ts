@@ -1,7 +1,7 @@
 import { it, describe, expect, afterEach } from 'vitest';
 import { gray } from 'colorette';
 import { cleanup as cleanupMountedReactTrees, act, renderHook } from '@testing-library/react';
-import { useAsyncIter } from '../../src/index.js';
+import { useAsyncIter, iterateFormatted } from '../../src/index.js';
 import { asyncIterOf } from '../utils/asyncIterOf.js';
 import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
 
@@ -483,6 +483,52 @@ describe('`useAsyncIter` hook', () => {
       expect(timesRerendered).toStrictEqual(2);
       expect(renderedHook.result.current).toStrictEqual({
         value: 'a',
+        pendingFirst: false,
+        done: false,
+        error: undefined,
+      });
+    }
+  );
+
+  it(
+    gray(
+      'When given a `ReactAsyncIterable` yielding `undefined`s or `null`s that wraps an iter which originally yields non-nullable values, returns the `undefined`s and `null`s in the result as expected'
+    ),
+    async () => {
+      const channel = new IteratorChannelTestHelper<string>();
+      let timesRerendered = 0;
+
+      const renderedHook = await act(() =>
+        renderHook(
+          ({ formatInto }) => {
+            timesRerendered++;
+            return useAsyncIter(iterateFormatted(channel, _ => formatInto));
+          },
+          {
+            initialProps: { formatInto: '' as string | null | undefined },
+          }
+        )
+      );
+
+      await act(() => {
+        channel.put('a');
+        renderedHook.rerender({ formatInto: null });
+      });
+      expect(timesRerendered).toStrictEqual(3);
+      expect(renderedHook.result.current).toStrictEqual({
+        value: null,
+        pendingFirst: false,
+        done: false,
+        error: undefined,
+      });
+
+      await act(() => {
+        channel.put('b');
+        renderedHook.rerender({ formatInto: undefined });
+      });
+      expect(timesRerendered).toStrictEqual(5);
+      expect(renderedHook.result.current).toStrictEqual({
+        value: undefined,
         pendingFirst: false,
         done: false,
         error: undefined,

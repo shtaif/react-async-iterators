@@ -1,7 +1,7 @@
-import { it, describe, expect, afterEach } from 'vitest';
+import { it, describe, expect, afterEach, vi, type Mock } from 'vitest';
 import { gray } from 'colorette';
 import { render, cleanup as cleanupMountedReactTrees, act } from '@testing-library/react';
-import { Iterate, It, type IterationResult } from '../../src/index.js';
+import { Iterate, It, iterateFormatted, type IterationResult } from '../../src/index.js';
 import { asyncIterOf } from '../utils/asyncIterOf.js';
 import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
 
@@ -664,17 +664,16 @@ describe('`Iterate` component', () => {
   it(
     gray('When given iterable yields consecutive identical values the hook will not re-render'),
     async () => {
-      let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
       const channel = new IteratorChannelTestHelper<string>();
+      const renderFn = vi.fn() as Mock<
+        (next: IterationResult<AsyncIterable<string | undefined>>) => any
+      >;
 
       const rendered = render(
         <Iterate value={channel}>
-          {next => {
-            timesRerendered++;
-            lastRenderFnInput = next;
-            return <div id="test-created-elem">Render count: {timesRerendered}</div>;
-          }}
+          {renderFn.mockImplementation(() => (
+            <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+          ))}
         </Iterate>
       );
 
@@ -682,15 +681,58 @@ describe('`Iterate` component', () => {
         await act(() => channel.put('a'));
       }
 
-      expect(timesRerendered).toStrictEqual(2);
-      expect(lastRenderFnInput).toStrictEqual({
-        value: 'a',
-        pendingFirst: false,
-        done: false,
-        error: undefined,
-      });
+      expect(renderFn.mock.calls).lengthOf(2);
+      expect(renderFn.mock.lastCall).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+      ]);
       expect(rendered.container.innerHTML).toStrictEqual(
         '<div id="test-created-elem">Render count: 2</div>'
+      );
+    }
+  );
+
+  it(
+    gray(
+      'When given a `ReactAsyncIterable` yielding `undefined`s or `null`s that wraps an iter which originally yields non-nullable values, processes the `undefined`s and `null` values expected'
+    ),
+    async () => {
+      const channel = new IteratorChannelTestHelper<string>();
+      const renderFn = vi.fn() as Mock<
+        (next: IterationResult<AsyncIterable<string | null | undefined>>) => any
+      >;
+
+      const buildContent = (iter: AsyncIterable<string>, formatInto: string | null | undefined) => {
+        return (
+          <Iterate value={iterateFormatted(iter, _ => formatInto)}>
+            {renderFn.mockImplementation(next => (
+              <div id="test-created-elem">{next.value + ''}</div>
+            ))}
+          </Iterate>
+        );
+      };
+
+      const rendered = render(<></>);
+
+      rendered.rerender(buildContent(channel, ''));
+
+      await act(() => {
+        channel.put('a');
+        rendered.rerender(buildContent(channel, null));
+      });
+      expect(renderFn.mock.lastCall).toStrictEqual([
+        { value: null, pendingFirst: false, done: false, error: undefined },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual('<div id="test-created-elem">null</div>');
+
+      await act(() => {
+        channel.put('b');
+        rendered.rerender(buildContent(channel, undefined));
+      });
+      expect(renderFn.mock.lastCall).toStrictEqual([
+        { value: undefined, pendingFirst: false, done: false, error: undefined },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        '<div id="test-created-elem">undefined</div>'
       );
     }
   );

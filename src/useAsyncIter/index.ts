@@ -7,6 +7,7 @@ import {
   reactAsyncIterSpecialInfoSymbol,
   type ReactAsyncIterSpecialInfo,
 } from '../common/ReactAsyncIterable.js';
+import { iterateAsyncIterWithCallbacks } from '../common/iterateAsyncIterWithCallbacks.js';
 import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { type iterateFormatted } from '../iterateFormatted/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -154,58 +155,24 @@ const useAsyncIter: {
     }, [iterSourceRefToUse]);
 
     useEffect(() => {
-      const iterator = iterSourceRefToUse[Symbol.asyncIterator]();
-      let iteratorClosedByConsumer = false;
+      let iterationIdx = 0;
 
-      (async () => {
-        let iterationIdx = 0;
+      return iterateAsyncIterWithCallbacks(iterSourceRefToUse, stateRef.current.value, next => {
+        const possibleGivenFormatFn =
+          latestInputRef.current?.[reactAsyncIterSpecialInfoSymbol]?.formatFn;
 
-        try {
-          for await (const value of { [Symbol.asyncIterator]: () => iterator }) {
-            if (!iteratorClosedByConsumer) {
-              const formattedValue =
-                latestInputRef.current?.[reactAsyncIterSpecialInfoSymbol]?.formatFn(
-                  value,
-                  iterationIdx++
-                ) ?? (value as ExtractAsyncIterValue<TVal>);
+        const formattedValue = possibleGivenFormatFn
+          ? possibleGivenFormatFn(next.value, iterationIdx++)
+          : (next.value as ExtractAsyncIterValue<TVal>);
 
-              if (!Object.is(formattedValue, stateRef.current.value)) {
-                stateRef.current = {
-                  value: formattedValue,
-                  pendingFirst: false,
-                  done: false,
-                  error: undefined,
-                };
-                rerender();
-              }
-            }
-          }
-          if (!iteratorClosedByConsumer) {
-            stateRef.current = {
-              value: stateRef.current.value,
-              pendingFirst: false,
-              done: true,
-              error: undefined,
-            };
-            rerender();
-          }
-        } catch (err) {
-          if (!iteratorClosedByConsumer) {
-            stateRef.current = {
-              value: stateRef.current.value,
-              pendingFirst: false,
-              done: true,
-              error: err,
-            };
-            rerender();
-          }
-        }
-      })();
+        stateRef.current = {
+          ...next,
+          pendingFirst: false,
+          value: formattedValue,
+        };
 
-      return () => {
-        iteratorClosedByConsumer = true;
-        iterator.return?.();
-      };
+        rerender();
+      });
     }, [iterSourceRefToUse]);
 
     return stateRef.current;
