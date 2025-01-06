@@ -1,6 +1,5 @@
 import { it, describe, expect, afterEach } from 'vitest';
 import { gray } from 'colorette';
-import { range } from 'lodash-es';
 import { cleanup as cleanupMountedReactTrees, act, renderHook } from '@testing-library/react';
 import { iterateFormatted, useAsyncIterMulti } from '../../src/index.js';
 import { pipe } from '../utils/pipe.js';
@@ -26,18 +25,25 @@ describe('`useAsyncIterMulti` hook', () => {
     expect(renderedHook.result.current).toStrictEqual([]);
   });
 
-  it(gray('When given multiple `undefined`s, returns them as-are'), async () => {
+  it(gray('When given multiple `undefined`s and `null`s, returns them as-are'), async () => {
     let timesRerendered = 0;
 
     const renderedHook = renderHook(() => {
       timesRerendered++;
-      return useAsyncIterMulti([]);
+      return useAsyncIterMulti([undefined, null, undefined, null]);
     });
 
     await act(() => {});
 
     expect(timesRerendered).toStrictEqual(1);
-    expect(renderedHook.result.current).toStrictEqual([]);
+    expect(renderedHook.result.current).toStrictEqual(
+      [undefined, null, undefined, null].map(value => ({
+        value,
+        pendingFirst: false,
+        done: false,
+        error: undefined,
+      }))
+    );
   });
 
   it(gray('When given multiple non-iterables, returns them as-are'), async () => {
@@ -45,15 +51,15 @@ describe('`useAsyncIterMulti` hook', () => {
 
     const renderedHook = renderHook(() => {
       timesRerendered++;
-      return useAsyncIterMulti([undefined, undefined, undefined]);
+      return useAsyncIterMulti(['a', 'b', 'c']);
     });
 
     await act(() => {});
 
     expect(timesRerendered).toStrictEqual(1);
     expect(renderedHook.result.current).toStrictEqual(
-      range(3).map(() => ({
-        value: undefined,
+      ['a', 'b', 'c'].map(value => ({
+        value,
         pendingFirst: false,
         done: false,
         error: undefined,
