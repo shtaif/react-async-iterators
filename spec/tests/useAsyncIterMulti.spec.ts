@@ -652,7 +652,7 @@ describe('`useAsyncIterMulti` hook', () => {
 
   it(
     gray(
-      'When given "React Async Iterables", maintains the iteration states based on the original source iters they contain and applies the next given format functions correctly'
+      'When given `ReactAsyncIterables`, maintains the iteration states based on the original source iters they contain and applies the next given format functions correctly'
     ),
     async () => {
       const channel1 = new IteratorChannelTestHelper<string>();
@@ -719,6 +719,54 @@ describe('`useAsyncIterMulti` hook', () => {
           done: false,
           error: undefined,
         },
+      ]);
+    }
+  );
+
+  it(
+    gray(
+      'When given `ReactAsyncIterable`s yielding `undefined`s or `null`s that wrap iters which originally yield non-nullable values, returns the `undefined`s and `null`s in the results as expected'
+    ),
+    async () => {
+      const channel1 = new IteratorChannelTestHelper<string>();
+      const channel2 = new IteratorChannelTestHelper<string>();
+      let timesRerendered = 0;
+
+      const renderedHook = await act(() =>
+        renderHook(
+          ({ formatInto }) => {
+            timesRerendered++;
+            return useAsyncIterMulti([
+              iterateFormatted(channel1, _ => formatInto),
+              iterateFormatted(channel2, _ => formatInto),
+            ]);
+          },
+          {
+            initialProps: { formatInto: '' as string | null | undefined },
+          }
+        )
+      );
+
+      await act(() => {
+        channel1.put('a');
+        channel2.put('a');
+        renderedHook.rerender({ formatInto: null });
+      });
+      expect(timesRerendered).toStrictEqual(3);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: null, pendingFirst: false, done: false, error: undefined },
+        { value: null, pendingFirst: false, done: false, error: undefined },
+      ]);
+
+      await act(() => {
+        channel1.put('b');
+        channel2.put('b');
+        renderedHook.rerender({ formatInto: undefined });
+      });
+      expect(timesRerendered).toStrictEqual(5);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: undefined, pendingFirst: false, done: false, error: undefined },
+        { value: undefined, pendingFirst: false, done: false, error: undefined },
       ]);
     }
   );

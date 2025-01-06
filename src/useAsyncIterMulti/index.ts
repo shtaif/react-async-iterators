@@ -5,7 +5,7 @@ import { isAsyncIter } from '../common/isAsyncIter.js';
 import { type IterationResult } from '../useAsyncIter/index.js';
 import { asyncIterSyncMap } from '../common/asyncIterSyncMap.js';
 import { parseReactAsyncIterable } from '../common/ReactAsyncIterable.js';
-import { iterateAsyncIterWithCallbacks } from './iterateAsyncIterWithCallbacks.js';
+import { iterateAsyncIterWithCallbacks } from '../common/iterateAsyncIterWithCallbacks.js';
 
 export { useAsyncIterMulti, type IterationResult, type IterationResultSet };
 
