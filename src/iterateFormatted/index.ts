@@ -52,8 +52,9 @@ export { iterateFormatted };
  *
  * This utility should come handy in places when you need a formatted (or _"mapped"_) version of
  * some existing async iterable before passing it as prop into an other component which consumes it
- * and you rather have the transformation written right next to the place instead of far from it
- * in the top as some `useMemo` hook call.
+ * and you rather have the formatting logic right at the place in code of passing the prop instead
+ * of far from it having to do this transformation via some `useMemo` hook call at the top of the
+ * component.
  *
  * The utility's method of operation is it will take `source` and return from it a new transformed
  * async iterable object with some special metadata attached that tells library tools like
