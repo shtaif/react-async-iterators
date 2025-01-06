@@ -15,13 +15,13 @@ plugins:
         types:
           - { type: feat, section: Features, hidden: false }
           - { type: fix, section: Bug Fixes, hidden: false }
-          - { type: perf, section: Performance, hidden: false }
-          - { type: refactor, section: Refactor, hidden: false }
-          - { type: test, section: Tests, hidden: false }
-          - { type: revert, section: Reverts, hidden: false }
           - { type: docs, section: Documentation, hidden: false }
-          - { type: ci, section: Continuous Integration, hidden: true }
           - { type: build, section: Build System, hidden: false }
+          - { type: perf, section: Performance, hidden: false }
+          - { type: revert, section: Reverts, hidden: false }
+          - { type: refactor, section: Refactor, hidden: true }
+          - { type: test, section: Tests, hidden: true }
+          - { type: ci, section: Continuous Integration, hidden: true }
 
   - - '@semantic-release/changelog'
     - {}
