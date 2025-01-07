@@ -4,16 +4,16 @@ import { useAsyncIter, type IterationResult } from '../useAsyncIter/index.js';
 export { Iterate, type IterateProps };
 
 /**
- * The `<Iterate>` helper component (importable also as `<It>`) is used to format and render an async iterable
- * (or a plain non-iterable value) directly onto a piece of UI.
+ * The `<Iterate>` helper component (also exported as `<It>`) is used to format and render an async
+ * iterable (or a plain non-iterable value) directly onto a piece of UI.
  *
- * Essentially wraps a single {@link useAsyncIter `useAsyncIter`} hook call into a component
+ * Essentially, can be seen as a {@link useAsyncIter `useAsyncIter`} hook in a component form,
  * conveniently.
  *
  * _Illustration:_
  *
  * ```tsx
- * import { Iterate } from 'react-async-iterators';
+ * import { It } from 'react-async-iterators';
  *
  * function SelfUpdatingTodoList(props) {
  *   return (
@@ -21,28 +21,28 @@ export { Iterate, type IterateProps };
  *       <h2>My TODOs</h2>
  *
  *       <div>
- *         Last TODO was completed at: <Iterate>{props.lastCompletedTodoDate}</Iterate>
+ *         Last TODO was completed at: <It>{props.lastCompletedTodoDate}</It>
  *       </div>
  *
  *       <ul>
- *         <Iterate value={props.todosAsyncIter}>
+ *         <It value={props.todosAsyncIter}>
  *           {({ value: todos }) =>
  *             todos?.map(todo =>
  *               <li key={todo.id}>{todo.text}</li>
  *             )
  *           }
- *         </Iterate>
+ *         </It>
  *       </ul>
  *     </div>
  *   );
  * }
  * ```
  *
- * `<Iterate>` may be preferable over {@link useAsyncIter `useAsyncIter`} typically as the UI area
- * it re-renders can be expressively confined to the minimum necessary, saving unrelated elements
- * within UI of a larger component from re-evaluating. On the other hand, the
- * counterpart {@link useAsyncIter `useAsyncIter`} being a hook has to re-render the entire
- * component output for every new value.
+ * `<Iterate>` may be preferable over the {@link useAsyncIter `useAsyncIter`} counterpart typically as
+ * the UI area it re-renders within a component tree can be expressly confined to the necessary
+ * minimum, saving any other unrelated elements from re-evaluation - while on the other hand
+ * {@link useAsyncIter `useAsyncIter`} being a hook it has to re-render an entire
+ * component's output for every new value.
  *
  * Given an async iterable as the `value` prop, this component will iterate it and render each new
  * value that becomes available together with any possible completion or error it may run into.
@@ -54,15 +54,16 @@ export { Iterate, type IterateProps };
  * should be recreated with React's [`useMemo`](https://react.dev/reference/react/useMemo).
  * `<Iterate>` will automatically close its iterated iterable as soon as it gets unmounted.
  *
+ * ---
+ *
  * @template TVal The type of values yielded by the passed iterable or otherwise type of the passed plain value itself.
  * @template TInitialVal The type of the initial value, defaults to `undefined`.
  *
  * @param props Props for `<Iterate>`. See {@link IterateProps `IterateProps`}.
  *
- * @returns A React node that updates its contents in response to each next yielded value automatically as
- * formatted by the function passed as `children` (or in the absent of, just the yielded values as-are).
+ * @returns A React node that re-renders itself with each yielded value, completion or error, and formatted by the child render function passed into `children` (or just the yielded value as-is in the absent of it).
  *
- * @see {@link IterationResult}
+ * @see {@link IterationResult `IterationResult`}
  *
  * @example
  * ```tsx
@@ -129,7 +130,7 @@ function Iterate<TVal, TInitialVal = undefined>(props: IterateProps<TVal, TIniti
  * 1. Providing a render function as `children` to dynamically format each state of the iteration.
  * 2. Providing an async iterable as `children` to render the values of the async iterable (or plain value) directly as are.
  *
- * @template TVal The type of values yielded by the passed iterable or otherwise type of the passed plain value itself.
+ * @template TVal The type of the input async iterable or plain value.
  * @template TInitialVal The type of the initial value, defaults to `undefined`.
  */
 type IterateProps<TVal, TInitialVal = undefined> =
@@ -142,11 +143,13 @@ type IteratePropsWithRenderFunction<TVal, TInitialVal = undefined> = {
    */
   value: TVal;
   /**
-   * An optional initial value, defaults to `undefined`.
+   * An optional initial value, defaults to `undefined`. Will be the value provided inside the child
+   * render function when `<Iterate>` first renders on being mounted and while it's pending its first
+   * value to be yielded.
    */
   initialValue?: TInitialVal;
   /**
-   * A render function that is called for each iteration state and returns something to render
+   * A render function that is called for each step of the iteration, returning something to render
    * out of it.
    *
    * @param nextIterationState - The current state of the iteration, including the yielded value, whether iteration is complete, any associated error, etc. (see {@link IterationResult `IterationResult`})

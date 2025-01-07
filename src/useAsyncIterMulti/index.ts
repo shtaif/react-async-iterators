@@ -15,87 +15,64 @@ export { useAsyncIterMulti, type IterationResult, type IterationResultSet };
  * `useAsyncIterMulti` hooks up multiple async iterables to your component and its lifecycle, letting
  * additional async iterables be added or removed on the go.
  *
- * Similar to `useAsyncIter`, only it works with zero or more async iterables and plain values instead of
- * a single one.
+ * It's similar to `useAsyncIter`, only it works with any changeable number of async iterables or
+ * plain values instead of a single one.
+ *
+ * ---
+ *
+ * _Illustration:_
  *
  * @example
  * ```tsx
  * import { useAsyncIterMulti } from 'react-async-iterators';
  *
- * const wordGen = (async function* () {
- *   const words = ['Hello', 'React', 'Async', 'Iterators'];
- *   for (const word of words) {
- *     await new Promise(resolve => setTimeout(resolve, 1500));
- *     yield word;
- *   }
- * })();
- *
- * const fruitGen = (async function* () {
- *   const sets = [
- *     ['Peach', 'Mango', 'Orange'],
- *     ['Apple', 'Pear', 'Guyava'],
- *     ['Watermelon', 'Kiwi', 'Grapes'],
- *   ];
- *   for (const fruits of sets) {
- *     await new Promise(resolve => setTimeout(resolve, 2000));
- *     yield fruits;
- *   }
- * })();
- *
  * function MyComponent() {
- *   const [currentWords, currentFruits] = useAsyncIterMulti([wordGen, fruitGen]);
+ *   const [nextNum, nextStr, nextArr] = useAsyncIterMulti([numberIter, stringIter, arrayIter], {
+ *     initialValues: [0, '', []]
+ *   });
  *
- *   return (
- *     <div>
- *       <h2>
- *         Current word:
- *         {currentWords.pendingFirst
- *           ? 'Loading fruits...'
- *           : currentWords.error
- *           ? `Error: ${currentWords.error}`
- *           : currentWords.done
- *           ? `Done (last value: ${currentWords.value})`
- *           : `Value: ${currentWords.value}`}
- *       </h2>
- *       <ul>
- *         {currentFruits.pendingFirst
- *           ? 'Loading words...'
- *           : currentFruits.value.map(fruit => (
- *             <div key={fruit.name}>{fruit.name}</div>
- *           ))}
- *       </ul>
- *     </div>
- *   );
+ *   nextNum.value; // Current value of `numberIter`
+ *   nextStr.value; // Current value of `stringIter`
+ *   nextArr.value; // Current value of `arrayIter`
+ *   nextNum.done; // Whether iteration of `numberIter` ended
+ *   nextStr.done; // Whether iteration of `stringIter` ended
+ *   nextArr.done; // Whether iteration of `arrayIter` ended
+ *
+ *   // ...
  * }
  * ```
  *
  * Given an array of async iterables for `inputs`, this hook will iterate over all of them concurrently,
  * updating (re-rendering) the host component whenever any yields a value, completes, or errors outs -
- * each time returning a combined array of all their current individual states, corresponding to their
- * original positions in the given `inputs`.
+ * each time returning an array combining all their current individual states, in correspondence to
+ * their original positions they were given in on `inputs`.
+ *
  * `inputs` may also be mixed with plain (non async iterable) values, in which case they'll simply be
  * returned as-are, coinciding along current values of other async iterables.
- * This can enable components that could seamlessly handle _"static"_ as well as _"changing"_ values
+ * This can enable components that can work seamlessly with either _"static"_ and _"changing"_ values
  * and props.
  *
  * The hook initializes and maintains its iteration process with each async iterable object as long as
  * that same object remains present in `inputs` arrays across subsequent updates. Changing the position
  * of such object in the array on a consequent call will __not__ close its current running iteration - it
- * will only change the position its result would appear at in the returned array.
+ * will only change the position its result appears at in the returned array.
  * Care should be taken therefore to not unintentionally recreate the given iterables on every render,
- * by e.g; declaring an iterable outside the component body, control __when__ it should be recreated
- * with React's [`useMemo`](https://react.dev/reference/react/useMemo) or alternatively use the library's
- * {@link iterateFormatted `iterateFormatted`} util for a formatted version of an iterable which
- * preserves its identity.
+ * by e.g; declaring an iterable outside the component body, controling __when__ it should be recreated
+ * with React's [`useMemo`](https://react.dev/reference/react/useMemo) or preferably use the library's
+ * {@link iterateFormatted `iterateFormatted`} util for formatting an iterable's values while preserving
+ * its identity.
+ *
  * Whenever `useAsyncIterMulti` detects that one or more previously present async iterables have
  * disappeared from the `inputs` array, it will close their iteration processes.
- * On component unmount, the hook will also ensure closing all actively iterated async iterables.
+ * On component unmount, the hook will ensure closing all active iterated async iterables entirely.
  *
  * The array returned from `useAsyncIterMulti` contains all the individual most recent states of all
  * actively iterated objects and/or plain values from the current `inputs` (including each's most recent
  * value, who's completed, etc. - see {@link IterationResultSet `IterationResultSet`}).
  *
- * @template TValues The type of the set of all plain or async iterable input values an array.
+ * ---
+ *
+ * @template TValues The array/tuple type of the input set of async iterable or plain values.
  * @template TInitValues The type of all initial values corresponding to types of `TValues`.
  *
  * @param inputs An array of zero or more async iterable or plain values (mixed).
@@ -108,7 +85,65 @@ export { useAsyncIterMulti, type IterationResult, type IterationResultSet };
  *
  * @example
  * ```tsx
- * // Using `useAsyncIterMulti` with a dynamically-changing amount of inputs:
+ * import { useAsyncIterMulti } from 'react-async-iterators';
+ *
+ * function MyDemo() {
+ *   const [currentWords, currentFruits] = useAsyncIterMulti(
+ *     [wordGen, fruitGen],
+ *     { initialValues: ['', []] }
+ *   );
+ *
+ *   return (
+ *     <div>
+ *       Current word:
+ *       <h2>
+ *         {currentWords.pendingFirst
+ *           ? 'Loading words...'
+ *           : currentWords.error
+ *           ? `Error: ${currentWords.error}`
+ *           : currentWords.done
+ *           ? `Done (last value: ${currentWords.value})`
+ *           : `Value: ${currentWords.value}`}
+ *       </h2>
+ *
+ *       Fruits:
+ *       <ul>
+ *         {currentFruits.pendingFirst
+ *           ? 'Loading fruits...'
+ *           : currentFruits.value.map(fruit => (
+ *             <li key={fruit.icon}>{fruit.icon}</li>
+ *           ))}
+ *       </ul>
+ *     </div>
+ *   );
+ * }
+ *
+ * const wordGen = (async function* () {
+ *   const words = ['Hello', 'React', 'Async', 'Iterators'];
+ *   for (const word of words) {
+ *     await new Promise(resolve => setTimeout(resolve, 1250));
+ *     yield word;
+ *   }
+ * })();
+ *
+ * const fruitGen = (async function* () {
+ *   const sets = [
+ *     [{ icon: '🍑' }, { icon: '🥭' }, { icon: '🍊' }],
+ *     [{ icon: '🍏' }, { icon: '🍐' }, { icon: '🍋' }],
+ *     [{ icon: '🍉' }, { icon: '🥝' }, { icon: '🍇' }],
+ *   ];
+ *   for (const fruits of sets) {
+ *     await new Promise(resolve => setTimeout(resolve, 2000));
+ *     yield fruits;
+ *   }
+ * })();
+ * ```
+ *
+ * ---
+ *
+ * @example
+ * ```tsx
+ * // Using `useAsyncIterMulti` with a dynamically-changed amount of inputs:
  *
  * import { useState } from 'react';
  * import { useAsyncIterMulti, type MaybeAsyncIterable } from 'react-async-iterators';
