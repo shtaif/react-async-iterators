@@ -164,6 +164,29 @@ describe('`useAsyncIterMulti` hook', () => {
   });
 
   it(
+    gray("When given multiple iterables, some empty, reflects each's states correctly"),
+    async () => {
+      let timesRerendered = 0;
+
+      const iter = asyncIterOf('a');
+      const emptyIter = asyncIterOf();
+
+      const renderedHook = await act(() =>
+        renderHook(() => {
+          timesRerendered++;
+          return useAsyncIterMulti([iter, emptyIter]);
+        })
+      );
+
+      expect(timesRerendered).toStrictEqual(2);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: true, error: undefined },
+        { value: undefined, pendingFirst: false, done: true, error: undefined },
+      ]);
+    }
+  );
+
+  it(
     gray(
       "When given multiple iterables with corresponding initial values, reflects each's states correctly, starting with its corresponding initial value"
     ),
@@ -204,7 +227,7 @@ describe('`useAsyncIterMulti` hook', () => {
 
   it(
     gray(
-      "When given multiple iterables with corresponding initial values for some, reflects each's states correctly, possibly starting with a corresponding initial value if present"
+      "When given multiple iterables with corresponding initial values for only some, reflects each's states correctly, possibly starting with a corresponding initial value if present"
     ),
     async () => {
       const channels = [
@@ -421,7 +444,7 @@ describe('`useAsyncIterMulti` hook', () => {
     }
   );
 
-  it(gray('When unmounted will close all the last held active iterators'), async () => {
+  it(gray('When unmounted will close all active iterators it has been holding'), async () => {
     const channel1 = new IteratorChannelTestHelper<'a' | 'b' | 'c'>();
     const channel2 = new IteratorChannelTestHelper<'a' | 'b' | 'c'>();
 
@@ -459,7 +482,7 @@ describe('`useAsyncIterMulti` hook', () => {
 
   it(
     gray(
-      'When adding / removing / swapping positions of iterables, their ongoing states are maintained every step regardless of position and are closed only when they disappear altogether from passed array'
+      'When adding / removing / swapping positions of iterables, their ongoing states are maintained at every step regardless of position and get closed only when they disappear altogether from passed array'
     ),
     async () => {
       const values: (string | IteratorChannelTestHelper<string>)[] = [];
