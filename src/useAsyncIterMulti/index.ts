@@ -201,19 +201,12 @@ function useAsyncIterMulti<
   opts?: {
     initialValues?: TInitValues;
   }
-): IterationResultSet<TValues, TInitValues>;
-
-function useAsyncIterMulti(
-  inputs: readonly unknown[],
-  opts?: {
-    initialValues?: readonly unknown[];
-  }
-): IterationResultSet<readonly unknown[], readonly unknown[]> {
+): IterationResultSet<TValues, TInitValues> {
   const update = useSimpleRerender();
 
   const ref = useRefWithInitialValue(() => ({
     currDiffCompId: 0,
-    prevResults: [] as IterationResult<unknown, unknown>[],
+    prevResults: [] as IterationResultSet<TValues, TInitValues>,
     activeItersMap: new Map<
       AsyncIterable<unknown>,
       {
@@ -289,7 +282,7 @@ function useAsyncIterMulti(
     activeItersMap.set(baseIter, newIterState);
 
     return newIterState.currState;
-  });
+  }) as IterationResultSet<TValues, TInitValues>;
 
   const numOfPrevRunItersDisappeared = numOfPrevRunIters - numOfPrevRunItersPreserved;
 
