@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/shtaif/react-async-iterators/compare/v0.4.0...v0.4.1) (2025-01-07)
+
+
+### Bug Fixes
+
+* first yielding wrongly ignored if yielded value is identical to the last one stored before ([#36](https://github.com/shtaif/react-async-iterators/issues/36)) ([23ad98c](https://github.com/shtaif/react-async-iterators/commit/23ad98c6240469b3b0ad131be5c9f64e3c8a8d6b))
+
 ## [0.4.0](https://github.com/shtaif/react-async-iterators/compare/v0.3.0...v0.4.0) (2025-01-06)
 
 
