@@ -662,7 +662,9 @@ describe('`Iterate` component', () => {
   );
 
   it(
-    gray('When given iterable yields consecutive identical values the hook will not re-render'),
+    gray(
+      'When given iterable yields consecutive identical values after the first, the component will not re-render'
+    ),
     async () => {
       const channel = new IteratorChannelTestHelper<string>();
       const renderFn = vi.fn() as Mock<
@@ -687,6 +689,61 @@ describe('`Iterate` component', () => {
       ]);
       expect(rendered.container.innerHTML).toStrictEqual(
         '<div id="test-created-elem">Render count: 2</div>'
+      );
+    }
+  );
+
+  it(
+    gray(
+      "When given iterable's first yield is identical to the previous value, the component does re-render"
+    ),
+    async () => {
+      const renderFn = vi.fn() as Mock<
+        (next: IterationResult<AsyncIterable<string | undefined>>) => any
+      >;
+      const channel1 = new IteratorChannelTestHelper<string>();
+
+      const Component = (props: { value: AsyncIterable<string> }) => {
+        return (
+          <Iterate value={props.value}>
+            {renderFn.mockImplementation(() => (
+              <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+            ))}
+          </Iterate>
+        );
+      };
+
+      const rendered = await act(() => render(<Component value={channel1} />));
+
+      await act(() => channel1.put('a'));
+
+      const channel2 = new IteratorChannelTestHelper<string>();
+      await act(() => rendered.rerender(<Component value={channel2} />));
+      expect(renderFn.mock.calls).lengthOf(3);
+      expect(renderFn.mock.lastCall).toStrictEqual([
+        {
+          value: 'a',
+          pendingFirst: true,
+          done: false,
+          error: undefined,
+        },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        '<div id="test-created-elem">Render count: 3</div>'
+      );
+
+      await act(() => channel2.put('a'));
+      expect(renderFn.mock.calls).lengthOf(4);
+      expect(renderFn.mock.lastCall).toStrictEqual([
+        {
+          value: 'a',
+          pendingFirst: false,
+          done: false,
+          error: undefined,
+        },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        '<div id="test-created-elem">Render count: 4</div>'
       );
     }
   );

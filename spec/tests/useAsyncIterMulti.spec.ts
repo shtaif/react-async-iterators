@@ -597,7 +597,9 @@ describe('`useAsyncIterMulti` hook', () => {
   );
 
   it(
-    gray('If any given iterable yields consecutive identical values, the hook will not re-render'),
+    gray(
+      'If any given iterable yields consecutive identical values after the first, the hook will not re-render'
+    ),
     async () => {
       const channel1 = new IteratorChannelTestHelper<string>();
       const channel2 = new IteratorChannelTestHelper<string>();
@@ -620,6 +622,41 @@ describe('`useAsyncIterMulti` hook', () => {
       expect(renderedHook.result.current).toStrictEqual([
         { value: 'a', pendingFirst: false, done: false, error: undefined },
         { value: 'b', pendingFirst: false, done: false, error: undefined },
+      ]);
+    }
+  );
+
+  it(
+    gray(
+      "When given iterable's first yield is identical to the previous value, the hook does re-render"
+    ),
+    async () => {
+      let timesRerendered = 0;
+      const channel1 = new IteratorChannelTestHelper<string>();
+
+      const renderedHook = await act(() =>
+        renderHook(
+          ({ channel }) => {
+            timesRerendered++;
+            return useAsyncIterMulti([channel]);
+          },
+          { initialProps: { channel: channel1 } }
+        )
+      );
+
+      await act(() => channel1.put('a'));
+
+      const channel2 = new IteratorChannelTestHelper<string>();
+      await act(() => renderedHook.rerender({ channel: channel2 }));
+      expect(timesRerendered).toStrictEqual(3);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: 'a', pendingFirst: true, done: false, error: undefined },
+      ]);
+
+      await act(() => channel2.put('a'));
+      expect(timesRerendered).toStrictEqual(4);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
       ]);
     }
   );
