@@ -1,3 +1,16 @@
+## [0.5.0](https://github.com/shtaif/react-async-iterators/compare/v0.4.1...v0.5.0) (2025-01-08)
+
+
+### Features
+
+* implement the new `<IterateMulti>` component ([#39](https://github.com/shtaif/react-async-iterators/issues/39)) ([18997f8](https://github.com/shtaif/react-async-iterators/commit/18997f803dbecbf8cf959891ee1a6698b3f3f8a1))
+* **useAsyncIterState:** add a current value property on `useAsyncIterState` hook's returned iterable ([#41](https://github.com/shtaif/react-async-iterators/issues/41)) ([6e1a36b](https://github.com/shtaif/react-async-iterators/commit/6e1a36b090bc5028499b50fe99e9019b0dc1f90c))
+
+
+### Documentation
+
+* various JSDocs blocks edits ([#38](https://github.com/shtaif/react-async-iterators/issues/38)) ([b313438](https://github.com/shtaif/react-async-iterators/commit/b3134383ebe3d83e596f47a32b4546ca140d3029))
+
 ## [0.4.1](https://github.com/shtaif/react-async-iterators/compare/v0.4.0...v0.4.1) (2025-01-07)
 
 
