@@ -8,8 +8,16 @@ class IterableChannel<T> {
   #nextIteration = promiseWithResolvers<IteratorResult<T, void>>();
   #currentValue: T | undefined;
 
-  put(value: T): void {
+  put(update: T | ((prevState: T | undefined) => T)): void {
     if (!this.#isClosed) {
+      const value =
+        typeof update !== 'function'
+          ? update
+          : (() => {
+              const updateFnTypePatched = update as (prevState: T | undefined) => T;
+              return updateFnTypePatched(this.#currentValue);
+            })();
+
       (async () => {
         this.#currentValue = value;
         await undefined; // Deferring to the next microtick so that an attempt to pull the a value before making multiple rapid synchronous calls to `put()` will make that pull ultimately yield only the last value that was put - instead of the first one as were if this otherwise wasn't deferred.
