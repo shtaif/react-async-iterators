@@ -10,9 +10,12 @@ class IterableChannel<T> {
 
   put(value: T): void {
     if (!this.#isClosed) {
-      this.#currentValue = value;
-      this.#nextIteration.resolve({ done: false, value });
-      this.#nextIteration = promiseWithResolvers();
+      (async () => {
+        this.#currentValue = value;
+        await undefined; // Deferring to the next microtick so that an attempt to pull the a value before making multiple rapid synchronous calls to `put()` will make that pull ultimately yield only the last value that was put - instead of the first one as were if this otherwise wasn't deferred.
+        this.#nextIteration.resolve({ done: false, value: this.#currentValue });
+        this.#nextIteration = promiseWithResolvers();
+      })();
     }
   }
 
