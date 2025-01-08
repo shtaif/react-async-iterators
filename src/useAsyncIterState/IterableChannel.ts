@@ -40,8 +40,25 @@ class IterableChannel<T> {
   };
 }
 
+/**
+ * A stateful async iterable which will yield every updated value following an update. Includes a
+ * `.current.value` property which shows the current up to date state value.
+ *
+ * This is a shared async iterable - all iterators obtained from it share the same source values,
+ * meaning that multiple iterators can be consumed (iterated) simultaneously and each one would pick up
+ * the same values as others the moment they were generated through state updates.
+ */
 type AsyncIterableSubject<T> = {
+  /**
+   * A React Ref-like object whose inner `current` property shows the most up to date state value.
+   */
   value: MutableRefObject<T | undefined>;
+
+  /**
+   * Returns an async iterator to iterate over. All iterators returned by this share the same source
+   * values - they can be iterated by multiple consumers simultaneously and each would pick up the
+   * same values as others the moment they were generated.
+   */
   [Symbol.asyncIterator](): {
     next(): Promise<IteratorResult<T, void>>;
     return(): Promise<IteratorReturnResult<void>>;
