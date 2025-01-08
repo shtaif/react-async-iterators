@@ -6,10 +6,11 @@ export { IterableChannel, type AsyncIterableSubject };
 class IterableChannel<T> {
   #isClosed = false;
   #nextIteration = promiseWithResolvers<IteratorResult<T, void>>();
+  #currentValue: T | undefined;
 
   put(value: T): void {
     if (!this.#isClosed) {
-      this.values.value.current = value;
+      this.#currentValue = value;
       this.#nextIteration.resolve({ done: false, value });
       this.#nextIteration = promiseWithResolvers();
     }
@@ -21,9 +22,14 @@ class IterableChannel<T> {
   }
 
   values: AsyncIterableSubject<T> = {
-    value: {
-      current: undefined,
-    },
+    value: (() => {
+      const self = this;
+      return {
+        get current() {
+          return self.#currentValue;
+        },
+      };
+    })(),
 
     [Symbol.asyncIterator]: () => {
       const whenIteratorClosed = promiseWithResolvers<IteratorReturnResult<undefined>>();
@@ -52,7 +58,7 @@ type AsyncIterableSubject<T> = {
   /**
    * A React Ref-like object whose inner `current` property shows the most up to date state value.
    */
-  value: MutableRefObject<T | undefined>;
+  value: Readonly<MutableRefObject<T | undefined>>;
 
   /**
    * Returns an async iterator to iterate over. All iterators returned by this share the same source
