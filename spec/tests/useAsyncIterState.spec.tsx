@@ -19,12 +19,17 @@ describe('`useAsyncIterState` hook', () => {
     const valuesToSet = ['a', 'b', 'c'];
 
     const collectPromise = pipe(values, asyncIterTake(valuesToSet.length), asyncIterToArray);
+    const currentValues = [values.value.current];
 
     for (const value of valuesToSet) {
-      await act(() => setValue(value));
+      await act(() => {
+        setValue(value);
+        currentValues.push(values.value.current);
+      });
     }
 
     expect(await collectPromise).toStrictEqual(['a', 'b', 'c']);
+    expect(currentValues).toStrictEqual([undefined, 'a', 'b', 'c']);
   });
 
   it(
@@ -79,6 +84,7 @@ describe('`useAsyncIterState` hook', () => {
 
       const collections = await Promise.all([collectPromise1, collectPromise2]);
       expect(collections).toStrictEqual([[], []]);
+      expect(values.value.current).toStrictEqual(undefined);
     }
   );
 
@@ -91,13 +97,18 @@ describe('`useAsyncIterState` hook', () => {
       const [values, setValue] = renderedHook.result.current;
 
       const [collectPromise1, collectPromise2] = range(2).map(() => asyncIterToArray(values));
+      const currentValues = [values.value.current];
 
-      await act(() => setValue('a'));
+      await act(() => {
+        setValue('a');
+        currentValues.push(values.value.current);
+      });
 
       renderedHook.unmount();
 
       const collections = await Promise.all([collectPromise1, collectPromise2]);
       expect(collections).toStrictEqual([['a'], ['a']]);
+      expect(currentValues).toStrictEqual([undefined, 'a']);
     }
   );
 
@@ -113,6 +124,7 @@ describe('`useAsyncIterState` hook', () => {
 
       const collections = await Promise.all(range(2).map(() => asyncIterToArray(values)));
       expect(collections).toStrictEqual([[], []]);
+      expect(values.value.current).toStrictEqual(undefined);
     }
   );
 
@@ -124,16 +136,21 @@ describe('`useAsyncIterState` hook', () => {
       const [values, setValue] = renderHook(() => useAsyncIterState<string>()).result.current;
 
       const consumeStacks: string[][] = [];
+      const currentValues = [values.value.current];
 
       for (const [i, value] of ['a', 'b', 'c'].entries()) {
         consumeStacks[i] = [];
         (async () => {
           for await (const v of values) consumeStacks[i].push(v);
         })();
-        await act(() => setValue(value));
+        await act(() => {
+          setValue(value);
+          currentValues.push(values.value.current);
+        });
       }
 
       expect(consumeStacks).toStrictEqual([['a', 'b', 'c'], ['b', 'c'], ['c']]);
+      expect(currentValues).toStrictEqual([undefined, 'a', 'b', 'c']);
     }
   );
 });

@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { IterableChannel } from './IterableChannel.js';
+import { IterableChannel, type AsyncIterableSubject } from './IterableChannel.js';
 import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
-export { useAsyncIterState, type AsyncIterStateResult };
+export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableSubject };
 
 /**
  * Basically like {@link https://react.dev/reference/react/useState `React.useState`}, only that the value
@@ -58,7 +58,7 @@ function useAsyncIterState<TVal>(): AsyncIterStateResult<TVal> {
     const channel = new IterableChannel<TVal>();
     return {
       channel,
-      result: [channel.iterable, newVal => channel.put(newVal)],
+      result: [channel.values, newVal => channel.put(newVal)],
     };
   })();
 
@@ -77,4 +77,7 @@ function useAsyncIterState<TVal>(): AsyncIterStateResult<TVal> {
  *
  * @see {@link useAsyncIterState `useAsyncIterState`}
  */
-type AsyncIterStateResult<TVal> = [IterableChannel<TVal>['iterable'], (newValue: TVal) => void];
+type AsyncIterStateResult<TVal> = [
+  values: AsyncIterableSubject<TVal>,
+  setValue: (newValue: TVal) => void,
+];
