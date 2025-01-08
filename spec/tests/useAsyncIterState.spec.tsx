@@ -5,6 +5,7 @@ import { renderHook, cleanup as cleanupMountedReactTrees, act } from '@testing-l
 import { useAsyncIterState } from '../../src/index.js';
 import { asyncIterToArray } from '../utils/asyncIterToArray.js';
 import { asyncIterTake } from '../utils/asyncIterTake.js';
+import { asyncIterTakeFirst } from '../utils/asyncIterTakeFirst.js';
 import { checkPromiseState } from '../utils/checkPromiseState.js';
 import { pipe } from '../utils/pipe.js';
 
@@ -13,12 +14,49 @@ afterEach(() => {
 });
 
 describe('`useAsyncIterState` hook', () => {
+  it(gray('Updating states iteratively with the returned setter works correctly'), async () => {
+    const [values, setValue] = renderHook(() => useAsyncIterState<number>()).result.current;
+
+    const rounds = 3;
+
+    const yieldsPromise = pipe(values, asyncIterTake(rounds), asyncIterToArray);
+    const currentValues = [values.value.current];
+
+    for (let i = 0; i < rounds; ++i) {
+      await act(() => {
+        setValue(i);
+        currentValues.push(values.value.current);
+      });
+    }
+
+    expect(currentValues).toStrictEqual([undefined, 0, 1, 2]);
+    expect(await yieldsPromise).toStrictEqual([0, 1, 2]);
+  });
+
+  it(
+    gray('Updating states as rapidly as possible with the returned setter works correctly'),
+    async () => {
+      const [values, setValue] = renderHook(() => useAsyncIterState<number>()).result.current;
+
+      const yieldPromise = pipe(values, asyncIterTakeFirst());
+      const currentValues = [values.value.current];
+
+      for (let i = 0; i < 3; ++i) {
+        setValue(i);
+        currentValues.push(values.value.current);
+      }
+
+      expect(currentValues).toStrictEqual([undefined, 0, 1, 2]);
+      expect(await yieldPromise).toStrictEqual(2);
+    }
+  );
+
   it(gray('The returned iterable can be async-iterated upon successfully'), async () => {
     const [values, setValue] = renderHook(() => useAsyncIterState<string>()).result.current;
 
     const valuesToSet = ['a', 'b', 'c'];
 
-    const collectPromise = pipe(values, asyncIterTake(valuesToSet.length), asyncIterToArray);
+    const yieldsPromise = pipe(values, asyncIterTake(valuesToSet.length), asyncIterToArray);
     const currentValues = [values.value.current];
 
     for (const value of valuesToSet) {
@@ -28,7 +66,7 @@ describe('`useAsyncIterState` hook', () => {
       });
     }
 
-    expect(await collectPromise).toStrictEqual(['a', 'b', 'c']);
+    expect(await yieldsPromise).toStrictEqual(['a', 'b', 'c']);
     expect(currentValues).toStrictEqual([undefined, 'a', 'b', 'c']);
   });
 
@@ -130,7 +168,7 @@ describe('`useAsyncIterState` hook', () => {
 
   it(
     gray(
-      "The returned iterable's values are each shared between all its parallel consumers so that each receives all the values that will yield after the start of its consumption"
+      "The returned iterable's values are each shared between all its parallel consumers so that each will receives all values that will yield from the time it started consuming"
     ),
     async () => {
       const [values, setValue] = renderHook(() => useAsyncIterState<string>()).result.current;
@@ -140,9 +178,11 @@ describe('`useAsyncIterState` hook', () => {
 
       for (const [i, value] of ['a', 'b', 'c'].entries()) {
         consumeStacks[i] = [];
+
         (async () => {
           for await (const v of values) consumeStacks[i].push(v);
         })();
+
         await act(() => {
           setValue(value);
           currentValues.push(values.value.current);
