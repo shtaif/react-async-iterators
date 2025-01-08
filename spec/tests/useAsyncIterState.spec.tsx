@@ -153,4 +153,12 @@ describe('`useAsyncIterState` hook', () => {
       expect(currentValues).toStrictEqual([undefined, 'a', 'b', 'c']);
     }
   );
+
+  it(gray("The state iterable's `.current.value` property is read-only"), async () => {
+    const [values] = renderHook(() => useAsyncIterState<number>()).result.current;
+
+    expect(() => {
+      (values.value as any).current = "can't do this...";
+    }).toThrow(TypeError);
+  });
 });
