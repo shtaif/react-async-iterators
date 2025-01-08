@@ -1,3 +1,16 @@
+## [0.5.1](https://github.com/shtaif/react-async-iterators/compare/v0.5.0...v0.5.1) (2025-01-08)
+
+
+### Bug Fixes
+
+* **useAsyncIterState:** disallow user manipulation of the state iterable's current value property ([#43](https://github.com/shtaif/react-async-iterators/issues/43)) ([6dd5ac5](https://github.com/shtaif/react-async-iterators/commit/6dd5ac5eb852da01e8178b332e0c083ca74bf091))
+* **useAsyncIterState:** rapidly updating state yields the first update instead of the last update's value ([#44](https://github.com/shtaif/react-async-iterators/issues/44)) ([b11b5a5](https://github.com/shtaif/react-async-iterators/commit/b11b5a56c1ac3621b58a37fa04902b6bfd20da1a))
+
+
+### Documentation
+
+* **useAsyncIterState:** missing documentations for the state iterable's added current value property ([#42](https://github.com/shtaif/react-async-iterators/issues/42)) ([675331f](https://github.com/shtaif/react-async-iterators/commit/675331f444189124c55b19e21938f56d1d8343b7))
+
 ## [0.5.0](https://github.com/shtaif/react-async-iterators/compare/v0.4.1...v0.5.0) (2025-01-08)
 
 
