@@ -8,9 +8,9 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableSubject
  * Basically like {@link https://react.dev/reference/react/useState `React.useState`}, only that the value
  * is provided back __wrapped as an async iterable__.
  *
- * This hook allows a component to declare and manage a piece of state while easily letting it control
- * what area(s) specifically within the UI should be bound to it (should re-render in reaction to changes
- * in it) - combined for example with one or more {@link Iterate `<Iterate>`}s.
+ * This hook allows a component to declare and manage a piece of state while easily letting you control
+ * what specifically area(s) within the UI should be bound to it (should re-render in reaction to changes
+ * in it) - for example, if combined with one or more {@link Iterate `<Iterate>`}s.
  *
  * @example
  * ```tsx
@@ -36,14 +36,24 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableSubject
  *
  * ---
  *
- * This is unlike vanila `React.useState` which simply re-renders the entire component. Instead,
- * `useAsyncIterState` helps confine UI updates as well as facilitate layers of sub-components that pass
- * actual async iterables across one another as props, skipping typical cascading re-renderings down to
- * __only the inner-most leafs__ of the UI tree.
  *
- * The returned async iterable contains a `.current.value` property which shows the current up to date
- * state value at all times. Use this any case you just need to read the immediate current state rather
- * than directly rendering it, since for rendering you may simply async-iterate it.
+ *
+ * The returned async iterable can be passed over to any level down the component tree and rendered
+ * using `<Iterate>`, `useAsyncIter`, and so on. It also contains a `.current.value` property which shows
+ * the current up to date state value at all times. Use this any case you just need to read the immediate
+ * current state rather than directly rendering it, since for rendering you may simply async-iterate it.
+ *
+ * Returned also alongside the async iterable is a function for updating the state. Calling it with a new
+ * value will cause the paired iterable to yield the updated state value as well as immediately set the
+ * iterable's `.current.value` property to that new state. Just like
+ * [`React.useState`'s setter](https://react.dev/reference/react/useState#setstate), you can pass it
+ * the next state directly, or a function that calculates it from the previous state.
+ *
+ * Unlike vanila `React.useState`, which simply re-renders the entire component - `useAsyncIterState`
+ * helps confine UI updates by handing you an iterable which choose how and where in the component tree
+ * to render it. This work method can facilitate layers of sub-components that pass actual async iterables
+ * across one another as props, skipping typical cascading re-renderings down to __only the inner-most
+ * leafs__ of the UI tree.
  *
  * @example
  * ```tsx
@@ -107,7 +117,8 @@ function useAsyncIterState<TVal>(): AsyncIterStateResult<TVal> {
 }
 
 /**
- * A pair of stateful async iterable and a function which modifies the state and yields the updated value.
+ * A pair of stateful async iterable and a function which updates the state and making the paired
+ * async iterable yield the new value.
  * Returned from the {@link useAsyncIterState `useAsyncIterState`} hook.
  *
  * @see {@link useAsyncIterState `useAsyncIterState`}
@@ -125,8 +136,8 @@ type AsyncIterStateResult<TVal> = [
   values: AsyncIterableSubject<TVal>,
 
   /**
-   * A function which modifies the state, causing the paired async iterable to yield the updated state
+   * A function which updates the state, causing the paired async iterable to yield the updated state
    * value and immediately sets its `.current.value` property to the latest state.
    */
-  setValue: (newValue: TVal) => void,
+  setValue: (update: TVal | ((prevState: TVal | undefined) => TVal)) => void,
 ];
