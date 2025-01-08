@@ -36,8 +36,6 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableSubject
  *
  * ---
  *
- *
- *
  * The returned async iterable can be passed over to any level down the component tree and rendered
  * using `<Iterate>`, `useAsyncIter`, and so on. It also contains a `.current.value` property which shows
  * the current up to date state value at all times. Use this any case you just need to read the immediate
@@ -88,19 +86,38 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableSubject
  * ---
  *
  * @template TVal the type of state to be set and yielded by returned iterable.
+ * @template TInitVal The type of the starting value for the state iterable's `.current.value` property.
+ *
+ * @param initialValue Any optional starting value for the state iterable's `.current.value` property, defaults to `undefined`.
  *
  * @returns a stateful async iterable and a function with which to yield an update, both maintain stable references across re-renders.
  *
  * @see {@link Iterate `<Iterate>`}
  */
-function useAsyncIterState<TVal>(): AsyncIterStateResult<TVal> {
+function useAsyncIterState<TVal>(): AsyncIterStateResult<TVal, undefined>;
+
+function useAsyncIterState<TVal>(
+  initialValue: TVal | (() => TVal)
+): AsyncIterStateResult<TVal, TVal>;
+
+function useAsyncIterState<TVal, TInitVal = undefined>(
+  initialValue: TInitVal | (() => TInitVal)
+): AsyncIterStateResult<TVal, TInitVal>;
+
+function useAsyncIterState<TVal, TInitVal>(
+  initialValue?: TInitVal | (() => TInitVal)
+): AsyncIterStateResult<TVal, TInitVal> {
   const ref = useRef<{
-    channel: IterableChannel<TVal>;
-    result: AsyncIterStateResult<TVal>;
+    channel: IterableChannel<TVal, TInitVal>;
+    result: AsyncIterStateResult<TVal, TInitVal>;
   }>();
 
   ref.current ??= (() => {
-    const channel = new IterableChannel<TVal>();
+    const initialValueDetermined =
+      typeof initialValue !== 'function' ? initialValue : (initialValue as () => TInitVal)();
+
+    const channel = new IterableChannel<TVal, TInitVal>(initialValueDetermined as TInitVal);
+
     return {
       channel,
       result: [channel.values, newVal => channel.put(newVal)],
@@ -123,7 +140,7 @@ function useAsyncIterState<TVal>(): AsyncIterStateResult<TVal> {
  *
  * @see {@link useAsyncIterState `useAsyncIterState`}
  */
-type AsyncIterStateResult<TVal> = [
+type AsyncIterStateResult<TVal, TInitVal> = [
   /**
    * A stateful async iterable which yields every updated value following a state update.
    *
@@ -133,11 +150,11 @@ type AsyncIterStateResult<TVal> = [
    * meaning multiple iterators can be consumed (iterated) simultaneously, each one picking up the
    * same values as others the moment they were generated through state updates.
    */
-  values: AsyncIterableSubject<TVal>,
+  values: AsyncIterableSubject<TVal, TInitVal>,
 
   /**
    * A function which updates the state, causing the paired async iterable to yield the updated state
    * value and immediately sets its `.current.value` property to the latest state.
    */
-  setValue: (update: TVal | ((prevState: TVal | undefined) => TVal)) => void,
+  setValue: (update: TVal | ((prevState: TVal | TInitVal) => TVal)) => void,
 ];

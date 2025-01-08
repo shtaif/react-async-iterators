@@ -14,6 +14,43 @@ afterEach(() => {
 });
 
 describe('`useAsyncIterState` hook', () => {
+  it(gray("The state iterable's `.current.value` property is read-only"), async () => {
+    const [values] = renderHook(() => useAsyncIterState<string>()).result.current;
+
+    expect(() => {
+      (values.value as any).current = '...';
+    }).toThrow(TypeError);
+  });
+
+  describe(
+    gray(
+      "When a non-`undefined` initial value is given, it's set as the starting value for the iterable's `.value.current` property"
+    ),
+    () => {
+      for (const [desc, initVal] of [
+        ['As a plain value', { initial: true } as const],
+        ['As a function', () => ({ initial: true }) as const],
+      ] as const) {
+        it(gray(desc), async () => {
+          const [values, setValue] = renderHook(() =>
+            useAsyncIterState<string, { initial: true }>(initVal)
+          ).result.current;
+
+          const currentValues = [values.value.current];
+          const yieldPromise = pipe(values, asyncIterTakeFirst());
+
+          await act(() => {
+            setValue('a');
+            currentValues.push(values.value.current);
+          });
+
+          expect(await yieldPromise).toStrictEqual('a');
+          expect(currentValues).toStrictEqual([{ initial: true }, 'a']);
+        });
+      }
+    }
+  );
+
   it(gray('The returned iterable can be async-iterated upon successfully'), async () => {
     const [values, setValue] = renderHook(() => useAsyncIterState<string>()).result.current;
 
@@ -243,12 +280,4 @@ describe('`useAsyncIterState` hook', () => {
       expect(currentValues).toStrictEqual([undefined, 'a', 'b', 'c']);
     }
   );
-
-  it(gray("The state iterable's `.current.value` property is read-only"), async () => {
-    const [values] = renderHook(() => useAsyncIterState<number>()).result.current;
-
-    expect(() => {
-      (values.value as any).current = `CAN'T DO THIS...`;
-    }).toThrow(TypeError);
-  });
 });

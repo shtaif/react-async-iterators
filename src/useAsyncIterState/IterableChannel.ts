@@ -3,18 +3,22 @@ import { promiseWithResolvers } from '../common/promiseWithResolvers.js';
 
 export { IterableChannel, type AsyncIterableSubject };
 
-class IterableChannel<T> {
+class IterableChannel<T, TInit = T> {
   #isClosed = false;
   #nextIteration = promiseWithResolvers<IteratorResult<T, void>>();
-  #currentValue: T | undefined;
+  #currentValue: T | TInit;
 
-  put(update: T | ((prevState: T | undefined) => T)): void {
+  constructor(initialValue: TInit) {
+    this.#currentValue = initialValue;
+  }
+
+  put(update: T | ((prevState: T | TInit) => T)): void {
     if (!this.#isClosed) {
       const value =
         typeof update !== 'function'
           ? update
           : (() => {
-              const updateFnTypePatched = update as (prevState: T | undefined) => T;
+              const updateFnTypePatched = update as (prevState: T | TInit) => T;
               return updateFnTypePatched(this.#currentValue);
             })();
 
@@ -32,7 +36,7 @@ class IterableChannel<T> {
     this.#nextIteration.resolve({ done: true, value: undefined });
   }
 
-  values: AsyncIterableSubject<T> = {
+  values: AsyncIterableSubject<T, TInit> = {
     value: (() => {
       const self = this;
       return {
@@ -65,11 +69,11 @@ class IterableChannel<T> {
  * meaning that multiple iterators can be consumed (iterated) simultaneously and each one would pick up
  * the same values as others the moment they were generated through state updates.
  */
-type AsyncIterableSubject<T> = {
+type AsyncIterableSubject<T, TInit> = {
   /**
    * A React Ref-like object whose inner `current` property shows the most up to date state value.
    */
-  value: Readonly<MutableRefObject<T | undefined>>;
+  value: Readonly<MutableRefObject<T | TInit>>;
 
   /**
    * Returns an async iterator to iterate over. All iterators returned by this share the same source
