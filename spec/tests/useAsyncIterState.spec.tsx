@@ -14,6 +14,21 @@ afterEach(() => {
 });
 
 describe('`useAsyncIterState` hook', () => {
+  it(
+    gray(
+      'The returned iterable and setter function both remain stable references across re-renders'
+    ),
+    async () => {
+      const renderedHook = renderHook(() => useAsyncIterState());
+      const [iter, setter] = renderedHook.result.current;
+
+      for (let i = 0; i < 3; ++i) {
+        renderedHook.rerender();
+        expect(renderedHook.result.current).toStrictEqual([iter, setter]);
+      }
+    }
+  );
+
   it(gray("The state iterable's `.current.value` property is read-only"), async () => {
     const [values] = renderHook(() => useAsyncIterState<string>()).result.current;
 
