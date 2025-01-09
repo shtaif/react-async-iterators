@@ -1,4 +1,4 @@
-import { it, describe, expect, afterEach } from 'vitest';
+import { it, describe, expect, afterEach, vi } from 'vitest';
 import { gray } from 'colorette';
 import { cleanup as cleanupMountedReactTrees, act, renderHook } from '@testing-library/react';
 import { useAsyncIter, iterateFormatted } from '../../src/index.js';
@@ -401,6 +401,32 @@ describe('`useAsyncIter` hook', () => {
           error: undefined,
         });
       }
+    }
+  );
+
+  it(
+    gray(
+      'When given an initial value as a function, calls it once on mount and uses its result as the initial value correctly'
+    ),
+    async () => {
+      const channel = new IteratorChannelTestHelper<string>();
+      const initValFn = vi.fn(() => '_');
+
+      const renderedHook = await act(() => renderHook(() => useAsyncIter(channel, initValFn)));
+      const results = [renderedHook.result.current];
+
+      await act(() => renderedHook.rerender());
+      results.push(renderedHook.result.current);
+
+      await act(() => channel.put('a'));
+      results.push(renderedHook.result.current);
+
+      expect(initValFn).toHaveBeenCalledOnce();
+      expect(results).toStrictEqual([
+        { value: '_', pendingFirst: true, done: false, error: undefined },
+        { value: '_', pendingFirst: true, done: false, error: undefined },
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+      ]);
     }
   );
 
