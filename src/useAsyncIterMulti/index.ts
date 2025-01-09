@@ -9,7 +9,7 @@ import { iterateAsyncIterWithCallbacks } from '../common/iterateAsyncIterWithCal
 
 export { useAsyncIterMulti, type IterationResult, type IterationResultSet };
 
-// TODO: The initial values should be able to be given as functions, having them called once on mount if so
+// TODO: The initial values should be able to be given in function/s form, with consideration for iterable sources that could be added in dynamically.
 
 /**
  * `useAsyncIterMulti` hooks up multiple async iterables to your component and its lifecycle, letting
