@@ -1,3 +1,11 @@
+## [0.6.0](https://github.com/shtaif/react-async-iterators/compare/v0.5.1...v0.6.0) (2025-01-09)
+
+
+### Features
+
+* **useAsyncIterState:** support for setting state with a function to calculate the new state from the previous ([#45](https://github.com/shtaif/react-async-iterators/issues/45)) ([392b2e9](https://github.com/shtaif/react-async-iterators/commit/392b2e908d8be96bb499aa13efa096d32cf9026f))
+* **useAsyncIterState:** support setting an initial value via an argument ([#46](https://github.com/shtaif/react-async-iterators/issues/46)) ([08a664d](https://github.com/shtaif/react-async-iterators/commit/08a664df85cffe76b88601b6e49fb32f98166057))
+
 ## [0.5.1](https://github.com/shtaif/react-async-iterators/compare/v0.5.0...v0.5.1) (2025-01-08)
 
 
