@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { IterableChannel, type AsyncIterableSubject } from './IterableChannel.js';
+import { useEffect } from 'react';
+import { callOrReturn } from '../common/callOrReturn.js';
+import { useRefWithInitialValue } from '../common/hooks/useRefWithInitialValue.js';
 import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { IterableChannel, type AsyncIterableSubject } from './IterableChannel.js';
 
 export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableSubject };
 
@@ -88,7 +90,7 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableSubject
  * @template TVal the type of state to be set and yielded by returned iterable.
  * @template TInitVal The type of the starting value for the state iterable's `.current.value` property.
  *
- * @param initialValue Any optional starting value for the state iterable's `.current.value` property, defaults to `undefined`.
+ * @param initialValue Any optional starting value for the state iterable's `.current.value` property, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call once during mounting).
  *
  * @returns a stateful async iterable and a function with which to yield an update, both maintain stable references across re-renders.
  *
@@ -107,22 +109,17 @@ function useAsyncIterState<TVal, TInitVal = undefined>(
 function useAsyncIterState<TVal, TInitVal>(
   initialValue?: TInitVal | (() => TInitVal)
 ): AsyncIterStateResult<TVal, TInitVal> {
-  const ref = useRef<{
+  const ref = useRefWithInitialValue<{
     channel: IterableChannel<TVal, TInitVal>;
     result: AsyncIterStateResult<TVal, TInitVal>;
-  }>();
-
-  ref.current ??= (() => {
-    const initialValueDetermined =
-      typeof initialValue !== 'function' ? initialValue : (initialValue as () => TInitVal)();
-
-    const channel = new IterableChannel<TVal, TInitVal>(initialValueDetermined as TInitVal);
-
+  }>(() => {
+    const initialValueCalced = callOrReturn(initialValue) as TInitVal;
+    const channel = new IterableChannel<TVal, TInitVal>(initialValueCalced);
     return {
       channel,
       result: [channel.values, newVal => channel.put(newVal)],
     };
-  })();
+  });
 
   const { channel, result } = ref.current;
 
