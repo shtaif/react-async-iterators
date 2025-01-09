@@ -580,6 +580,50 @@ describe('`Iterate` component', () => {
     }
   );
 
+  it(
+    gray(
+      'When given an initial value as a function, calls it once on mount and uses its result as the initial value correctly'
+    ),
+    async () => {
+      const channel = new IteratorChannelTestHelper<string>();
+      const initValFn = vi.fn(() => '_');
+      const renderFn = vi.fn() as Mock<
+        (next: IterationResult<AsyncIterable<string>, string>) => any
+      >;
+
+      const Component = (props: { value: AsyncIterable<string> }) => (
+        <Iterate value={props.value} initialValue={initValFn}>
+          {renderFn.mockImplementation(() => (
+            <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+          ))}
+        </Iterate>
+      );
+
+      const rendered = render(<></>);
+
+      await act(() => rendered.rerender(<Component value={channel} />));
+      const renderedHtmls = [rendered.container.innerHTML];
+
+      await act(() => rendered.rerender(<Component value={channel} />));
+      renderedHtmls.push(rendered.container.innerHTML);
+
+      await act(() => channel.put('a'));
+      renderedHtmls.push(rendered.container.innerHTML);
+
+      expect(initValFn).toHaveBeenCalledOnce();
+      expect(renderFn.mock.calls).toStrictEqual([
+        [{ value: '_', pendingFirst: true, done: false, error: undefined }],
+        [{ value: '_', pendingFirst: true, done: false, error: undefined }],
+        [{ value: 'a', pendingFirst: false, done: false, error: undefined }],
+      ]);
+      expect(renderedHtmls).toStrictEqual([
+        '<div id="test-created-elem">Render count: 1</div>',
+        '<div id="test-created-elem">Render count: 2</div>',
+        '<div id="test-created-elem">Render count: 3</div>',
+      ]);
+    }
+  );
+
   it(gray('When unmounted will close the last active iterator it held'), async () => {
     let lastRenderFnInput: undefined | IterationResult<string | undefined>;
 

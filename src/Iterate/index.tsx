@@ -1,4 +1,6 @@
 import { type ReactNode } from 'react';
+import { type MaybeFunction } from '../common/MaybeFunction.js';
+import { type MaybeAsyncIterable } from '../MaybeAsyncIterable/index.js';
 import { useAsyncIter, type IterationResult } from '../useAsyncIter/index.js';
 
 export { Iterate, type IterateProps };
@@ -110,7 +112,7 @@ function Iterate<TVal, TInitialVal = undefined>(props: IterateProps<TVal, TIniti
           const propsBetterTyped = props as IteratePropsWithRenderFunction<TVal, TInitialVal>;
           const next = useAsyncIter(
             propsBetterTyped.value,
-            propsBetterTyped.initialValue as TInitialVal
+            propsBetterTyped.initialValue as NonNullable<typeof propsBetterTyped.initialValue>
           );
           return propsBetterTyped.children(next);
         })()
@@ -143,16 +145,18 @@ type IteratePropsWithRenderFunction<TVal, TInitialVal = undefined> = {
    */
   value: TVal;
   /**
-   * An optional initial value, defaults to `undefined`. Will be the value provided inside the child
-   * render function when `<Iterate>` first renders on being mounted and while it's pending its first
-   * value to be yielded.
+   * An optional starting value, defaults to `undefined`. Will be the value inserted into the child render
+   * function when `<Iterate>` first renders during mount and while it's pending its first value to be
+   * yielded.
+   *
+   * You can pass an actual value, or a function that returns a value (which `<Iterate>` will call once during mounting).
    */
-  initialValue?: TInitialVal;
+  initialValue?: MaybeFunction<TInitialVal>;
   /**
    * A render function that is called for each step of the iteration, returning something to render
    * out of it.
    *
-   * @param nextIterationState - The current state of the iteration, including the yielded value, whether iteration is complete, any associated error, etc. (see {@link IterationResult `IterationResult`})
+   * @param nextIterationState - The current state of the iteration, including the yielded value, whether iteration is complete, any associated error, etc. (see {@link IterationResult `IterationResult`}).
    * @returns The content to render for the current iteration state.
    *
    * @see {@link IterateProps `IterateProps`}
@@ -169,10 +173,12 @@ type IteratePropsWithNoRenderFunction = {
   value?: undefined;
   /**
    * An optional initial value, defaults to `undefined`.
+   *
+   * You can pass an actual value, or a function that returns a value (which `<Iterate>` will call once during mounting).
    */
-  initialValue?: ReactNode;
+  initialValue?: MaybeFunction<ReactNode>;
   /**
    * The source value to render from, either an async iterable to iterate over of a plain value.
    */
-  children: ReactNode | AsyncIterable<ReactNode>;
+  children: MaybeAsyncIterable<ReactNode>;
 };
