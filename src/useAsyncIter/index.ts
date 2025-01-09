@@ -3,6 +3,7 @@ import { useLatest } from '../common/hooks/useLatest.js';
 import { isAsyncIter } from '../common/isAsyncIter.js';
 import { useSimpleRerender } from '../common/hooks/useSimpleRerender.js';
 import { useRefWithInitialValue } from '../common/hooks/useRefWithInitialValue.js';
+import { type MaybeFunction } from '../common/MaybeFunction.js';
 import { type ExtractAsyncIterValue } from '../common/ExtractAsyncIterValue.js';
 import {
   reactAsyncIterSpecialInfoSymbol,
@@ -102,7 +103,7 @@ const useAsyncIter: {
   <TVal>(input: TVal, initialVal?: undefined): IterationResult<TVal>;
   <TVal, TInitVal>(
     input: TVal,
-    initialVal: TInitVal | (() => TInitVal)
+    initialVal: MaybeFunction<TInitVal>
   ): IterationResult<TVal, TInitVal>;
 } = <
   TVal extends
@@ -118,7 +119,7 @@ const useAsyncIter: {
   TInitVal,
 >(
   input: TVal,
-  initialVal: TInitVal | (() => TInitVal)
+  initialVal: MaybeFunction<TInitVal>
 ): IterationResult<TVal, TInitVal> => {
   const rerender = useSimpleRerender();
 
