@@ -1,19 +1,19 @@
-import { useRef, useMemo, useEffect } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useLatest } from '../common/hooks/useLatest.js';
 import { isAsyncIter } from '../common/isAsyncIter.js';
 import { useSimpleRerender } from '../common/hooks/useSimpleRerender.js';
+import { useRefWithInitialValue } from '../common/hooks/useRefWithInitialValue.js';
 import { type ExtractAsyncIterValue } from '../common/ExtractAsyncIterValue.js';
 import {
   reactAsyncIterSpecialInfoSymbol,
   type ReactAsyncIterSpecialInfo,
 } from '../common/ReactAsyncIterable.js';
 import { iterateAsyncIterWithCallbacks } from '../common/iterateAsyncIterWithCallbacks.js';
+import { callOrReturn } from '../common/callOrReturn.js';
 import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { type iterateFormatted } from '../iterateFormatted/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export { useAsyncIter, type IterationResult };
-
-// TODO: The initial values should be able to be given as functions, having them called once on mount
 
 /**
  * `useAsyncIter` hooks up a single async iterable value to your component and its lifecycle.
@@ -62,7 +62,7 @@ export { useAsyncIter, type IterationResult };
  * @template TInitVal The type of the initial value, defaults to `undefined`.
  *
  * @param input Any async iterable or plain value.
- * @param initialVal Any initial value for the hook to return prior to resolving the ___first emission___ of the ___first given___ async iterable, defaults to `undefined`.
+ * @param initialVal Any optional starting value for the hook to return prior to the ___first yield___ of the ___first given___ async iterable, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call once during mounting).
  *
  * @returns An object with properties reflecting the current state of the iterated async iterable or plain value provided via `input` (see {@link IterationResult `IterationResult`}).
  *
@@ -100,7 +100,10 @@ export { useAsyncIter, type IterationResult };
  */
 const useAsyncIter: {
   <TVal>(input: TVal, initialVal?: undefined): IterationResult<TVal>;
-  <TVal, TInitVal>(input: TVal, initialVal: TInitVal): IterationResult<TVal, TInitVal>;
+  <TVal, TInitVal>(
+    input: TVal,
+    initialVal: TInitVal | (() => TInitVal)
+  ): IterationResult<TVal, TInitVal>;
 } = <
   TVal extends
     | undefined
@@ -112,19 +115,19 @@ const useAsyncIter: {
           ExtractAsyncIterValue<TVal>
         >;
       },
-  TInitVal = undefined,
+  TInitVal,
 >(
   input: TVal,
-  initialVal: TInitVal
+  initialVal: TInitVal | (() => TInitVal)
 ): IterationResult<TVal, TInitVal> => {
   const rerender = useSimpleRerender();
 
-  const stateRef = useRef<IterationResult<TVal, TInitVal>>({
-    value: initialVal as any,
+  const stateRef = useRefWithInitialValue<IterationResult<TVal, TInitVal>>(() => ({
+    value: callOrReturn(initialVal) as any,
     pendingFirst: true,
     done: false,
     error: undefined,
-  });
+  }));
 
   const latestInputRef = useLatest(input);
 
