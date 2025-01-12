@@ -4,6 +4,7 @@ import { cleanup as cleanupMountedReactTrees, act, render } from '@testing-libra
 import {
   iterateFormatted,
   IterateMulti,
+  ItMulti,
   type IterateMultiProps,
   type IterationResultSet,
 } from '../../src/index.js';
@@ -16,6 +17,10 @@ afterEach(() => {
 });
 
 describe('`IterateMulti` hook', () => {
+  it(gray('Importable also as `<ItMulti>`'), () => {
+    expect(IterateMulti).toStrictEqual(ItMulti);
+  });
+
   it(gray('When given an empty array, renders with an empty array'), async () => {
     const renderFn = vi.fn() as Mock<IterateMultiRenderFunc<[]>>;
 
