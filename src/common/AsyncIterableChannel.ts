@@ -1,10 +1,11 @@
 import { type MutableRefObject } from 'react';
-import { promiseWithResolvers } from '../common/promiseWithResolvers.js';
-import { callWithArgsOrReturn } from '../common/callWithArgsOrReturn.js';
+import { type MaybeFunction } from './MaybeFunction.js';
+import { promiseWithResolvers } from './promiseWithResolvers.js';
+import { callWithArgsOrReturn } from './callWithArgsOrReturn.js';
 
-export { IterableChannel, type AsyncIterableSubject };
+export { AsyncIterableChannel, type AsyncIterableSubject };
 
-class IterableChannel<T, TInit = T> {
+class AsyncIterableChannel<T, TInit = T> {
   #isClosed = false;
   #nextIteration = promiseWithResolvers<IteratorResult<T, void>>();
   #currentValue: T | TInit;
@@ -13,15 +14,16 @@ class IterableChannel<T, TInit = T> {
     this.#currentValue = initialValue;
   }
 
-  put(update: T | ((prevState: T | TInit) => T)): void {
-    if (!this.#isClosed) {
-      (async () => {
-        this.#currentValue = callWithArgsOrReturn(update, this.#currentValue);
-        await undefined; // Deferring to the next microtick so that an attempt to pull the a value before making multiple rapid synchronous calls to `put()` will make that pull ultimately yield only the last value that was put - instead of the first one as were if this otherwise wasn't deferred.
-        this.#nextIteration.resolve({ done: false, value: this.#currentValue });
-        this.#nextIteration = promiseWithResolvers();
-      })();
+  put(update: MaybeFunction<T, [prevState: T | TInit]>): void {
+    if (this.#isClosed) {
+      return;
     }
+    (async () => {
+      this.#currentValue = callWithArgsOrReturn(update, this.#currentValue);
+      await undefined; // Deferring to the next microtick so that an attempt to pull the a value before making multiple rapid synchronous calls to `put()` will make that pull ultimately yield only the last value that was put - instead of the first one as were if this otherwise wasn't deferred.
+      this.#nextIteration.resolve({ done: false, value: this.#currentValue });
+      this.#nextIteration = promiseWithResolvers();
+    })();
   }
 
   close(): void {
@@ -29,7 +31,7 @@ class IterableChannel<T, TInit = T> {
     this.#nextIteration.resolve({ done: true, value: undefined });
   }
 
-  values: AsyncIterableSubject<T, TInit> = {
+  out: AsyncIterableSubject<T, TInit> = {
     value: (() => {
       const self = this;
       return {

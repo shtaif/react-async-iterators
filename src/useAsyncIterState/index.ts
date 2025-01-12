@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { callOrReturn } from '../common/callOrReturn.js';
 import { useRefWithInitialValue } from '../common/hooks/useRefWithInitialValue.js';
+import { type MaybeFunction } from '../common/MaybeFunction.js';
 import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { IterableChannel, type AsyncIterableSubject } from './IterableChannel.js';
+import { AsyncIterableChannel, type AsyncIterableSubject } from '../common/AsyncIterableChannel.js';
 
 export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableSubject };
 
@@ -99,25 +100,25 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableSubject
 function useAsyncIterState<TVal>(): AsyncIterStateResult<TVal, undefined>;
 
 function useAsyncIterState<TVal>(
-  initialValue: TVal | (() => TVal)
+  initialValue: MaybeFunction<TVal>
 ): AsyncIterStateResult<TVal, TVal>;
 
 function useAsyncIterState<TVal, TInitVal = undefined>(
-  initialValue: TInitVal | (() => TInitVal)
+  initialValue: MaybeFunction<TInitVal>
 ): AsyncIterStateResult<TVal, TInitVal>;
 
 function useAsyncIterState<TVal, TInitVal>(
-  initialValue?: TInitVal | (() => TInitVal)
+  initialValue?: MaybeFunction<TInitVal>
 ): AsyncIterStateResult<TVal, TInitVal> {
   const ref = useRefWithInitialValue<{
-    channel: IterableChannel<TVal, TInitVal>;
+    channel: AsyncIterableChannel<TVal, TInitVal>;
     result: AsyncIterStateResult<TVal, TInitVal>;
   }>(() => {
     const initialValueCalced = callOrReturn(initialValue) as TInitVal;
-    const channel = new IterableChannel<TVal, TInitVal>(initialValueCalced);
+    const channel = new AsyncIterableChannel<TVal, TInitVal>(initialValueCalced);
     return {
       channel,
-      result: [channel.values, newVal => channel.put(newVal)],
+      result: [channel.out, newVal => channel.put(newVal)],
     };
   });
 
