@@ -1,9 +1,9 @@
-import { type MutableRefObject } from 'react';
 import { type MaybeFunction } from './MaybeFunction.js';
+import { type AsyncIterableSubject } from '../AsyncIterableSubject/index.js';
 import { promiseWithResolvers } from './promiseWithResolvers.js';
 import { callWithArgsOrReturn } from './callWithArgsOrReturn.js';
 
-export { AsyncIterableChannel, type AsyncIterableSubject };
+export { AsyncIterableChannel, type AsyncIterableChannelSubject };
 
 class AsyncIterableChannel<T, TInit = T> {
   #isClosed = false;
@@ -31,7 +31,7 @@ class AsyncIterableChannel<T, TInit = T> {
     this.#nextIteration.resolve({ done: true, value: undefined });
   }
 
-  out: AsyncIterableSubject<T, TInit> = {
+  out: AsyncIterableChannelSubject<T, TInit> = {
     value: (() => {
       const self = this;
       return {
@@ -64,12 +64,7 @@ class AsyncIterableChannel<T, TInit = T> {
  * meaning that multiple iterators can be consumed (iterated) simultaneously and each one would pick up
  * the same values as others the moment they were generated through state updates.
  */
-type AsyncIterableSubject<T, TInit> = {
-  /**
-   * A React Ref-like object whose inner `current` property shows the most up to date state value.
-   */
-  value: Readonly<MutableRefObject<T | TInit>>;
-
+type AsyncIterableChannelSubject<T, TCurrVal = T> = AsyncIterableSubject<T, TCurrVal> & {
   /**
    * Returns an async iterator to iterate over. All iterators returned by this share the same source
    * values - they can be iterated by multiple consumers simultaneously and each would pick up the

@@ -3,9 +3,12 @@ import { callOrReturn } from '../common/callOrReturn.js';
 import { useRefWithInitialValue } from '../common/hooks/useRefWithInitialValue.js';
 import { type MaybeFunction } from '../common/MaybeFunction.js';
 import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { AsyncIterableChannel, type AsyncIterableSubject } from '../common/AsyncIterableChannel.js';
+import {
+  AsyncIterableChannel,
+  type AsyncIterableChannelSubject,
+} from '../common/AsyncIterableChannel.js';
 
-export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableSubject };
+export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableChannelSubject };
 
 /**
  * Basically like {@link https://react.dev/reference/react/useState `React.useState`}, only that the value
@@ -148,11 +151,11 @@ type AsyncIterStateResult<TVal, TInitVal> = [
    * meaning multiple iterators can be consumed (iterated) simultaneously, each one picking up the
    * same values as others the moment they were generated through state updates.
    */
-  values: AsyncIterableSubject<TVal, TInitVal>,
+  values: AsyncIterableChannelSubject<TVal, TInitVal>,
 
   /**
    * A function which updates the state, causing the paired async iterable to yield the updated state
    * value and immediately sets its `.current.value` property to the latest state.
    */
-  setValue: (update: TVal | ((prevState: TVal | TInitVal) => TVal)) => void,
+  setValue: (update: MaybeFunction<TVal, [prevState: TVal | TInitVal]>) => void,
 ];
