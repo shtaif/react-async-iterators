@@ -444,6 +444,59 @@ describe('`useAsyncIterMulti` hook', () => {
     }
   );
 
+  describe(
+    gray(
+      'When given multiple iterables with `.value.current` properties at any point, uses these as current values respectively and skips the pending stages'
+    ),
+    () =>
+      [{ initialValues: undefined }, { initialValues: ['_1', '_2'] }].forEach(
+        ({ initialValues }) => {
+          it(
+            gray(
+              `${!initialValues?.length ? 'without initial values' : 'with initial values and ignoring them'}`
+            ),
+            async () => {
+              const [channel1, channel2] = ['__current__1', '__current__2'].map(current =>
+                Object.assign(new IteratorChannelTestHelper<string>(), {
+                  value: { current },
+                })
+              );
+
+              const renderedHook = renderHook(
+                props => useAsyncIterMulti(props.channels, { initialValues }),
+                { initialProps: { channels: [] as AsyncIterable<string>[] } }
+              );
+
+              const results: any[] = [];
+
+              for (const run of [
+                () => act(() => renderedHook.rerender({ channels: [channel1] })),
+                () => act(() => channel1.put('a')),
+                () => act(() => renderedHook.rerender({ channels: [channel2, channel1] })),
+                () => act(() => channel2.put('b')),
+              ]) {
+                await run();
+                results.push(renderedHook.result.current);
+              }
+
+              expect(results).toStrictEqual([
+                [{ value: '__current__1', pendingFirst: false, done: false, error: undefined }],
+                [{ value: 'a', pendingFirst: false, done: false, error: undefined }],
+                [
+                  { value: '__current__2', pendingFirst: false, done: false, error: undefined },
+                  { value: 'a', pendingFirst: false, done: false, error: undefined },
+                ],
+                [
+                  { value: 'b', pendingFirst: false, done: false, error: undefined },
+                  { value: 'a', pendingFirst: false, done: false, error: undefined },
+                ],
+              ]);
+            }
+          );
+        }
+      )
+  );
+
   it(gray('When unmounted will close all active iterators it has been holding'), async () => {
     const channel1 = new IteratorChannelTestHelper<'a' | 'b' | 'c'>();
     const channel2 = new IteratorChannelTestHelper<'a' | 'b' | 'c'>();

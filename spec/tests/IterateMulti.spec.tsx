@@ -665,6 +665,72 @@ describe('`IterateMulti` hook', () => {
     }
   );
 
+  describe(
+    gray(
+      'When given multiple iterables with `.value.current` properties at any point, uses these as current values respectively and skips the pending stages'
+    ),
+    () =>
+      [{ initialValues: undefined }, { initialValues: ['_1', '_2'] }].forEach(
+        ({ initialValues }) => {
+          it(
+            gray(
+              `${!initialValues?.length ? 'without initial values' : 'with initial values and ignoring them'}`
+            ),
+            async () => {
+              const renderFn = vi.fn() as Mock<
+                (nexts: IterationResultSet<AsyncIterable<string>[]>) => any
+              >;
+              const [channel1, channel2] = ['__current__1', '__current__2'].map(current =>
+                Object.assign(new IteratorChannelTestHelper<string>(), {
+                  value: { current },
+                })
+              );
+
+              const Component = (props: { values: AsyncIterable<string>[] }) => (
+                <IterateMulti values={props.values}>
+                  {renderFn.mockImplementation(() => (
+                    <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+                  ))}
+                </IterateMulti>
+              );
+
+              const rendered = render(<></>);
+              const renderedHtmls = [];
+
+              for (const run of [
+                () => act(() => rendered.rerender(<Component values={[channel1]} />)),
+                () => act(() => channel1.put('a')),
+                () => act(() => rendered.rerender(<Component values={[channel2, channel1]} />)),
+                () => act(() => channel2.put('b')),
+              ]) {
+                await run();
+                renderedHtmls.push(rendered.container.innerHTML);
+              }
+
+              expect(renderFn.mock.calls.flat()).toStrictEqual([
+                [{ value: '__current__1', pendingFirst: false, done: false, error: undefined }],
+                [{ value: 'a', pendingFirst: false, done: false, error: undefined }],
+                [
+                  { value: '__current__2', pendingFirst: false, done: false, error: undefined },
+                  { value: 'a', pendingFirst: false, done: false, error: undefined },
+                ],
+                [
+                  { value: 'b', pendingFirst: false, done: false, error: undefined },
+                  { value: 'a', pendingFirst: false, done: false, error: undefined },
+                ],
+              ]);
+              expect(renderedHtmls).toStrictEqual([
+                '<div id="test-created-elem">Render count: 1</div>',
+                '<div id="test-created-elem">Render count: 2</div>',
+                '<div id="test-created-elem">Render count: 3</div>',
+                '<div id="test-created-elem">Render count: 4</div>',
+              ]);
+            }
+          );
+        }
+      )
+  );
+
   it(gray('When unmounted will close all active iterators it has been holding'), async () => {
     const renderFn = vi.fn() as Mock<
       (

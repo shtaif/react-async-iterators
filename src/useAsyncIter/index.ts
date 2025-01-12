@@ -4,7 +4,7 @@ import { isAsyncIter } from '../common/isAsyncIter.js';
 import { useSimpleRerender } from '../common/hooks/useSimpleRerender.js';
 import { useRefWithInitialValue } from '../common/hooks/useRefWithInitialValue.js';
 import { type MaybeFunction } from '../common/MaybeFunction.js';
-import { type ExtractAsyncIterValue } from '../common/ExtractAsyncIterValue.js';
+import { type AsyncIterableSubject } from '../AsyncIterableSubject/index.js';
 import {
   reactAsyncIterSpecialInfoSymbol,
   type ReactAsyncIterSpecialInfo,
@@ -109,26 +109,21 @@ const useAsyncIter: {
     input: TVal,
     initialVal: MaybeFunction<TInitVal>
   ): IterationResult<TVal, TInitVal>;
-} = <
-  TVal extends
+} = (
+  input:
     | undefined
     | null
     | {
-        [Symbol.asyncIterator]?: () => AsyncIterator<ExtractAsyncIterValue<TVal>, unknown, unknown>;
-        [reactAsyncIterSpecialInfoSymbol]?: ReactAsyncIterSpecialInfo<
-          unknown,
-          ExtractAsyncIterValue<TVal>
-        >;
+        [Symbol.asyncIterator]?: () => AsyncIterator<unknown, unknown, unknown>;
+        [reactAsyncIterSpecialInfoSymbol]?: ReactAsyncIterSpecialInfo<unknown, unknown>;
+        value?: AsyncIterableSubject<unknown>['value'];
       },
-  TInitVal,
->(
-  input: TVal,
-  initialVal: MaybeFunction<TInitVal>
-): IterationResult<TVal, TInitVal> => {
+  initialVal: MaybeFunction<unknown>
+): IterationResult<unknown, unknown> => {
   const rerender = useSimpleRerender();
 
-  const stateRef = useRefWithInitialValue<IterationResult<TVal, TInitVal>>(() => ({
-    value: callOrReturn(initialVal) as any,
+  const stateRef = useRefWithInitialValue<IterationResult<unknown, unknown>>(() => ({
+    value: callOrReturn(initialVal) /*as any*/,
     pendingFirst: true,
     done: false,
     error: undefined,
@@ -141,7 +136,7 @@ const useAsyncIter: {
     useEffect(() => {}, [undefined]);
 
     stateRef.current = {
-      value: latestInputRef.current as ExtractAsyncIterValue<TVal>,
+      value: latestInputRef.current /*as unknown*/,
       pendingFirst: false,
       done: false,
       error: undefined,
@@ -153,10 +148,23 @@ const useAsyncIter: {
       latestInputRef.current[reactAsyncIterSpecialInfoSymbol]?.origSource ?? latestInputRef.current;
 
     useMemo((): void => {
-      const prevSourceLastestVal = stateRef.current.value;
+      const latestInputRefCurrent = latestInputRef.current!;
+
+      let value;
+      let pendingFirst;
+
+      if (latestInputRefCurrent.value) {
+        value = latestInputRefCurrent.value.current;
+        pendingFirst = false;
+      } else {
+        const prevSourceLastestVal = stateRef.current.value;
+        value = prevSourceLastestVal;
+        pendingFirst = true;
+      }
+
       stateRef.current = {
-        value: prevSourceLastestVal,
-        pendingFirst: true,
+        value,
+        pendingFirst,
         done: false,
         error: undefined,
       };
@@ -171,7 +179,7 @@ const useAsyncIter: {
 
         const formattedValue = possibleGivenFormatFn
           ? possibleGivenFormatFn(next.value, iterationIdx++)
-          : (next.value as ExtractAsyncIterValue<TVal>);
+          : next.value; /*as unknown*/
 
         stateRef.current = {
           ...next,
@@ -205,7 +213,11 @@ type IterationResult<TVal, TInitVal = undefined> = {
    * When the source iterable changes and an iteration restarts with a new iterable, the same last
    * `value` is carried over and reflected until the new iterable resolves its first value.
    * */
-  value: TVal extends AsyncIterable<infer J> ? J | TInitVal : TVal;
+  value: TVal extends AsyncIterableSubject<infer J>
+    ? J
+    : TVal extends AsyncIterable<infer J>
+      ? J | TInitVal
+      : TVal;
 
   /**
    * Indicates whether the iterated async iterable is still pending its own first value to be
@@ -245,11 +257,13 @@ type IterationResult<TVal, TInitVal = undefined> = {
    */
   error: unknown;
 } & (
-  | {
-      pendingFirst: true;
-      done: false;
-      error: undefined;
-    }
+  | (TVal extends AsyncIterableSubject<unknown>
+      ? never
+      : {
+          pendingFirst: true;
+          done: false;
+          error: undefined;
+        })
   | ({
       pendingFirst: false;
     } & (
@@ -263,3 +277,5 @@ type IterationResult<TVal, TInitVal = undefined> = {
         }
     ))
 );
+
+type ___1 = { a: string } & never;
