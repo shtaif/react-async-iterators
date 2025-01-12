@@ -3,6 +3,7 @@ import { useSimpleRerender } from '../common/hooks/useSimpleRerender.js';
 import { useRefWithInitialValue } from '../common/hooks/useRefWithInitialValue.js';
 import { isAsyncIter } from '../common/isAsyncIter.js';
 import { type IterationResult } from '../useAsyncIter/index.js';
+import { type AsyncIterableSubject } from '../AsyncIterableSubject/index.js';
 import { asyncIterSyncMap } from '../common/asyncIterSyncMap.js';
 import { parseReactAsyncIterable } from '../common/ReactAsyncIterable.js';
 import { iterateAsyncIterWithCallbacks } from '../common/iterateAsyncIterWithCallbacks.js';
@@ -255,14 +256,26 @@ function useAsyncIterMulti<
       return existingIterState.currState;
     }
 
-    const initialValue = prevResults[i] ? prevResults[i].value : initialValues[i]; // TODO: Sure this is the ideal behavior, to use prev iter that happened to be at that position as the value that a new one starts with, even though positions could have been shuffled?
-
     const formattedIter: AsyncIterable<unknown> = (() => {
       let iterationIdx = 0;
       return asyncIterSyncMap(baseIter, value => newIterState.formatFn(value, iterationIdx++));
     })();
 
-    const destroyFn = iterateAsyncIterWithCallbacks(formattedIter, initialValue, next => {
+    const inputWithMaybeCurrentValue = input as typeof input & {
+      value?: AsyncIterableSubject<unknown>['value'];
+    };
+
+    let startingValue;
+    let pendingFirst;
+    if (inputWithMaybeCurrentValue.value) {
+      startingValue = inputWithMaybeCurrentValue.value.current;
+      pendingFirst = false;
+    } else {
+      startingValue = prevResults[i] ? prevResults[i].value : initialValues[i]; // TODO: Sure this is the ideal behavior, to use prev iter that happened to be at that position as the value that a new one starts with, even though positions could have been shuffled?
+      pendingFirst = true;
+    }
+
+    const destroyFn = iterateAsyncIterWithCallbacks(formattedIter, startingValue, next => {
       newIterState.currState = { pendingFirst: false, ...next };
       update();
     });
@@ -272,8 +285,8 @@ function useAsyncIterMulti<
       destroy: destroyFn,
       formatFn,
       currState: {
-        value: initialValue,
-        pendingFirst: true as const,
+        value: startingValue,
+        pendingFirst,
         done: false as const,
         error: undefined,
       } as IterationResult<unknown, unknown>,
