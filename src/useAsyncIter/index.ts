@@ -34,6 +34,8 @@ export { useAsyncIter, type IterationResult };
  *   );
  * }
  * ```
+ * 
+ * ---
  *
  * Given an async iterable `input`, this hook will iterate it value-by-value and update (re-render) the
  * host component upon each yielded value, along with any possible completion or error it may run into.
@@ -58,6 +60,8 @@ export { useAsyncIter, type IterationResult };
  * {@link IterationResult `IterationResult`}).
  * In case `input` is given a plain value, it will be delivered as-is within the returned
  * result object's `value` property.
+ * 
+ * ---
  *
  * @template TVal The type of values yielded by the passed iterable or type of plain value if otherwise passed.
  * @template TInitVal The type of the initial value, defaults to `undefined`.
