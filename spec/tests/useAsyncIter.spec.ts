@@ -2,6 +2,7 @@ import { it, describe, expect, afterEach, vi } from 'vitest';
 import { gray } from 'colorette';
 import { cleanup as cleanupMountedReactTrees, act, renderHook } from '@testing-library/react';
 import { useAsyncIter, iterateFormatted } from '../../src/index.js';
+import { pipe } from '../utils/pipe.js';
 import { asyncIterOf } from '../utils/asyncIterOf.js';
 import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
 
@@ -435,41 +436,57 @@ describe('`useAsyncIter` hook', () => {
       'When given an iterable with a `.value.current` property at any point, uses that as the current value and skips the pending stage'
     ),
     () =>
-      [{ initialValue: undefined }, { initialValue: '_' }].forEach(({ initialValue }) => {
-        it(
-          gray(`${!initialValue ? 'without initial value' : 'with initial value and ignoring it'}`),
-          async () => {
-            const [channel1, channel2] = ['__current__1', '__current__2'].map(current =>
-              Object.assign(new IteratorChannelTestHelper<string>(), {
-                value: { current },
-              })
-            );
+      ([{ initialValue: undefined }, { initialValue: '_' }] as const).forEach(
+        ({ initialValue }) => {
+          it(
+            gray(
+              `${!initialValue ? 'without initial value' : 'with initial value and ignoring it'}`
+            ),
+            async () => {
+              const [channel1, channel2] = ['a_current', 'b_current'].map(current =>
+                Object.assign(new IteratorChannelTestHelper<string>(), {
+                  value: { current },
+                })
+              );
 
-            const renderedHook = renderHook(props => useAsyncIter(props.channel, initialValue), {
-              initialProps: { channel: undefined as undefined | AsyncIterable<string> },
-            });
+              const renderedHook = renderHook(props => useAsyncIter(props.value, initialValue), {
+                initialProps: { value: undefined as undefined | AsyncIterable<string> },
+              });
 
-            const results: any[] = [];
+              const results: any[] = [];
 
-            for (const run of [
-              () => act(() => renderedHook.rerender({ channel: channel1 })),
-              () => act(() => channel1.put('a')),
-              () => act(() => renderedHook.rerender({ channel: channel2 })),
-              () => act(() => channel2.put('b')),
-            ]) {
-              await run();
-              results.push(renderedHook.result.current);
+              for (const run of [
+                () =>
+                  act(() =>
+                    renderedHook.rerender({
+                      value: channel1,
+                    })
+                  ),
+                () => act(() => channel1.put('a')),
+                () =>
+                  act(() =>
+                    renderedHook.rerender({
+                      value: iterateFormatted(channel2, (val, i) => `${val}_formatted_${i}`),
+                    })
+                  ),
+                () => act(() => channel2.put('b')),
+              ]) {
+                await run();
+                results.push(renderedHook.result.current);
+              }
+
+              expect(results).toStrictEqual(
+                ['a_current', 'a', 'b_current_formatted_0', 'b_formatted_0'].map(value => ({
+                  value,
+                  pendingFirst: false,
+                  done: false,
+                  error: undefined,
+                }))
+              );
             }
-
-            expect(results).toStrictEqual([
-              { value: '__current__1', pendingFirst: false, done: false, error: undefined },
-              { value: 'a', pendingFirst: false, done: false, error: undefined },
-              { value: '__current__2', pendingFirst: false, done: false, error: undefined },
-              { value: 'b', pendingFirst: false, done: false, error: undefined },
-            ]);
-          }
-        );
-      })
+          );
+        }
+      )
   );
 
   it(gray('When unmounted will close the last active iterator it held'), async () => {
@@ -603,7 +620,7 @@ describe('`useAsyncIter` hook', () => {
 
   it(
     gray(
-      'When given a `ReactAsyncIterable` yielding `undefined`s or `null`s that wraps an iter which originally yields non-nullable values, returns the `undefined`s and `null`s in the result as expected'
+      'When given a `ReactAsyncIterable` yielding `undefined`s or `null`s that wraps an iter which originally yields non-nullable values, returns the `undefined`s and `null`s in the result as expected (https://github.com/shtaif/react-async-iterators/pull/32)'
     ),
     async () => {
       const channel = new IteratorChannelTestHelper<string>();
