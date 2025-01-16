@@ -10,6 +10,6 @@ type AsyncIterableSubject<T, TCurrVal = T> = AsyncIterable<T> & {
    */
 
   value: {
-    readonly current?: T | TCurrVal;
+    readonly current: T | TCurrVal;
   };
 };
