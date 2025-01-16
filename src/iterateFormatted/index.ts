@@ -5,7 +5,7 @@ import {
 } from '../common/ReactAsyncIterable.js';
 import { asyncIterSyncMap } from '../common/asyncIterSyncMap.js';
 import { isAsyncIter } from '../common/isAsyncIter.js';
-import { type ExtractAsyncIterValue } from '../common/ExtractAsyncIterValue.js';
+import { type DeasyncIterized } from '../common/DeasyncIterized.js';
 import { type AsyncIterableSubject } from '../AsyncIterableSubject/index.js';
 import { type useAsyncIter } from '../useAsyncIter/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -81,10 +81,10 @@ export { iterateFormatted };
 function iterateFormatted<TIn, TRes>(
   source: TIn,
   formatFn: (
-    value: ExtractAsyncIterValue<TIn> | (TIn extends AsyncIterableSubject<infer J> ? J : never),
+    value: DeasyncIterized<TIn> | (TIn extends AsyncIterableSubject<infer J> ? J : never),
     i: number
   ) => TRes
-): ReactAsyncIterable<ExtractAsyncIterValue<TIn>, TRes> &
+): ReactAsyncIterable<DeasyncIterized<TIn>, TRes> &
   (TIn extends AsyncIterableSubject<unknown>
     ? { value: AsyncIterableSubject<TRes>['value'] }
     : { value: undefined });
