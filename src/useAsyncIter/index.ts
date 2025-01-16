@@ -119,10 +119,10 @@ const useAsyncIter: {
         value?: AsyncIterableSubject<unknown>['value'];
       },
   initialVal: MaybeFunction<unknown>
-): IterationResult<unknown, unknown> => {
+): IterationResult<any, any> => {
   const rerender = useSimpleRerender();
 
-  const stateRef = useRefWithInitialValue<IterationResult<unknown, unknown>>(() => ({
+  const stateRef = useRefWithInitialValue<IterationResult<any, any>>(() => ({
     value: callOrReturn(initialVal) /*as any*/,
     pendingFirst: true,
     done: false,
@@ -259,11 +259,13 @@ type IterationResult<TVal, TInitVal = undefined> = {
 } & (
   | (TVal extends AsyncIterableSubject<unknown>
       ? never
-      : {
-          pendingFirst: true;
-          done: false;
-          error: undefined;
-        })
+      : TVal extends AsyncIterable<unknown>
+        ? {
+            pendingFirst: true;
+            done: false;
+            error: undefined;
+          }
+        : never)
   | ({
       pendingFirst: false;
     } & (
