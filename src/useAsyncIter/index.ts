@@ -225,8 +225,8 @@ type IterationResult<TVal, TInitVal = undefined> = {
    * Will appear `false` for any iterations thereafter and reset back every time the iteratee
    * is changed to a new one.
    *
-   * Can be used in certain cases for displaying _"loading" states_ metaphorically similar to
-   * a how a pending state of a promise is thought of.
+   * Can be used for displaying _"loading" states_ in many cases, metaphorically similar to
+   * a how promise's pending state is thought of.
    *
    * Is always `false` for any plain value given instead of an async iterable.
    */
@@ -279,5 +279,3 @@ type IterationResult<TVal, TInitVal = undefined> = {
         }
     ))
 );
-
-type ___1 = { a: string } & never;
