@@ -45,6 +45,7 @@ class AsyncIterableChannel<T, TInit = T> {
       const whenIteratorClosed = promiseWithResolvers<IteratorReturnResult<undefined>>();
       return {
         next: () => {
+          // TODO: Should every iterator of this kind here yield `this.#currentValue` first?...
           return Promise.race([this.#nextIteration.promise, whenIteratorClosed.promise]);
         },
         return: async () => {

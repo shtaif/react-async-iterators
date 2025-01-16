@@ -70,7 +70,7 @@ export { iterateFormatted };
  * If `source` is a plain value and not an async iterable, it will be passed to the given `formatFn`
  * and returned on the spot.
  *
- * @template TIn The type of values yielded by the passed iterable or of a plain value passed otherwise.
+ * @template TIn The full type of the source input.
  * @template TRes The type of values resulting after formatting.
  *
  * @param source Any async iterable or plain value.
@@ -78,7 +78,7 @@ export { iterateFormatted };
  *
  * @returns a transformed async iterable emitting every value of `source` after formatting.
  */
-function iterateFormatted<TIn extends AsyncIterable<unknown>, TRes>(
+function iterateFormatted<TIn, TRes>(
   source: TIn,
   formatFn: (
     value: ExtractAsyncIterValue<TIn> | (TIn extends AsyncIterableSubject<infer J> ? J : never),
@@ -88,8 +88,6 @@ function iterateFormatted<TIn extends AsyncIterable<unknown>, TRes>(
   (TIn extends AsyncIterableSubject<unknown>
     ? { value: Required<AsyncIterableSubject<TRes>['value']> }
     : { value: undefined });
-
-function iterateFormatted<TIn, TRes>(source: TIn, formatFn: (value: TIn, i: number) => TRes): TRes;
 
 function iterateFormatted(
   source:
