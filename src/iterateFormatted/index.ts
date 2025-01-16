@@ -86,7 +86,7 @@ function iterateFormatted<TIn, TRes>(
   ) => TRes
 ): ReactAsyncIterable<ExtractAsyncIterValue<TIn>, TRes> &
   (TIn extends AsyncIterableSubject<unknown>
-    ? { value: Required<AsyncIterableSubject<TRes>['value']> }
+    ? { value: AsyncIterableSubject<TRes>['value'] }
     : { value: undefined });
 
 function iterateFormatted(
