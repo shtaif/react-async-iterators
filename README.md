@@ -287,6 +287,7 @@ The following phases and state properties are reflected from all consumer utilit
     Description
   </th>
 </tr>
+
 <tr>
   <td>
 
@@ -310,6 +311,13 @@ a single occurrence of:
 
   </td>
 </tr>
+
+<tr>
+  <td colspan="3" align="center">
+    ⬇️
+  </td>
+</tr>
+
 <tr>
   <td>
 
@@ -333,6 +341,13 @@ a single occurrence of:
 
   </td>
 </tr>
+
+<tr>
+  <td colspan="3" align="center">
+    ⬇️
+  </td>
+</tr>
+
 <tr>
   <td>
 
@@ -356,14 +371,12 @@ with `error` property being `undefined` - __ending due to completion - source is
 
   </td>
 </tr>
+
 <tr>
-  <td>
+  <td colspan="3" align="center">
 
-<span>___Repeat when changing to new source value___ 🔃</span>
+🔃 _Repeat when changing to new source value_ 🔃
 
-  </td>
-  <td>
-    ***
   </td>
 </tr>
 </table>
@@ -386,9 +399,11 @@ For example, the stateful iterable created from the [`useAsyncIterState`]() hook
 
 ## Formatting values
 
-When building your app with components accepting async iterable data as props, and as you render these and have to provide them such props, a common need emerges to re-format held async iterables' value shapes before they could match the values asked by such props. [`iterateFormatted`]() is an easy to use utility for many such cases.
+<!-- (^^^ should add "and transforming iterables"?) -->
 
-For instance, let's say we're trying to use an existing `<Select>` generic component, which supports getting its option list __in async iterable form__, so it could update its rendered dropdown in real-time as new sets of options are yielded. It is used like so;
+When building your app with components accepting async iterable data as props, and as you render these and have to provide such props, you may commonly see a need to _re-format_ held async iterables' value shapes before they could match the values asked by such props. [`iterateFormatted`]() is an easy to use utility for many such cases.
+
+For instance, let's say we're trying to use an existing `<Select>` generic component, which supports being provided its option list __in async iterable form__, so it could update its rendered dropdown in real-time as new sets of options are yielded. It is used like so;
 
 ```tsx
 <Select
@@ -413,7 +428,7 @@ const currenciesIter = getAvailableCurrenciesIter();
 // }
 ```
 
-As seen, the yielded types between these two don't match (properties are not matching).
+As seen, the value types between these two aren't compatible (properties are not matching).
 
 Using [`iterateFormatted`]() our source iterable can be formatted/transformed to fit like so:
 
@@ -426,29 +441,28 @@ function MyComponent() {
       <Select
         options={iterateFormatted(currenciesIter, ({ isoCode, name }) => ({
           value: isoCode,
-          label: name,
+          label: `${name} (${isoCode})`
         }))}
       />
-      // ...
     </div>
   );
 }
 ```
 
-Alternatively, such transformation can be also achieved like so, with help from [`React.useMemo`](https://react.dev/reference/react/useMemo) and the multitude of existing helpers from libraries like [`iter-tools`](https://github.com/iter-tools/iter-tools):
+Alternatively, such transformation can be also achieved (entirely legitimately) with help from [`React.useMemo`](https://react.dev/reference/react/useMemo) and some "mapping" operator from the multitude of helpers available from libraries like [`iter-tools`](https://github.com/iter-tools/iter-tools):
 
 ```tsx
 import { useMemo } from 'react';
-import { execPipe, asyncMap } from 'iter-tools';
+import { execPipe as pipe, asyncMap } from 'iter-tools';
 
 function MyComponent() {
   const formattedCurrenciesIter = useMemo(
     () =>
-      execPipe(
+      pipe(
         getAvailableCurrenciesIter(),
         asyncMap(({ isoCode, name }) => ({
           value: isoCode,
-          label: name,
+          label: `${name} (${isoCode})`
         }))
       ),
     []
@@ -457,143 +471,13 @@ function MyComponent() {
   return (
     <div>
       <Select options={formattedCurrenciesIter} />
-      // ...
     </div>
   );
 }
 ```
 
-But in cases with multiple...
-
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-
-```tsx
-const currenciesIter = getAvailableCurrenciesIter();
-
-function MyComponent() {
-  currenciesIter;
-  // ^ here we got an async iter yielding:
-  // {
-  //   isoCode: string;
-  //   name: string;
-  // }
-
-  return (
-    <div>
-      <Select
-        options={
-          // BUT we here need an async iter yielding:
-          // {
-          //   value: string;
-          //   label: string;
-          // }
-        }
-      />
-    </div>
-  );
-
-  // assume `<Select>` supports getting `options` in async iter form, thus it can update its dropdown when in real-time as updated currencies are yielded.
-}
-```
-
-When you build app components with props accepting async iterable data, you'll probably find yourself needing to re-format values of source iterables so they match the types and shapes expected by those said app components, as they're probably decoupled to any particular source iterables' shapes you have. For this need and more, `react-async-iterators` packages a utility called [`iterateFormatted`]().
-
-```tsx
-function CountrySelect(
-  props: AsyncIterable<{ value: string; label: string }>
-) {
-  
-}
-```
-
-`react-async-iterators` offers a way to format 
-
-```tsx
-function MyComponent(props) {
-  const { currencies, products } = props;
-
-  return (
-    <div>
-      <SelectDropdown
-        options={currencies.map(({ isoCode, name }) => ({
-          value: isoCode,
-          label: name,
-        }))}
-      />
-      <ProductList
-        products={products.map(({ id, name, price }) => ({
-          sku: id,
-          name,
-          price,
-        }))}
-      />
-    <div>
-  );
-}
-```
-
-```tsx
-// `useMemo` with some pseudo third-party mapping helper `mapAsyncIter`:
-
-function MyComponent(props) {
-  const { currencies, products } = props; // `currencies` and `products` are async iterables
-
-  const currenciesFormatted = useMemo(
-    () =>
-      mapAsyncIter(currencies, ({ isoCode, name }) => ({
-        value: isoCode,
-        label: name,
-      })),
-    [currencies]
-  );
-
-  const productsFormatted = useMemo(
-    () =>
-      mapAsyncIter(products, ({ id, name, price }) => ({
-        sku: id,
-        name,
-        price,
-      })),
-    [products]
-  );
-
-  return (
-    <div>
-      <SelectDropdown options={currenciesFormatted} />
-      <ProductList products={productsFormatted} />
-    <div>
-  );
-}
-```
-
-```tsx
-function MyComponent(props) {
-  const { currencies, products } = props; // `currencies` and `products` are async iterables
-
-  return (
-    <div>
-      <SelectDropdown
-        options={iterateFormatted(currencies, ({ isoCode, name }) => ({
-          value: isoCode,
-          label: name,
-        }))}
-      />
-      <ProductList
-        products={iterateFormatted(products, ({ id, name, price }) => ({
-          sku: id,
-          name,
-          price,
-        }))}
-      />
-    <div>
-  );
-}
-```
+> <br/>ℹ️ Calls to [`iterateFormatted`]() return _formatted_ versions of `currenciesIter` with some transparent metadata, used by library's consumers (like [`<It>`]()) to associate every transformed iterable with the original source iterable so existing iteration states could be maintained. It's safe therefore to recreate and pass on formatted iterables from repeated calls to [`iterateFormatted`]() across re-renders (as long the same source is used with it consistently).<br/><br/>
+So it might be more ergonomic to use [`iterateFormatted`]() vs compositions that involve [`React.useMemo`](https://react.dev/reference/react/useMemo), especially with multiple iterables - unless you require more elaborate transformations then simply mapping/formatting yielded values.<br/><br/>
 
 
 
