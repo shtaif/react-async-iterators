@@ -19,7 +19,7 @@
   </a>
 <p>
 
-Async iterables/iterators are a native language construct in JS that can be viewed as a counterpart to [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), in the sense that while a promise asynchronously resolves one value - an async iterable on the other hand is a stream that asynchronously yields any number of values.
+Async iterables/iterators are a native language construct in JS that can be viewed as a counterpart to [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), in the sense that while a promise asynchronously resolves one value - an async iterable is a stream that asynchronously yields any number of values.
 
 Somewhat obvious to say, the React ecosystem features many methods and tools that have to do with integrating promise-based data into your React components; from higher level SDK libraries, state managers - to generic async utilities, which make the different promise states available to the rendering. And just like that - `react-async-iterators` packs hooks, components and utilities written in TypeScript with the aim to make async iterables into __first-class citizens to React__ as they become gradually more prevalent across the JavaScript platform.
 
@@ -70,6 +70,34 @@ const randoms = (async function* () {
 //   etc.
 ```
 
+<!-- TODO: Include this example somewhere? -->
+<!-- ```tsx
+import { useMemo } from 'react';
+import { useAsyncIter } from 'react-async-iterators';
+
+function LiveUserProfile(props: { userId: string }) {
+  const profileIter = useMemo(
+    () => subscribeToUserProfile(props.userId),
+    [props.userId]
+  );
+
+  const { pendingFirst, value: profile } = useAsyncIter(profileIter);
+
+  return (
+    <div>
+      {pendingFirst ? (
+        'Loading profile...'
+      ) : (
+        <>
+          <div>First name: {profile.firstName}</div>
+          <div>Last name: {profile.lastName}</div>
+        </>
+      )}
+    </div>
+  );
+}
+``` -->
+
 
 
 # Highlights
@@ -87,7 +115,7 @@ const randoms = (async function* () {
 - [Installation](#installation)
 - [Walkthrough](#walkthrough)
   - [Consuming async iterables](#consuming-async-iterables)
-    - [Plain values](#plain-values)
+  - [Plain values](#plain-values)
   - [Iteration lifecycle](#iteration-lifecycle)
   - [Async iterables with current values](#async-iterables-with-current-values)
   - [Formatting values](#formatting-values)
@@ -182,7 +210,7 @@ When segregating data flows and relationships across the components' render code
 
 
 
-### Plain values
+## Plain values
 
 All of the consuming hooks and components __also__ accept plain (_"non-iterable"_) values safely, rendering them as-are with very low extra overhead - their inputs may alternate between async iterable and plain values at any time.
 
@@ -246,7 +274,9 @@ Whenever the consumer receives a _new_ value to iterate, it will immediately dis
 
 Finally, when the consumer is unmounted, the current running iteration is disposed of as well.
 
-### Iteration lifecycle phases:
+### Iteration lifecycle phases
+
+The following phases and state properties are reflected from all consumer utilities (with hooks - returned, with components - injected to their provided render functions):
 
 <table>
 <tr>
@@ -326,6 +356,16 @@ with `error` property being `undefined` - __ending due to completion - source is
 
   </td>
 </tr>
+<tr>
+  <td>
+
+<span>___Repeat when changing to new source value___ 🔃</span>
+
+  </td>
+  <td>
+    ***
+  </td>
+</tr>
 </table>
 
 
@@ -336,7 +376,7 @@ Throughout the library there is a specially recognized case (or convention) for 
 
 If a any consumer hook/component from the library detects the presence of a current value (`.value.current`), it can render it immediately and skip the `isPending: true` [phase](#iteration-lifecycle-table-initial-phase), since this effectively signals there is no need to _wait_ for a first yield - the value is available already.
 
-This rule bridges the gap between async iterables which always yield asynchronously (as their yields are wrapped in promises) and React's component model in which render outputs should be strictly synchronous. Even if, for example, the first value for an async iterable is known in advance and is yielded as soon as possible - React could only grab the yielded value from it via an immediate subsequent run of the consumer hook/component (since the promise would always resolve _after_ the initial run). Such concern may be solved with async iterables that expose a current value.
+This rule bridges the gap between async iterables which always yield asynchronously (as their yields are wrapped in promises) and React's component model in which render outputs should be strictly synchronous. Even if, for example, the first value for an async iterable is known in advance and is yielded as soon as possible - React could only grab the yielded value from it via an immediate subsequent run of the consumer hook/component (since the promise would always resolve _after_ the initial run). Such concern therefore may be solved with async iterables that expose a current value.
 
 For example, the stateful iterable created from the [`useAsyncIterState`]() hook (_see [Component state as an async iterable](#component-state-as-an-async-iterable)_) applies this convention by intention, acting like a "topic" with an always-available current value that's able to signal future changes, skipping pending phases so there is no need to set and handle any initial starting state.
 
@@ -346,9 +386,214 @@ For example, the stateful iterable created from the [`useAsyncIterState`]() hook
 
 ## Formatting values
 
-When you build app components with props accepting async iterable data, you might notice some challenges...
+When building your app with components accepting async iterable data as props, and as you render these and have to provide them such props, a common need emerges to re-format held async iterables' value shapes before they could match the values asked by such props. [`iterateFormatted`]() is an easy to use utility for many such cases.
+
+For instance, let's say we're trying to use an existing `<Select>` generic component, which supports getting its option list __in async iterable form__, so it could update its rendered dropdown in real-time as new sets of options are yielded. It is used like so;
+
+```tsx
+<Select
+  options={
+    // expecting here an async iter yielding:
+    // {
+    //   value: string;
+    //   label: string;
+    // }
+  }
+/>
+```
+
+Now, we would like to populate `<Select>`'s dropdown with some currency options from an async iterable like this one:
+
+```tsx
+const currenciesIter = getAvailableCurrenciesIter();
+// This yields objects of:
+// {
+//   isoCode: string;
+//   name: string;
+// }
+```
+
+As seen, the yielded types between these two don't match (properties are not matching).
+
+Using [`iterateFormatted`]() our source iterable can be formatted/transformed to fit like so:
+
+```tsx
+const currenciesIter = getAvailableCurrenciesIter();
+
+function MyComponent() {
+  return (
+    <div>
+      <Select
+        options={iterateFormatted(currenciesIter, ({ isoCode, name }) => ({
+          value: isoCode,
+          label: name,
+        }))}
+      />
+      // ...
+    </div>
+  );
+}
+```
+
+Alternatively, such transformation can be also achieved like so, with help from [`React.useMemo`](https://react.dev/reference/react/useMemo) and the multitude of existing helpers from libraries like [`iter-tools`](https://github.com/iter-tools/iter-tools):
+
+```tsx
+import { useMemo } from 'react';
+import { execPipe, asyncMap } from 'iter-tools';
+
+function MyComponent() {
+  const formattedCurrenciesIter = useMemo(
+    () =>
+      execPipe(
+        getAvailableCurrenciesIter(),
+        asyncMap(({ isoCode, name }) => ({
+          value: isoCode,
+          label: name,
+        }))
+      ),
+    []
+  );
+
+  return (
+    <div>
+      <Select options={formattedCurrenciesIter} />
+      // ...
+    </div>
+  );
+}
+```
+
+But in cases with multiple...
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+```tsx
+const currenciesIter = getAvailableCurrenciesIter();
+
+function MyComponent() {
+  currenciesIter;
+  // ^ here we got an async iter yielding:
+  // {
+  //   isoCode: string;
+  //   name: string;
+  // }
+
+  return (
+    <div>
+      <Select
+        options={
+          // BUT we here need an async iter yielding:
+          // {
+          //   value: string;
+          //   label: string;
+          // }
+        }
+      />
+    </div>
+  );
+
+  // assume `<Select>` supports getting `options` in async iter form, thus it can update its dropdown when in real-time as updated currencies are yielded.
+}
+```
+
+When you build app components with props accepting async iterable data, you'll probably find yourself needing to re-format values of source iterables so they match the types and shapes expected by those said app components, as they're probably decoupled to any particular source iterables' shapes you have. For this need and more, `react-async-iterators` packages a utility called [`iterateFormatted`]().
+
+```tsx
+function CountrySelect(
+  props: AsyncIterable<{ value: string; label: string }>
+) {
+  
+}
+```
 
 `react-async-iterators` offers a way to format 
+
+```tsx
+function MyComponent(props) {
+  const { currencies, products } = props;
+
+  return (
+    <div>
+      <SelectDropdown
+        options={currencies.map(({ isoCode, name }) => ({
+          value: isoCode,
+          label: name,
+        }))}
+      />
+      <ProductList
+        products={products.map(({ id, name, price }) => ({
+          sku: id,
+          name,
+          price,
+        }))}
+      />
+    <div>
+  );
+}
+```
+
+```tsx
+// `useMemo` with some pseudo third-party mapping helper `mapAsyncIter`:
+
+function MyComponent(props) {
+  const { currencies, products } = props; // `currencies` and `products` are async iterables
+
+  const currenciesFormatted = useMemo(
+    () =>
+      mapAsyncIter(currencies, ({ isoCode, name }) => ({
+        value: isoCode,
+        label: name,
+      })),
+    [currencies]
+  );
+
+  const productsFormatted = useMemo(
+    () =>
+      mapAsyncIter(products, ({ id, name, price }) => ({
+        sku: id,
+        name,
+        price,
+      })),
+    [products]
+  );
+
+  return (
+    <div>
+      <SelectDropdown options={currenciesFormatted} />
+      <ProductList products={productsFormatted} />
+    <div>
+  );
+}
+```
+
+```tsx
+function MyComponent(props) {
+  const { currencies, products } = props; // `currencies` and `products` are async iterables
+
+  return (
+    <div>
+      <SelectDropdown
+        options={iterateFormatted(currencies, ({ isoCode, name }) => ({
+          value: isoCode,
+          label: name,
+        }))}
+      />
+      <ProductList
+        products={iterateFormatted(products, ({ id, name, price }) => ({
+          sku: id,
+          name,
+          price,
+        }))}
+      />
+    <div>
+  );
+}
+```
 
 
 
@@ -422,7 +667,6 @@ When you build app components with props accepting async iterable data, you migh
     </td>
   </tr>
 </table>
-
 
 
 
