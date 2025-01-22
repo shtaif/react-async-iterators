@@ -13,7 +13,7 @@ import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @type
 export { iterateFormatted };
 
 /**
- * An optional utility to format an async iterable's values inline right where its passing into
+ * An optional utility to format an async iterable's values inline where its passed into
  * an other consuming component.
  *
  * @example
@@ -57,7 +57,7 @@ export { iterateFormatted };
  * of far from it, having to perform the transformation using some `useMemo` call at the top of the
  * component.
  *
- * The utility's method of operation is it will take `source` and return from it a new transformed
+ * The utility's method of operation is to be given a `source` and return from it a new transformed
  * async iterable object, attaching it with some special metadata that tells library tools like
  * {@link Iterate `<Iterate>`} and {@link useAsyncIter `useAsyncIter`} to bind the iteration process
  * to the same original base object. This way, the outer "formatted" iterable may be recreated repeatedly
