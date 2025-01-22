@@ -22,11 +22,11 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableChannel
  * ```tsx
  * // Quick usage:
  *
- * import { useAsyncIterState, Iterate } from 'async-react-iterators';
+ * import { useAsyncIterState, Iterate } from 'react-async-iterators';
  *
  * function MyForm() {
- *   const [firstNameIter, setFirstName] = useAsyncIterState<string>();
- *   const [lastNameIter, setLastName] = useAsyncIterState<string>();
+ *   const [firstNameIter, setFirstName] = useAsyncIterState('');
+ *   const [lastNameIter, setLastName] = useAsyncIterState('');
  *   return (
  *     <div>
  *       <form>
@@ -43,9 +43,10 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableChannel
  * ---
  *
  * The returned async iterable can be passed over to any level down the component tree and rendered
- * using `<Iterate>`, `useAsyncIter`, and so on. It also contains a `.current.value` property which shows
- * the current up to date state value at all times. Use this any case you just need to read the immediate
- * current state rather than directly rendering it, since for rendering you may simply async-iterate it.
+ * using `<Iterate>`, `useAsyncIter`, and others. It also contains a `.current.value` property which shows
+ * the current up to date state value at all times. Use this any time you need to read the immediate
+ * current state (for example as part of side effect logic) rather than directly rendering it, since
+ * for rendering you may simply iterate values as part of an `<Iterate>`.
  *
  * Returned also alongside the async iterable is a function for updating the state. Calling it with a new
  * value will cause the paired iterable to yield the updated state value as well as immediately set the
@@ -55,19 +56,19 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableChannel
  *
  * Unlike vanila `React.useState`, which simply re-renders the entire component - `useAsyncIterState`
  * helps confine UI updates by handing you an iterable which choose how and where in the component tree
- * to render it. This work method can facilitate layers of sub-components that pass actual async iterables
- * across one another as props, skipping typical cascading re-renderings down to __only the inner-most
- * leafs__ of the UI tree.
+ * to render it. This method of working can facilitate layers of sub-components that pass actual async
+ * iterables down to one another as props, avoiding typical cascading re-renderings, updating __only
+ * the inner-most leafs__ in the UI tree instead.
  *
  * @example
  * ```tsx
  * // Use the state iterable's `.current.value` property to read the immediate current state:
  *
- * import { useAsyncIterState } from 'async-react-iterators';
+ * import { useAsyncIterState } from 'react-async-iterators';
  *
  * function MyForm() {
- *   const [firstNameIter, setFirstName] = useAsyncIterState<string>();
- *   const [lastNameIter, setLastName] = useAsyncIterState<string>();
+ *   const [firstNameIter, setFirstName] = useAsyncIterState('');
+ *   const [lastNameIter, setLastName] = useAsyncIterState('');
  *
  *   return (
  *     <form

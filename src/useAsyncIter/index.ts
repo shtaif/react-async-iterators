@@ -212,6 +212,9 @@ type IterationResult<TVal, TInitVal = undefined> = {
    *
    * When the source iterable changes and an iteration restarts with a new iterable, the same last
    * `value` is carried over and reflected until the new iterable resolves its first value.
+   *
+   * If the async iteration has completed or errored out, `value` would still hold the last
+   * value it picked up but now the accompanying `done` and `error` will be set accordingly.
    * */
   value: TVal extends AsyncIterableSubject<infer J>
     ? J

@@ -1,4 +1,4 @@
-export { MaybeAsyncIterable };
+export { type MaybeAsyncIterable };
 
 /**
  * Helper type that represents either a plain value or an async iterable of that value.
