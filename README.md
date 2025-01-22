@@ -25,7 +25,7 @@ Somewhat obvious to say, the React ecosystem features many methods and tools tha
 
 What can `react-async-iterators` be used for?
 
-- easily consuming async iterables obtained from any library, web API or composed manually - in a declarative React-friendly fashion.
+- easily consuming async iterables obtained from any library, web API or composed manually - in a React-friendly declarative fashion.
 <!-- Dynamically plug and unplug them at any place across your app's component tree with automatic teardown. -->
 
 - unlock new ways of expressing data flow in or between components efficiently, constricting redundant re-rendering.
@@ -120,13 +120,7 @@ function LiveUserProfile(props: { userId: string }) {
   - [Async iterables with current values](#async-iterables-with-current-values)
   - [Formatting values](#formatting-values)
   - [Component state as an async iterable](#component-state-as-an-async-iterable)
-- [API](#api)
-  - [Iteration state object detailed breakdown](#iteration-state-object-detailed-breakdown)
-  - [___](#___)
-  - [___](#___)
-  - [___](#___)
-  - [___](#___)
-  - [___](#___)
+- [Iteration state properties breakdown](#iteration-state-properties-breakdown)
 - [License](#license)
 
 
@@ -279,7 +273,7 @@ Finally, when the consumer is unmounted, the current running iteration is dispos
 
 ### Iteration lifecycle phases
 
-The following phases and state properties are reflected from all consumer utilities (with hooks - returned, with components - injected to their provided render functions):
+The following phases and state properties are reflected via all consumer utilities (with hooks - returned, with components - injected to their given render functions):
 
 <table>
 <tr>
@@ -486,25 +480,69 @@ So unless you require some more elaborate transformation than simply formatting 
 
 ## Component state as an async iterable
 
-As illustrated throughout this library and docs - whenever dealing with data in your app that's presented as an async iterable, an interesting pattern emerges; instead of a transition in app state traditionally sending down a cascading re-render through the entire tree of components underneath it to propagate the new state - __async iterable__ objects are distributed once when the whole tree is first mounted, and through those new states are communicated directly over to the inner-most leafs in the tree to be re-rendered, thus skipping all intermediaries.
+<!-- TODO: Add a more comprehensive and elaborate code example of some kind of an interactive form? -->
 
-...distribute async iterables throughout the app's component tree...
+As illustrated throughout this library and docs - when dealing with data in your app that's presented as an async iterable, an interesting pattern emerges; instead of a transition in app state traditionally sending down a cascading re-render through the entire tree of components underneath it to propagate the new state - your __async iterable__ objects can be distributed __once__ when the whole tree is first mounted, and when new data is then communicated through them it directly gets right to the edges of the UI tree that are concerned with it, re-rendering them exclusively and thus skipping all intermediaries.
 
-...This method of working can facilitate layers of sub-components that pass actual async iterables across one another as props, skipping typical cascading re-renderings down to __only the inner-most leafs__ of the UI tree...
+The packaged [`useAsyncIterState`]() hook can lend this paradigm to your __component state__. It's like a [`React.useState`](https://react.dev/reference/react/useState) version that returns you _an async iterable of the state value instead of the state value_, paired with a setter function that causes the stateful iterable to yield the next states.
 
-...Instead of a component communicating every state change to its children, `useAsyncIterState` is like passing some channel (read: an async iterable) down to the children just once through which the state values are communicated - letting every concerned child either consume them right there or alternatively forward the channel down to be consumed in a deeper level...
+The stateful iterable may be distributed via props down through any number of component levels the same way you would with classic React state, and used in conjunction with [`<It>`]() or [`useAsyncIter`](), etc. wherever it has to be rendered.
 
+In a glance, it's usage looks like this:
 
 ```tsx
+import { useAsyncIterState, It } from 'react-async-iterators';
+
+function MyCounter() {
+  const [countIter, setCount] = useAsyncIterState(0);
+
+  function handleIncrement() {
+    setCount(count => count + 1);
+  }
+
+  return (
+    <>
+      Current count: <It>{countIter}</It> {/* <- this is the ONLY thing re-rendering here! */}
+      <button onClick={handleIncrement}>Increment</button>
+    </>
+  );
+}
 ```
 
+The stateful iterable let's you directly access the current state any time via its `.value.current` property (see [Async iterables with current values](#async-iterables-with-current-values)) so you may read it when you need to get only the current state alone, for example - as part of a certain side effect logic;
+
+```tsx
+// Using the state iterable's `.value.current` property to read the immediate current state:
+
+import { useAsyncIterState, It } from 'react-async-iterators';
+
+function MyForm() {
+  const [firstNameIter, setFirstName] = useAsyncIterState('');
+  const [lastNameIter, setLastName] = useAsyncIterState('');
+
+  return (
+    <form
+      onSubmit={() => {
+        const firstName = firstNameIter.value.current;
+        const lastName = lastNameIter.value.current;
+        // submit `firstName` and `lastName`...
+      }}
+    >
+      Greetings, <It>{firstNameIter}</It> <It>{lastNameIter}</It>
+
+      {/* More content... */}
+    </form>
+  );
+}
+```
+
+<!-- TODO: Go over all mentions of [`<It>`](...), [`useAsyncIter`](...) and so on and make sure their links are are valid -->
 
 
-# API
 
+## Iteration state properties breakdown
 
-
-## Iteration state object detailed breakdown:
+The following iteration state properties are common for all consumer utilities, with hooks - returned, with components - injected to their given render functions:
 
 <table>
   <thead>
@@ -520,7 +558,7 @@ As illustrated throughout this library and docs - whenever dealing with data in 
     <td>
       Boolean indicating whether we're still waiting for the first value to yield.<br/>
       Can be considered analogous to the promise <em>pending state</em>.<br/><br/>
-      <i>** If source was otherwise not an async iterable but a plain value - this will always be <code>false</code>.
+      <i>** Is always <code>false</code> if source is a plain value instead of an async iterable.
     </td>
   </tr>
   <tr>
@@ -530,7 +568,7 @@ As illustrated throughout this library and docs - whenever dealing with data in 
     <td>
       The most recent value yielded.<br/>
       If we've just started consuming the current iterable (while <code>pendingFirst</code> is <code>true</code>), the last value from a prior iterable would be carried over. If there is no prior iterable (the hook/component had just been mounted) - this will be set to the provided initial value (<code>undefined</code> by default).<br/><br/>
-      <i>** If source was otherwise not an async iterable but a plain value - this will be itself.</i>
+      <i>** If source is otherwise a plain value and not an async iterable - this will be itself.</i>
     </td>
   </tr>
   <tr>
@@ -544,8 +582,8 @@ As illustrated throughout this library and docs - whenever dealing with data in 
         <li>it has completed (by resolving a <code>{ done: true }</code> object, per <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#done">async iteration protocol</a>)</li>
         <li>it had thrown an error (in which case the escorting <code>error</code> property will be set to that error).</li>
       </ol>
-      When <code>true</code>, the adjacent <code>value</code> property will __still be set__ to the last value seen before the moment of completing/erroring.<br/>
-      Is always <code>false</code> for any plain value given instead of an async iterable.
+      When <code>true</code>, the adjacent <code>value</code> property will __still be set__ to the last value seen before the moment of completing/erroring.<br/><br/>
+      <i>** Is always <code>false</code> if source is a plain value instead of an async iterable.</i>
     </td>
   </tr>
   <tr>
@@ -554,39 +592,11 @@ As illustrated throughout this library and docs - whenever dealing with data in 
     </td>
     <td>
       Indicates whether the iterated async iterable threw an error, capturing a reference to it.<br/>
-      If <code>error</code> is non-empty, the escorting <code>done</code> property will always be <code>true</code> because the iteration process has effectively ended.<br/>
-      Is always <code>undefined</code> for any plain value given instead of an async iterable.
+      If <code>error</code> is non-empty, the escorting <code>done</code> property will always be <code>true</code> because the iteration process has effectively ended.<br/><br/>
+      <i>** Is always <code>undefined</code> if source is a plain value instead of an async iterable.</i>
     </td>
   </tr>
 </table>
-
-## ___
-
-...
-
-
-
-## ___
-
-...
-
-
-
-## ___
-
-...
-
-
-
-## ___
-
-...
-
-
-
-## ___
-
-...
 
 
 
