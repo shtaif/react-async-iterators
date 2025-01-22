@@ -28,7 +28,7 @@ What can `react-async-iterators` be used for?
 - easily consuming async iterables obtained from any library, web API or composed manually - in a declarative React-friendly fashion.
 <!-- Dynamically plug and unplug them at any place across your app's component tree with automatic teardown. -->
 
-- unlock new ways of expressing efficient data flow in or between components, constricting redundant re-rendering.
+- unlock new ways of expressing data flow in or between components efficiently, constricting redundant re-rendering.
 <!-- made possible by the async iterables' unique properties (more on that later). -->
 
 <!-- TODO: Should mention here (or anywhere else?) about the state of the `async-iterator-helpers-proposal`, as well as existing possibilities to create and compose async iterables via `iter-tools` and `IxJS`? -->
@@ -209,7 +209,7 @@ next.error;
 
 _Using the component form may be __typically preferrable__ over the hook form_ (e.g [`<It>`]() over [`useAsyncIter`]()) - Why? because using it, when changes in data occure - the re-rendered UI area within a component tree can be declaratively narrowed to the necessary minimum, saving other React elements that do not depend on its values from re-evaluation. On the the other hand - [`useAsyncIter`](), being a hook, must re-render the entirety of the host component's output for every new value.
 
-When segregating data flows and relationships across the components' render code like this, using the component forms - it makes for a more managable code, and might get rid of having to akwardly split components down to smaller parts just to render-optimize them when it otherwise wouldn't feel right to do so.
+When segregating data flows and relationships across the components' render code like this, using the component forms - it makes for a more managable code, and might get rid of having to akwardly split components down to smaller parts just to render-optimize them when it otherwise wouldn't "feel right" to do so.
 
 
 
@@ -480,13 +480,20 @@ function MyComponent() {
 ```
 
 > <br/>ℹ️ Every calls to [`iterateFormatted`]() returns a _formatted_ versions of `currenciesIter` with some transparent metadata used by library's consumers (like [`<It>`]()) to associate every transformed iterable with its original source iterable so existing iteration states can be maintained. It's therefore safe to recreate and pass on formatted iterables from repeated calls to [`iterateFormatted`]() across re-renders (as long the same source is used with it consistently).<br/><br/>
-So unless you require more elaborate transformations than simply formatting values - it might be more ergonomic to use [`iterateFormatted`]() vs compositions that involve [`React.useMemo`](https://react.dev/reference/react/useMemo), especially with multiple iterables.<br/><br/>
+So unless you require some more elaborate transformation than simply formatting values - it might be more ergonomic to use [`iterateFormatted`]() vs manual compositions within [`React.useMemo`](https://react.dev/reference/react/useMemo), especially if dealing with multiple iterables to transform.<br/><br/>
 
 
 
 ## Component state as an async iterable
 
-...
+As illustrated throughout this library and docs - whenever dealing with data in your app that's presented as an async iterable, an interesting pattern emerges; instead of a transition in app state traditionally sending down a cascading re-render through the entire tree of components underneath it to propagate the new state - __async iterable__ objects are distributed once when the whole tree is first mounted, and through those new states are communicated directly over to the inner-most leafs in the tree to be re-rendered, thus skipping all intermediaries.
+
+...distribute async iterables throughout the app's component tree...
+
+...This method of working can facilitate layers of sub-components that pass actual async iterables across one another as props, skipping typical cascading re-renderings down to __only the inner-most leafs__ of the UI tree...
+
+...Instead of a component communicating every state change to its children, `useAsyncIterState` is like passing some channel (read: an async iterable) down to the children just once through which the state values are communicated - letting every concerned child either consume them right there or alternatively forward the channel down to be consumed in a deeper level...
+
 
 ```tsx
 ```
