@@ -124,6 +124,9 @@ function LiveUserProfile(props: { userId: string }) {
   - [Iteration state object detailed breakdown](#iteration-state-object-detailed-breakdown)
   - [___](#___)
   - [___](#___)
+  - [___](#___)
+  - [___](#___)
+  - [___](#___)
 - [License](#license)
 
 
@@ -387,11 +390,11 @@ with `error` property being `undefined` - __ending due to completion - source is
 
 Throughout the library there is a specially recognized case (or convention) for expressing async iterables with a notion of a _"current value"_. These are simply defined as any regular async iterable object coupled with a readable `.value.current` property.
 
-If a any consumer hook/component from the library detects the presence of a current value (`.value.current`), it can render it immediately and skip the `isPending: true` [phase](#iteration-lifecycle-table-initial-phase), since this effectively signals there is no need to _wait_ for a first yield - the value is available already.
+When any consumer hook/component from the library detects the presence of a current value (`.value.current`), it can render it immediately and skip the `isPending: true` [phase](#iteration-lifecycle-table-initial-phase), since this effectively signals there is no need to _wait_ for a first yield - the value is available already.
 
-This rule bridges the gap between async iterables which always yield asynchronously (as their yields are wrapped in promises) and React's component model in which render outputs should be strictly synchronous. Even if, for example, the first value for an async iterable is known in advance and is yielded as soon as possible - React could only grab the yielded value from it via an immediate subsequent run of the consumer hook/component (since the promise would always resolve _after_ the initial run). Such concern therefore may be solved with async iterables that expose a current value.
+This rule bridges the gap between async iterables which always yield asynchronously (as their yields are wrapped in promises) and React's component model in which render outputs are strictly synchronous. Normally, if for example the first value for an async iterable is known in advance and yielded as soon as possible - React could only grab the yielded value from it via an immediate subsequent run/render of the consumer hook/component (since the promise can resolve only _after_ such initial sync run/render). This issue is therefore solved by async iterables that expose a current value.
 
-For example, the stateful iterable created from the [`useAsyncIterState`]() hook (_see [Component state as an async iterable](#component-state-as-an-async-iterable)_) applies this convention by intention, acting like a "topic" with an always-available current value that's able to signal future changes, skipping pending phases so there is no need to set and handle any initial starting state.
+For example, the stateful iterable created from the [`useAsyncIterState`]() hook (_see [Component state as an async iterable](#component-state-as-an-async-iterable)_) applies this convention from its design, acting like a "topic" with an always-available current value that's able to signal out future changes, skipping pending phases so there is no need to manage setting any initial starting states.
 
 <!-- TODO: Any code sample that can/should go in here?... -->
 
@@ -401,14 +404,14 @@ For example, the stateful iterable created from the [`useAsyncIterState`]() hook
 
 <!-- (^^^ should add "and transforming iterables"?) -->
 
-When building your app with components accepting async iterable data as props, and as you render these and have to provide such props, you may commonly see a need to _re-format_ held async iterables' value shapes before they could match the values asked by such props. [`iterateFormatted`]() is an easy to use utility for many such cases.
+When building your app with components accepting async iterable data as props, as you render these and have to provide such props - you may commonly see a need to _re-format_ held async iterables' value shapes before they're passed in those props, in order for them to match the expected shape. [`iterateFormatted`]() is an easy-to-use approach to many cases like this.
 
 For instance, let's say we're trying to use an existing `<Select>` generic component, which supports being provided its option list __in async iterable form__, so it could update its rendered dropdown in real-time as new sets of options are yielded. It is used like so;
 
 ```tsx
 <Select
   options={
-    // expecting here an async iter yielding:
+    // EXPECTING HERE AN ASYNC ITER YIELDING:
     // {
     //   value: string;
     //   label: string;
@@ -421,16 +424,16 @@ Now, we would like to populate `<Select>`'s dropdown with some currency options 
 
 ```tsx
 const currenciesIter = getAvailableCurrenciesIter();
-// This yields objects of:
+// THIS YIELDS OBJECTS OF:
 // {
 //   isoCode: string;
 //   name: string;
 // }
 ```
 
-As seen, the value types between these two aren't compatible (properties are not matching).
+As apparent, the value types between these two are not compatible (properties are not matching).
 
-Using [`iterateFormatted`]() our source iterable can be formatted/transformed to fit like so:
+By using [`iterateFormatted`](), our source iterable can be formatted/transformed to fit like so:
 
 ```tsx
 const currenciesIter = getAvailableCurrenciesIter();
@@ -449,7 +452,7 @@ function MyComponent() {
 }
 ```
 
-Alternatively, such transformation can be also achieved (entirely legitimately) with help from [`React.useMemo`](https://react.dev/reference/react/useMemo) and some "mapping" operator from the multitude of helpers available from libraries like [`iter-tools`](https://github.com/iter-tools/iter-tools):
+Alternatively, such transformation can be also achieved (_entirely legitimately_) with help from [`React.useMemo`](https://react.dev/reference/react/useMemo) and some generic mapping operator like [`iter-tools`](https://github.com/iter-tools/iter-tools)'s `asyncMap`, among the multitude of available operators from such libraries:
 
 ```tsx
 import { useMemo } from 'react';
@@ -476,8 +479,8 @@ function MyComponent() {
 }
 ```
 
-> <br/>ℹ️ Calls to [`iterateFormatted`]() return _formatted_ versions of `currenciesIter` with some transparent metadata, used by library's consumers (like [`<It>`]()) to associate every transformed iterable with the original source iterable so existing iteration states could be maintained. It's safe therefore to recreate and pass on formatted iterables from repeated calls to [`iterateFormatted`]() across re-renders (as long the same source is used with it consistently).<br/><br/>
-So it might be more ergonomic to use [`iterateFormatted`]() vs compositions that involve [`React.useMemo`](https://react.dev/reference/react/useMemo), especially with multiple iterables - unless you require more elaborate transformations then simply mapping/formatting yielded values.<br/><br/>
+> <br/>ℹ️ Every calls to [`iterateFormatted`]() returns a _formatted_ versions of `currenciesIter` with some transparent metadata used by library's consumers (like [`<It>`]()) to associate every transformed iterable with its original source iterable so existing iteration states can be maintained. It's therefore safe to recreate and pass on formatted iterables from repeated calls to [`iterateFormatted`]() across re-renders (as long the same source is used with it consistently).<br/><br/>
+So unless you require more elaborate transformations than simply formatting values - it might be more ergonomic to use [`iterateFormatted`]() vs compositions that involve [`React.useMemo`](https://react.dev/reference/react/useMemo), especially with multiple iterables.<br/><br/>
 
 
 
@@ -491,8 +494,6 @@ So it might be more ergonomic to use [`iterateFormatted`]() vs compositions that
 
 
 # API
-
-...
 
 
 
@@ -511,8 +512,8 @@ So it might be more ergonomic to use [`iterateFormatted`]() vs compositions that
     </td>
     <td>
       Boolean indicating whether we're still waiting for the first value to yield.<br/>
-      Can be considered analogous to the promise <em>pending state</em>.
-      <!-- TODO: If source is a plain ("non-iterable") value, this will always be <code>false</code> -->
+      Can be considered analogous to the promise <em>pending state</em>.<br/><br/>
+      <i>** If source was otherwise not an async iterable but a plain value - this will always be <code>false</code>.
     </td>
   </tr>
   <tr>
@@ -521,8 +522,8 @@ So it might be more ergonomic to use [`iterateFormatted`]() vs compositions that
     </td>
     <td>
       The most recent value yielded.<br/>
-      If we've just started consuming the current iterable (while <code>pendingFirst</code> is <code>true</code>), the last value from a prior iterable would be carried over. If there is no prior iterable - the hook/component has just been mounted - this will be set as the provided initial value (<code>undefined</code> by default).<br/>
-      If source is a plain value, this will be itself.
+      If we've just started consuming the current iterable (while <code>pendingFirst</code> is <code>true</code>), the last value from a prior iterable would be carried over. If there is no prior iterable (the hook/component had just been mounted) - this will be set to the provided initial value (<code>undefined</code> by default).<br/><br/>
+      <i>** If source was otherwise not an async iterable but a plain value - this will be itself.</i>
     </td>
   </tr>
   <tr>
@@ -551,6 +552,34 @@ So it might be more ergonomic to use [`iterateFormatted`]() vs compositions that
     </td>
   </tr>
 </table>
+
+## ___
+
+...
+
+
+
+## ___
+
+...
+
+
+
+## ___
+
+...
+
+
+
+## ___
+
+...
+
+
+
+## ___
+
+...
 
 
 
