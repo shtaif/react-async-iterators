@@ -1,3 +1,25 @@
+## [0.7.0](https://github.com/shtaif/react-async-iterators/compare/v0.6.0...v0.7.0) (2025-01-22)
+
+
+### Features
+
+* `iterateFormatted`'s to also format given iterables' current values if present ([#56](https://github.com/shtaif/react-async-iterators/issues/56)) ([9f6e47a](https://github.com/shtaif/react-async-iterators/commit/9f6e47ac3bc717eb3f72307893899e57398bd7d7))
+* export a `AsyncIterableSubject` type and add it along related references ([#54](https://github.com/shtaif/react-async-iterators/issues/54)) ([39eae6f](https://github.com/shtaif/react-async-iterators/commit/39eae6fe7aa7f595cdb20f640be6de2264170212))
+* **Iterate:** support initial value in function form ([#49](https://github.com/shtaif/react-async-iterators/issues/49)) ([bfc1f09](https://github.com/shtaif/react-async-iterators/commit/bfc1f09ba8b68b50dd62ceeb84833b8ccad7265e))
+* special handling for async iterables with a current value( [#55](https://github.com/shtaif/react-async-iterators/issues/55)) ([01a30fc](https://github.com/shtaif/react-async-iterators/commit/01a30fce01eb5f0ebd2b9c712ace66efdc89a99b))
+* **useAsyncIter:** allow initial value to be a function, called once on mount ([#48](https://github.com/shtaif/react-async-iterators/issues/48)) ([9a7e9e4](https://github.com/shtaif/react-async-iterators/commit/9a7e9e4ab66bccacefc7e47c4f82bee390d22e08))
+
+
+### Bug Fixes
+
+* **iterateFormatted:** function's type signature does not not handle maybe-async-iterable kind of types correctly ([#57](https://github.com/shtaif/react-async-iterators/issues/57)) ([f073d90](https://github.com/shtaif/react-async-iterators/commit/f073d905ba0e4fd3a1faa0b45204738c405837dc))
+
+
+### Documentation
+
+* docs edits ([#53](https://github.com/shtaif/react-async-iterators/issues/53)) ([c5bfba4](https://github.com/shtaif/react-async-iterators/commit/c5bfba42c923530ba8eed5b25a5024fa09563013))
+* **readme:** Initial proper `README.md` ([#60](https://github.com/shtaif/react-async-iterators/issues/60)) ([4e1c4a9](https://github.com/shtaif/react-async-iterators/commit/4e1c4a97d9222c2600c946004d0e6f2e0d3a28d5))
+
 ## [0.6.0](https://github.com/shtaif/react-async-iterators/compare/v0.5.1...v0.6.0) (2025-01-09)
 
 
