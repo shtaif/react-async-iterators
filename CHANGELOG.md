@@ -1,3 +1,16 @@
+## [0.7.1](https://github.com/shtaif/react-async-iterators/compare/v0.7.0...v0.7.1) (2025-01-23)
+
+
+### Bug Fixes
+
+* **iterateFormatted:** compute formatted current value on demand instead of eagerly as the underlying value might change at any later time ([#63](https://github.com/shtaif/react-async-iterators/issues/63)) ([c4174ee](https://github.com/shtaif/react-async-iterators/commit/c4174ee072052d6cf2546e4921aecf982d84b11c))
+
+
+### Documentation
+
+* fix mentions of the current value property from `.current.value` to `.value.current` ([#64](https://github.com/shtaif/react-async-iterators/issues/64)) ([f2e4fef](https://github.com/shtaif/react-async-iterators/commit/f2e4feff6d2fe60833a0444c844be8bbc40f5434))
+* various docs touchups ([#62](https://github.com/shtaif/react-async-iterators/issues/62)) ([9ad4aeb](https://github.com/shtaif/react-async-iterators/commit/9ad4aeb4c9c73487276eceb76c8c114f0f6f4d84))
+
 ## [0.7.0](https://github.com/shtaif/react-async-iterators/compare/v0.6.0...v0.7.0) (2025-01-22)
 
 
