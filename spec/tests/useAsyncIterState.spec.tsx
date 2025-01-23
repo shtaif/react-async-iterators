@@ -29,7 +29,7 @@ describe('`useAsyncIterState` hook', () => {
     }
   );
 
-  it(gray("The state iterable's `.current.value` property is read-only"), async () => {
+  it(gray("The state iterable's `..value.current` property is read-only"), async () => {
     const [values] = renderHook(() => useAsyncIterState<string>()).result.current;
 
     expect(() => {

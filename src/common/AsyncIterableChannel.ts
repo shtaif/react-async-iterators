@@ -59,7 +59,7 @@ class AsyncIterableChannel<T, TInit = T> {
 
 /**
  * A stateful async iterable which will yield every updated value following an update. Includes a
- * `.current.value` property which shows the current up to date state value.
+ * `.value.current` property which shows the current up to date state value.
  *
  * This is a shared async iterable - all iterators obtained from it share the same source values,
  * meaning that multiple iterators can be consumed (iterated) simultaneously and each one would pick up
