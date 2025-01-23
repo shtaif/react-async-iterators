@@ -1,5 +1,6 @@
 import {
   reactAsyncIterSpecialInfoSymbol,
+  parseReactAsyncIterable,
   type ReactAsyncIterable,
   type ReactAsyncIterSpecialInfo,
 } from '../common/ReactAsyncIterable.js';
@@ -104,41 +105,28 @@ function iterateFormatted(
     return formatFn(source, 0);
   }
 
-  const sourcePrevSpecialInfo = source[reactAsyncIterSpecialInfoSymbol];
+  const { baseIter, formatFn: precedingFormatFn } = parseReactAsyncIterable(source);
 
   return {
     [Symbol.asyncIterator]: () => asyncIterSyncMap(source, formatFn)[Symbol.asyncIterator](),
 
-    ...(!sourcePrevSpecialInfo
-      ? {
-          value: !source.value
-            ? undefined
-            : {
-                current: formatFn(source.value.current, 0),
-              },
-
-          [reactAsyncIterSpecialInfoSymbol]: {
-            origSource: source,
-            formatFn,
-          },
-        }
-      : {
-          value: !source.value
-            ? undefined
-            : {
-                current: (() => {
-                  const prevMapResult = sourcePrevSpecialInfo.formatFn(source.value.current, 0);
-                  return formatFn(prevMapResult, 0);
-                })(),
-              },
-
-          [reactAsyncIterSpecialInfoSymbol]: {
-            origSource: sourcePrevSpecialInfo.origSource,
-            formatFn: (value: unknown, i: number) => {
-              const prevMapResult = sourcePrevSpecialInfo.formatFn(value, i);
-              return formatFn(prevMapResult, i);
+    get value() {
+      return !source.value
+        ? undefined
+        : {
+            get current() {
+              const result = precedingFormatFn(source.value!.current, 0);
+              return formatFn(result, 0);
             },
-          },
-        }),
+          };
+    },
+
+    [reactAsyncIterSpecialInfoSymbol]: {
+      origSource: baseIter,
+      formatFn: (value: unknown, i: number) => {
+        const result = precedingFormatFn(value, i);
+        return formatFn(result, i);
+      },
+    },
   };
 }
