@@ -28,7 +28,7 @@ What can `react-async-iterators` be used for?
 - easily consuming async iterables obtained from any library, web API or composed manually - in a React-friendly declarative fashion.
 <!-- Dynamically plug and unplug them at any place across your app's component tree with automatic teardown. -->
 
-- unlock new ways of expressing data flow in or between components efficiently, constricting redundant re-rendering.
+- unlocking new ways of expressing data flow in or between components efficiently, constricting redundant re-rendering.
 <!-- made possible by the async iterables' unique properties (more on that later). -->
 
 <!-- TODO: Should mention here (or anywhere else?) about the state of the `async-iterator-helpers-proposal`, as well as existing possibilities to create and compose async iterables via `iter-tools` and `IxJS`? -->
@@ -767,7 +767,7 @@ next.error;
 
 ### Returns
 
-The iteration state object with properties reflecting the current state of the iterated async iterable or plain value provided via `value` (see [Iteration state properties breakdown](#iteration-state-properties-breakdown)).
+  The iteration state object with properties reflecting the current state of the iterated async iterable or plain value provided via `value` (see [Iteration state properties breakdown](#iteration-state-properties-breakdown)).
 
 ### Notes
 
@@ -855,8 +855,7 @@ It's similar to [`<It>`](#it), only it works with any changeable number of async
   An array of values to iterate over simultaneously, which may include any mix of async iterables or plain (non async iterable) values. Source values may be added, removed or changed at any time and new iterations will be close and started accordingly as per [Iteration lifecycle](#iteration-lifecycle).
 
 - `initialValues`:
-  An optional array of initial values. The values here will be the starting points for all the async iterables from `values` (correspondingly by matching array positions) as they are rendered by the `children` render function __for the first time__ and for each while it is __pending its first yield__. Async iterables from `values` that have no initial value corresponding to them will assume `undefined` as initial value.
-
+  An optional array of initial values. The values here will be the starting points for all the async iterables from `values` (correspondingly by matching array positions) while they are rendered by the `children` render function __for the first time__ and for each while it is __pending its first yield__. Async iterables from `values` that have no initial value corresponding to them will assume `undefined` as initial value.
 
 - `children`:
   A render function that is called on every progression in any of the running iterations, returning something to render for them. The function is called with an array of the combined iteration state objects of all sources currently given by the `values` prop (see [Iteration state properties breakdown](#iteration-state-properties-breakdown)).
@@ -864,55 +863,219 @@ It's similar to [`<It>`](#it), only it works with any changeable number of async
 ### Notes
 
 -
-  Care should be taken to avoid passing a constantly recreated async iterables across re-renders, e.g; by declaring iterables outside the component body or by controlling __when__ iterables should be recreated with React's [`useMemo`](https://react.dev/reference/react/useMemo).
+  Care should be taken to avoid passing constantly recreated async iterables across re-renders, e.g; by declaring iterables outside the component body or by controlling __when__ iterables should be recreated with React's [`useMemo`](https://react.dev/reference/react/useMemo).
 
 <details>
   <summary><b><i>Additional examples</i></b></summary>
   <br/>
 
-  ```tsx
-  import { useMemo } from 'react';
-  import { ItMulti } from 'react-async-iterators';
+  <ul>
 
-  function MyComponent() {
-    const numberIter = useMemo(() => createNumberIter(), []);
-    const arrayIter = useMemo(() => createArrayIter(), []);
+    ```tsx
+    import { useMemo } from 'react';
+    import { ItMulti } from 'react-async-iterators';
+
+    function MyComponent() {
+      const numberIter = useMemo(() => createNumberIter(), []);
+      const arrayIter = useMemo(() => createArrayIter(), []);
+      return (
+        <>
+          <Header />
+          <SideMenu />
+          <main>
+            <ItMulti values={[numberIter, arrayIter]} initialValues={[0, []]}>
+              {([numState, arrState]) => (
+                <>
+                  <div>
+                    {numState.pendingFirst
+                      ? '⏳ Loading number...'
+                      : `Current number: ${numState.value}`}
+                  </div>
+                  <div>
+                    {arrState.pendingFirst
+                      ? '⏳ Loading items...'
+                      : arrState.value.map((item, i) => <div key={i}>{item}</div>)}
+                  </div>
+                </>
+              )}
+            </ItMulti>
+          </main>
+        </>
+      )
+    }
+    ```
+
+    <br/>
+
+    ```tsx
+    // Using `<ItMulti>` with a dynamically changing amount of inputs:
+    
+    import { useState } from 'react';
+    import { ItMulti, type MaybeAsyncIterable } from 'react-async-iterators';
+    
+    function DynamicInputsComponent() {
+      const [inputs, setInputs] = useState<MaybeAsyncIterable<string>[]>([]);
+    
+      const addAsyncIterValue = () => {
+        const iterableValue = (async function* () {
+          for (let i = 0; i < 10; i++) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            yield `Item ${i}`;
+          }
+        })();
+        setInputs(prev => [...prev, iterableValue]);
+      };
+    
+      const addStaticValue = () => {
+        const staticValue = `Static ${inputs.length + 1}`;
+        setInputs(prev => [...prev, staticValue]);
+      };
+    
+      return (
+        <div>
+          <h3>Dynamic Concurrent Async Iteration</h3>
+    
+          <button onClick={addAsyncIterValue}>🔄 Add Async Iterable</button>
+          <button onClick={addStaticValue}>🗿 Add Static Value</button>
+    
+          <ul>
+            <ItMulti values={inputs}>
+              {states =>
+                states.map((state, i) => (
+                  <li key={i}>
+                    {state.done
+                      ? state.error
+                        ? `Error: ${state.error}`
+                        : 'Done'
+                      : state.pendingFirst
+                        ? 'Pending...'
+                        : `Value: ${state.value}`}
+                  </li>
+                ))
+              }
+            </ItMulti>
+          </ul>
+        </div>
+      );
+    }
+    ```
+
+  </ul>
+
+</details>
+
+
+
+## `useAsyncIterMulti`
+
+[`useAsyncIterMulti`](#useasyncitermulti) hooks up multiple async iterable (or plain) values to your component and its lifecycle.
+
+It's similar to [`useAsyncIter`](#useasynciter), only it works with any number of async iterables or plain values instead of a single one.
+
+```tsx
+const nextStates = useAsyncIterMulti(iters);
+
+// or also:
+
+const [nextNum, nextStr, nextArr] = useAsyncIterMulti([numberIter, stringIter, arrayIter], {
+  initialValues: [0, '', []]
+});
+```
+
+### Parameters
+
+- `values`:
+  An array of values to iterate over simultaneously, which may include any mix of async iterables or plain (non async iterable) values. Source values may be added, removed or changed at any time and new iterations will be close and started accordingly as per [Iteration lifecycle](#iteration-lifecycle).
+
+- `initialValues`:
+  An optional array of initial values. The values here will be the starting points for all the async iterables from `values` (correspondingly by matching array positions) while they are rendered by the `children` render function __for the first time__ and for each while it is __pending its first yield__. Async iterables from `values` that have no initial value corresponding to them will assume `undefined` as initial value.
+
+### Returns
+
+  An array of objects with up-to-date information about each input's current value, completion status, and more - corresponding to the order by which they appear on `values` (see [Iteration state properties breakdown](#iteration-state-properties-breakdown)).
+
+### Notes
+
+-
+  Care should be taken to avoid passing constantly recreated async iterables across re-renders, e.g; by declaring iterables outside the component body or by controlling __when__ iterables should be recreated with React's [`useMemo`](https://react.dev/reference/react/useMemo).
+  
+<details>
+  <summary><b><i>Additional examples</i></b></summary>
+
+  <br/>
+
+  <ul>
+
+  ```tsx
+  import { useAsyncIterMulti } from 'react-async-iterators';
+
+  function MyDemo() {
+    const [currentWords, currentFruits] = useAsyncIterMulti(
+      [wordGen, fruitGen],
+      { initialValues: ['', []] }
+    );
+
     return (
-      <main>
-        <Header />
-        <SideMenu />
-        <ItMulti values={[numberIter, arrayIter]} initialValues={[0, []]}>
-          {([numState, arrState]) => (
-            <>
-              <div>
-                {numState.pendingFirst
-                  ? '⏳ Loading number...'
-                  : `Current number: ${numState.value}`}
-              </div>
-              <div>
-                {arrState.pendingFirst
-                  ? '⏳ Loading items...'
-                  : arrState.value.map((item, i) => <div key={i}>{item}</div>)}
-              </div>
-            </>
-          )}
-        </ItMulti>
-      </main>
-    )
+      <div>
+        Current word:
+        <h2>
+          {currentWords.pendingFirst
+            ? 'Loading words...'
+            : currentWords.error
+            ? `Error: ${currentWords.error}`
+            : currentWords.done
+            ? `Done (last value: ${currentWords.value})`
+            : `Value: ${currentWords.value}`}
+        </h2>
+
+        Fruits:
+        <ul>
+          {currentFruits.pendingFirst
+            ? 'Loading fruits...'
+            : currentFruits.value.map(fruit => (
+              <li key={fruit.icon}>{fruit.icon}</li>
+            ))}
+        </ul>
+      </div>
+    );
   }
+
+  const wordGen = (async function* () {
+    const words = ['Hello', 'React', 'Async', 'Iterators'];
+    for (const word of words) {
+      await new Promise(resolve => setTimeout(resolve, 1250));
+      yield word;
+    }
+  })();
+
+  const fruitGen = (async function* () {
+    const sets = [
+      [{ icon: '🍑' }, { icon: '🥭' }, { icon: '🍊' }],
+      [{ icon: '🍏' }, { icon: '🍐' }, { icon: '🍋' }],
+      [{ icon: '🍉' }, { icon: '🥝' }, { icon: '🍇' }],
+    ];
+    for (const fruits of sets) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      yield fruits;
+    }
+  })();
   ```
+
+  </ul>
 
   <br/>
 
   ```tsx
-  // Using `<ItMulti>` with a dynamically changing amount of inputs:
-  
+  // Using `useAsyncIterMulti` with a dynamically changing amount of inputs:
+
   import { useState } from 'react';
-  import { ItMulti, type MaybeAsyncIterable } from 'react-async-iterators';
-  
+  import { useAsyncIterMulti, type MaybeAsyncIterable } from 'react-async-iterators';
+
   function DynamicInputsComponent() {
     const [inputs, setInputs] = useState<MaybeAsyncIterable<string>[]>([]);
-  
+
+    const states = useAsyncIterMulti(inputs);
+
     const addAsyncIterValue = () => {
       const iterableValue = (async function* () {
         for (let i = 0; i < 10; i++) {
@@ -922,87 +1085,239 @@ It's similar to [`<It>`](#it), only it works with any changeable number of async
       })();
       setInputs(prev => [...prev, iterableValue]);
     };
-  
+
     const addStaticValue = () => {
       const staticValue = `Static ${inputs.length + 1}`;
       setInputs(prev => [...prev, staticValue]);
     };
-  
+
     return (
       <div>
         <h3>Dynamic Concurrent Async Iteration</h3>
-  
+
         <button onClick={addAsyncIterValue}>🔄 Add Async Iterable</button>
         <button onClick={addStaticValue}>🗿 Add Static Value</button>
-  
+
         <ul>
-          <ItMulti values={inputs}>
-            {states =>
-              states.map((state, i) => (
-                <li key={i}>
-                  {state.done
-                    ? state.error
-                      ? `Error: ${state.error}`
-                      : 'Done'
-                    : state.pendingFirst
-                      ? 'Pending...'
-                      : `Value: ${state.value}`}
-                </li>
-              ))
-            }
-          </ItMulti>
+          {states.map((state, i) => (
+            <li key={i}>
+              {state.done
+                ? state.error
+                  ? `Error: ${state.error}`
+                  : 'Done'
+                : state.pendingFirst
+                  ? 'Pending...'
+                  : `Value: ${state.value}`}
+            </li>
+          ))}
         </ul>
       </div>
     );
   }
   ```
-
 </details>
 
 
 
-## `useAsyncIterMulti`
+## `useAsyncIterState`
 
-...
+Basically like [`React.useState`](https://react.dev/reference/react/useState), only that the value is provided back __wrapped in an async iterable__.
+
+This hook allows a component to declare and manage a piece of state as an async iterable thus letting you easily control what specific places in the app UI tree should be bound to it, re-rendering in reaction to its changes (if used in conjunction with [`<It>`](#it) for example).
 
 ```tsx
+const [valueIter, setValue] = useAsyncIterState(initialValue);
 
+function handleChange() {
+  setValue(valueIter.value.current + 1);
+  // or:
+  setValue(value => value + 1);
+}
+
+<It>{valueIter}</It>
+
+function handleValueSubmit() {
+  // use `valueIter.value.current` to get the current state immediately
+  // (e.g, as part of some side effect logic)
+  submitMyValue({ value: valueIter.value.current });
+}
 ```
 
 ### Parameters
 
+- `initialValue`:
+  Any optional starting value for the state iterable's `.value.current` property, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call once during mounting).
+
 ### Returns
 
+  A stateful async iterable with accessible current value and a function for yielding an update. The returned async iterable is a shared iterable such that multiple simultaneous consumers (e.g multiple [`<It>`](#it)s) all pick up the same yields at the same times. The setter function, like[`React.useState`'s setter](https://react.dev/reference/react/useState#setstate), can be provided the next state directly, or a function that calculates it from the previous state.
+
 ### Notes
+
+<ul>
+
+  > <br/>ℹ️ The returned state iterable also contains a `.value.current` property which shows the current up to date state value at any time. Use this any time you need to read the immediate current state (e.g as part of side effects). Otherwise, to display its value and future ones to a user simply render it with things like [`<It>`](#it)/[`<ItMulti>`](#itmulti), [`useAsyncIter`](#useasynciter), etc - more info at [Async iterables with current values](#async-iterables-with-current-values).<br/><br/>
+
+  > <br/>ℹ️ The returned async iterable and setter function both maintain stable references across re-renders so are effective for use within React's [`useMemo`](https://react.dev/reference/react/useMemo) or [`useEffect`](https://react.dev/reference/react/useEffect) and their dependency lists.<br/><br/>
+
+</ul>
 
 <details>
   <summary><b><i>Additional examples</i></b></summary>
 
   <br/>
 
-  ```tsx
+  <ul>
 
+  ```tsx
+  import { useAsyncIterState, It } from 'react-async-iterators';
+
+  function MyForm() {
+    const [firstNameIter, setFirstName] = useAsyncIterState('');
+    const [lastNameIter, setLastName] = useAsyncIterState('');
+    return (
+      <div>
+        <form>
+          <FirstNameInput valueIter={firstNameIter} onChange={setFirstName} />
+          <LastNameInput valueIter={lastNameIter} onChange={setLastName} />
+        </form>
+
+        Greetings, <It>{firstNameIter}</It> <It>{lastNameIter}</It>
+      </div>
+    );
+  }
   ```
 
   <br/>
 
   ```tsx
+  // Use the state iterable's `.value.current` property to read the immediate current state:
 
+  import { useAsyncIterState } from 'react-async-iterators';
+
+  function MyForm() {
+    const [firstNameIter, setFirstName] = useAsyncIterState('');
+    const [lastNameIter, setLastName] = useAsyncIterState('');
+
+    return (
+      <form
+        onSubmit={() => {
+          const firstName = firstNameIter.value.current;
+          const lastName = lastNameIter.value.current;
+          // submit `firstName` and `lastName`...
+        }}
+      >
+        <>...</>
+      </form>
+    );
+  }
   ```
+
+  </ul>
 </details>
-
-
-
-
-## `useAsyncIterState`
-
-...
 
 
 
 ## `iterateFormatted`
 
-...
+A utility to inline-format an async iterable's values before passed into another consuming component.
+
+Can be thought of as mapping an async iterable before being rendered/passed over in the same way you would commonly `.map(...)` an array before rendering/passing it over. More details in [Formatting values](#formatting-values).
+
+```tsx
+iterateFormatted(myIter, (value, idx) => {
+  // return a formatted value here...
+})
+```
+
+```tsx
+// With some given async-iter-receiving `<Select>` component:
+
+<Select
+  optionsIter={iterateFormatted(currenciesIter, ({ isoCode, name }) => ({
+    value: isoCode,
+    label: `${name} (${isoCode})`
+  }))}
+  onChange={...}
+/>
+```
+
+### Parameters
+
+- `source`:
+  Any async iterable or plain value.
+
+- `formatFn`:
+  Function that performs formatting/mapping logic for each value of `source`.
+
+### Returns
+
+  A transformed async iterable emitting every value of `source` after formatting. If `source` is a plain value and not an async iterable, it will be passed into the given `formatFn` and returned on the spot.
+
+### Notes
+
+  - [`iterateFormatted`](#iterateformatted) acts by returning a new transformed version of the source async iterable object, attaching it with some special metadata telling consumers like [`<It>`](#it) and [`useAsyncIter`](#useasynciter) that the original base object is what the iteration process should be bound to instead of the given object. This way, the resulting formatted iterable may be recreated repeatedly without concerns of restarting the iteration process (as long as `source` is passed the same base iterable consistently).
+
+  - If `source` has a current value property at `.value.current` (see [Async iterables with current values](#async-iterables-with-current-values)), it will be formatted via `formatFn` as well.
+
+  - If `source` is a plain value and not an async iterable, it will be passed into the given `formatFn` and returned on the spot.
+
+<details>
+  <summary><b><i>Additional examples</i></b></summary>
+  <br/>
+  
+  <ul>
+
+  ```tsx
+  import { iterateFormatted } from 'iter-tools';
+
+  const currenciesIter = getAvailableCurrenciesIter();
+
+  // This:
+
+  function MyComponent() {
+    return (
+      <div>
+        <Select
+          options={iterateFormatted(currenciesIter, ({ isoCode, name }) => ({
+            value: isoCode,
+            label: `${name} (${isoCode})`
+          }))}
+        />
+      </div>
+    );
+  }
+  
+  // instead of this:
+  
+  import { useMemo } from 'react';
+  import { execPipe as pipe, asyncMap } from 'iter-tools';
+
+  function MyComponent() {
+    const formattedCurrenciesIter = useMemo(
+      () =>
+        pipe(
+          currenciesIter,
+          asyncMap(({ isoCode, name }) => ({
+            value: isoCode,
+            label: `${name} (${isoCode})`
+          }))
+        ),
+      []
+    );
+
+    return (
+      <div>
+        <Select options={formattedCurrenciesIter} />
+      </div>
+    );
+  }
+  ```
+
+  </ul>
+</details>
+
+<br/>
 
 
 
