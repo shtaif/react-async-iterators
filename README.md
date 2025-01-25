@@ -123,12 +123,15 @@ function LiveUserProfile(props: { userId: string }) {
   - [Component state as an async iterable](#component-state-as-an-async-iterable)
 - [API](#api)
   - [Iteration state properties breakdown](#iteration-state-properties-breakdown)
-  - [`<It>`](#it)
-  - [`useAsyncIter`](#useasynciter)
-  - [`<ItMulti>`](#itmulti)
-  - [`useAsyncIterMulti`](#useasyncitermulti)
-  - [`useAsyncIterState`](#useasynciterstate)
-  - [`iterateFormatted`](#iterateformatted)
+  - [Components](#components)
+    - [`<It>`](#it)
+    - [`<ItMulti>`](#itmulti)
+  - [Hooks](#hooks)
+    - [`useAsyncIter`](#useasynciter)
+    - [`useAsyncIterMulti`](#useasyncitermulti)
+    - [`useAsyncIterState`](#useasynciterstate)
+  - [Utils](#utils)
+    - [`iterateFormatted`](#iterateformatted)
 - [License](#license)
 
 
@@ -614,25 +617,11 @@ As detailed below, the types of these properties are affected by particular phas
 
 
 
-<!-- ## Components
-
-...
+## Components
 
 
 
-## Hooks
-
-...
-
-
-
-## Utilities
-
-... -->
-
-
-
-## `<It>`
+### `<It>`
 
 _Alias: [`<Iterate>`](#it)_
 
@@ -744,96 +733,7 @@ Essentially, can be seen as a [`useAsyncIter`](#useasynciter) hook in a componen
 
 
 
-## `useAsyncIter`
-
-[`useAsyncIter`](#useasynciter) hooks up a single async iterable value to your component and its lifecycle.
-
-```tsx
-const next = useAsyncIter(myIter, 'initial_value');
-
-next.value;
-next.pendingFirst;
-next.done;
-next.error;
-```
-
-### Parameters
-
-- `value`:
-  The source value to iterate over - an async iterable or a plain (non async iterable) value. The input value may be changed any time, starting a new iteration in the background, per [Iteration lifecycle](#iteration-lifecycle).
-
-- `initialValue`:
-  An optional starting value for the hook to return prior to the ___first yield___ of the ___first given___ async iterable, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call once during mounting).
-
-### Returns
-
-  The iteration state object with properties reflecting the current state of the iterated async iterable or plain value provided via `value` (see [Iteration state properties breakdown](#iteration-state-properties-breakdown)).
-
-### Notes
-
--
-  [`<It>`](#it) may be preferable over the [`useAsyncIter`](#useasynciter) counterpart typically as the UI area it re-renders within a component tree can be confined expressively to the necessary minimum, saving any other unrelated elements from re-evaluation. On the other hand, [`useAsyncIter`](#useasynciter) being a hook must re-render the entire component's output for every new value.
-
--
-  Care should be taken to avoid passing a constantly recreated iterable object across re-renders, e.g; by declaring it outside the component body or by controlling __when__ it should be recreated with React's [`useMemo`](https://react.dev/reference/react/useMemo).
-
-<details>
-  <summary><b><i>Additional examples</i></b></summary>
-
-  <br/>
-
-  ```tsx
-  import { useAsyncIter } from 'react-async-iterators';
-
-  function SelfUpdatingTodoList(props) {
-    const { value: todos } = useAsyncIter(props.todosAsyncIter);
-    return (
-      <ul>
-        {todos?.map(todo => (
-          <li key={todo.id}>{todo.text}</li>
-        ))}
-      </ul>
-    );
-  }
-  ```
-
-  <br/>
-
-  ```tsx
-  // With an `initialVal` and showing usage of all properties of the returned iteration object:
-
-  import { useAsyncIter } from 'react-async-iterators';
-
-  function SelfUpdatingTodoList(props) {
-    const todosNext = useAsyncIter(props.todosAsyncIter, []);
-
-    return (
-      <>
-        {todosNext.error ? (
-          <div>An error was encountered: {todosNext.error.toString()}</div>
-        ) : todosNext.done && (
-          <div>No additional updates for todos are expected</div>
-        )}
-
-        {todosNext.pendingFirst ? (
-          <div>Loading first todos...</div>
-        ) : (
-          <ul>
-            {todosNext.map(todo => (
-              <li key={todo.id}>{todo.text}</li>
-            ))}
-          </ul>
-        )}
-      </>
-    );
-  }
-  ```
-</details>
-
-
-
-
-## `<ItMulti>`
+### `<ItMulti>`
 
 _Alias: [`<IterateMulti>`](#itmulti)_
 
@@ -966,7 +866,99 @@ It's similar to [`<It>`](#it), only it works with any changeable number of async
 
 
 
-## `useAsyncIterMulti`
+## Hooks
+
+
+
+### `useAsyncIter`
+
+[`useAsyncIter`](#useasynciter) hooks up a single async iterable value to your component and its lifecycle.
+
+```tsx
+const next = useAsyncIter(myIter, 'initial_value');
+
+next.value;
+next.pendingFirst;
+next.done;
+next.error;
+```
+
+### Parameters
+
+- `value`:
+  The source value to iterate over - an async iterable or a plain (non async iterable) value. The input value may be changed any time, starting a new iteration in the background, per [Iteration lifecycle](#iteration-lifecycle).
+
+- `initialValue`:
+  An optional starting value for the hook to return prior to the ___first yield___ of the ___first given___ async iterable, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call once during mounting).
+
+### Returns
+
+  The iteration state object with properties reflecting the current state of the iterated async iterable or plain value provided via `value` (see [Iteration state properties breakdown](#iteration-state-properties-breakdown)).
+
+### Notes
+
+-
+  [`<It>`](#it) may be preferable over the [`useAsyncIter`](#useasynciter) counterpart typically as the UI area it re-renders within a component tree can be confined expressively to the necessary minimum, saving any other unrelated elements from re-evaluation. On the other hand, [`useAsyncIter`](#useasynciter) being a hook must re-render the entire component's output for every new value.
+
+-
+  Care should be taken to avoid passing a constantly recreated iterable object across re-renders, e.g; by declaring it outside the component body or by controlling __when__ it should be recreated with React's [`useMemo`](https://react.dev/reference/react/useMemo).
+
+<details>
+  <summary><b><i>Additional examples</i></b></summary>
+
+  <br/>
+
+  ```tsx
+  import { useAsyncIter } from 'react-async-iterators';
+
+  function SelfUpdatingTodoList(props) {
+    const { value: todos } = useAsyncIter(props.todosAsyncIter);
+    return (
+      <ul>
+        {todos?.map(todo => (
+          <li key={todo.id}>{todo.text}</li>
+        ))}
+      </ul>
+    );
+  }
+  ```
+
+  <br/>
+
+  ```tsx
+  // With an `initialVal` and showing usage of all properties of the returned iteration object:
+
+  import { useAsyncIter } from 'react-async-iterators';
+
+  function SelfUpdatingTodoList(props) {
+    const todosNext = useAsyncIter(props.todosAsyncIter, []);
+
+    return (
+      <>
+        {todosNext.error ? (
+          <div>An error was encountered: {todosNext.error.toString()}</div>
+        ) : todosNext.done && (
+          <div>No additional updates for todos are expected</div>
+        )}
+
+        {todosNext.pendingFirst ? (
+          <div>Loading first todos...</div>
+        ) : (
+          <ul>
+            {todosNext.map(todo => (
+              <li key={todo.id}>{todo.text}</li>
+            ))}
+          </ul>
+        )}
+      </>
+    );
+  }
+  ```
+</details>
+
+
+
+### `useAsyncIterMulti`
 
 [`useAsyncIterMulti`](#useasyncitermulti) hooks up multiple async iterable (or plain) values to your component and its lifecycle.
 
@@ -1119,7 +1111,7 @@ const [nextNum, nextStr, nextArr] = useAsyncIterMulti([numberIter, stringIter, a
 
 
 
-## `useAsyncIterState`
+### `useAsyncIterState`
 
 Basically like [`React.useState`](https://react.dev/reference/react/useState), only that the value is provided back __wrapped in an async iterable__.
 
@@ -1218,7 +1210,11 @@ function handleValueSubmit() {
 
 
 
-## `iterateFormatted`
+## Utils
+
+
+
+### `iterateFormatted`
 
 A utility to inline-format an async iterable's values before passed into another consuming component.
 
