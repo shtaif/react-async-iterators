@@ -26,10 +26,10 @@ Somewhat obvious to say, the React ecosystem features many methods and tools tha
 What can `react-async-iterators` be used for?
 
 - easily consuming async iterables obtained from any library, web API or composed manually - in a React-friendly declarative fashion.
-<!-- Dynamically plug and unplug them at any place across your app's component tree with automatic teardown. -->
+<!-- ...Dynamically plug and unplug them at any place across your app's component tree with automatic teardown... -->
 
 - unlocking new ways of expressing data flow in or between components efficiently, constricting redundant re-rendering.
-<!-- made possible by the async iterables' unique properties (more on that later). -->
+<!-- ...made possible by the async iterables' unique properties (more on that later)... -->
 
 <!-- TODO: Should mention here (or anywhere else?) about the state of the `async-iterator-helpers-proposal`, as well as existing possibilities to create and compose async iterables via `iter-tools` and `IxJS`? -->
 
@@ -38,13 +38,15 @@ What can `react-async-iterators` be used for?
 ```tsx
 import { It } from 'react-async-iterators';
 
-const randoms = (async function* () {
-  while (true) {
-    await new Promise(r => setTimeout(r, 1000));
-    const x = Math.random();
-    yield Math.round(x * 10);
-  }
-})();
+const randoms = {
+  async *[Symbol.asyncIterator]() {
+    while (true) {
+      await new Promise((r) => setTimeout(r, 500));
+      const x = Math.random();
+      yield Math.round(x * 10);
+    }
+  },
+};
 
 // and then:
 
@@ -57,13 +59,13 @@ const randoms = (async function* () {
 <It value={randoms}>
   {next => (
     next.pendingFirst
-      ? 'Loading first...'
-      : <p>{next.value.toExponential()}</p>
+      ? '⏳ Loading first...'
+      : <p>{next.value?.toExponential()}</p>
   )}
 </It>
 
 // renders:
-//   'Loading first...'
+//   '⏳ Loading first...'
 //   <p>2e+0</p>...
 //   <p>1e+0</p>...
 //   <p>3e+0</p>...
@@ -165,16 +167,16 @@ import { It, type IterationResult } from 'react-async-iterators';
 
 ## Consuming async iterables
 
-Async iterables can be hooked into your components and consumed using [`<It>`]() and [`<ItMulti>`](), or their hook version counterparts [`useAsyncIter`]() and [`useAsyncIterMulti`]() respectively.
+Async iterables can be hooked into your components and consumed using [`<It>`](#it) and [`<ItMulti>`](#itmulti), or their hook counterparts [`useAsyncIter`](#useasynciter) and [`useAsyncIterMulti`](#useasyncitermulti) respectively.
 
-The iteration values and states are expressed via a consistent structure (more exaustive list in [this breakdown](#iteration-state-object-detailed-breakdown)).<br/>
+The iteration values and states are expressed via a consistent structure (see exaustive list in [this breakdown](#iteration-state-object-detailed-breakdown)).<br/>
 They may be accessed as follows:
 
 ```tsx
 const myIter = getSomeIter(); // given some `myIter` async iterable
 ```
 
-With [`<It>`]():
+With [`<It>`](#it):
 
 ```tsx
 import { It } from 'react-async-iterators';
@@ -198,7 +200,7 @@ import { It } from 'react-async-iterators';
 </It>
 ```
 
-With [`useAsyncIter`]():
+With [`useAsyncIter`](#useasynciter):
 
 ```tsx
 import { useAsyncIter } from 'react-async-iterators';
@@ -212,9 +214,9 @@ next.done;
 next.error;
 ```
 
-_Using the component form may be __typically preferrable__ over the hook form_ (e.g [`<It>`]() over [`useAsyncIter`]()) - Why? because using it, when changes in data occure - the re-rendered UI area within a component tree can be declaratively narrowed to the necessary minimum, saving other React elements that do not depend on its values from re-evaluation. On the the other hand - [`useAsyncIter`](), being a hook, must re-render the entirety of the host component's output for every new value.
+_Using the component form may be __typically preferrable__ over the hook form_ (e.g [`<It>`](#it) over [`useAsyncIter`](#useasynciter)) - Why? because using it, when changes in data occure - the re-rendered UI area within a component tree can be declaratively narrowed to the necessary minimum, saving other React elements that do not depend on its values from re-evaluation. On the the other hand - [`useAsyncIter`](#useasynciter), being a hook, must re-render the entirety of the host component's output for every new value.
 
-When segregating data flows and relationships across the components' render code like this, using the component forms - it makes for a more managable code, and might get rid of having to akwardly split components down to smaller parts just to render-optimize them when it otherwise wouldn't "feel right" to do so.
+When segregating different flows of data the components' render code like this, using the component forms - it makes for a more managable code, and might get rid of having to akwardly split components down to smaller parts just to render-optimize them when it otherwise wouldn't "feel right" to do so.
 
 
 
@@ -234,7 +236,7 @@ When rendering a plain value, the iteration state properties behave alternativel
 
 <br/>
 
-_Showing [`<It>`]() being used with either plain or async iterable values, wrapped as a custom component:_
+_Showing [`<It>`](#it) being used with either plain or async iterable values, wrapped as a custom component:_
 
 ```tsx
 import { It, type MaybeAsyncIterable } from 'react-async-iterators';
@@ -399,7 +401,7 @@ When any consumer hook/component from the library detects the presence of a curr
 
 This rule bridges the gap between async iterables which always yield asynchronously (as their yields are wrapped in promises) and React's component model in which render outputs are strictly synchronous. Due to this discrepency, for example, if the first value for an async iterable is known in advance and yielded as soon as possible - React could only grab the yielded value from it via a subsequent (immediate) run/render of the consumer hook/component (since the promise can resolve only _after_ such initial sync run/render). This issue is therefore solved by async iterables that expose a current value.
 
-For example, the stateful iterable created from the [`useAsyncIterState`]() hook (_see [Component state as an async iterable](#component-state-as-an-async-iterable)_) applies this convention from its design, acting like a "topic" with an always-available current value that's able to signal out future changes, skipping pending phases, so there's no need to set initial starting states.
+For example, the stateful iterable created from the [`useAsyncIterState`](#useasynciterstate) hook (_see [Component state as an async iterable](#component-state-as-an-async-iterable)_) applies this convention from its design, acting like a "topic" with an always-available current value that's able to signal out future changes, skipping pending phases, so there's no need to set initial starting states.
 
 <!-- TODO: Any code sample that can/should go in here?... -->
 
@@ -407,9 +409,9 @@ For example, the stateful iterable created from the [`useAsyncIterState`]() hook
 
 ## Formatting values
 
-<!-- (^^^ should add "and transforming iterables"?) -->
+<!-- TODO: ^^^ should add "and transforming iterables"? -->
 
-When building your app with components accepting async iterable data as props, as you render these and have to provide such props - you may commonly see a need to _re-format_ held async iterables' value shapes before they're passed in those props, in order for them to match the expected shape. [`iterateFormatted`]() is an easy-to-use approach to many cases like this.
+When building your app with components accepting async iterable data as props, as you render these and have to provide such props - you may commonly see a need to _re-format_ held async iterables' value shapes before they're passed in those props, in order for them to match the expected shape. [`iterateFormatted`](#iterateformatted) is an easy-to-use approach to many cases like this.
 
 For instance, let's say we're trying to use some existing `<Select>` generic component, which supports being given its option list __in async iterable form__, so it could update its rendered dropdown in real-time as new sets of options are yielded. It is used like so;
 
@@ -438,7 +440,7 @@ const currenciesIter = getAvailableCurrenciesIter();
 
 As apparent, the value types between these two are not compatible (properties are not matching).
 
-By using [`iterateFormatted`](), our source iterable can be formatted/transformed to fit like so:
+By using [`iterateFormatted`](#iterateformatted), our source iterable can be formatted/transformed to fit like so:
 
 ```tsx
 const currenciesIter = getAvailableCurrenciesIter();
@@ -484,8 +486,8 @@ function MyComponent() {
 }
 ```
 
-> <br/>ℹ️ Every calls to [`iterateFormatted`]() returns a _formatted_ versions of `currenciesIter` with some transparent metadata used by library's consumers (like [`<It>`]()) to associate every transformed iterable with its original source iterable so existing iteration states can be maintained. It's therefore safe to recreate and pass on formatted iterables from repeated calls to [`iterateFormatted`]() across re-renders (as long the same source is used with it consistently).<br/><br/>
-So unless you require some more elaborate transformation than simply formatting values - it might be more ergonomic to use [`iterateFormatted`]() vs manual compositions within [`React.useMemo`](https://react.dev/reference/react/useMemo), especially if dealing with multiple iterables to transform.<br/><br/>
+> <br/>ℹ️ Each call to [`iterateFormatted`](#iterateformatted) returns a _formatted_ versions of `currenciesIter` with some transparent metadata, which the library's consumers (like [`<It>`](#it)) use to associate every transformed iterable with its original source iterable, and this way existing iteration states can be persisted properly. It's therefore safe to recreate and pass on formatted iterables from repeated calls to [`iterateFormatted`](#iterateformatted) across re-renders (as long the same source is used with it consistently).<br/><br/>
+So unless you require some more elaborate transformation than simply formatting values - it might be more ergonomic to use [`iterateFormatted`](#iterateformatted) vs manual compositions within [`React.useMemo`](https://react.dev/reference/react/useMemo), especially if dealing with multiple iterables to transform.<br/><br/>
 
 
 
@@ -495,9 +497,9 @@ So unless you require some more elaborate transformation than simply formatting 
 
 As illustrated throughout this library and docs - when dealing with data in your app that's presented as an async iterable, an interesting pattern emerges; instead of a transition in app state traditionally sending down a cascading re-render through the entire tree of components underneath it to propagate the new state - your __async iterable__ objects can be distributed __once__ when the whole tree is first mounted, and when new data is then communicated through them it directly gets right to the edges of the UI tree that are concerned with it, re-rendering them exclusively and thus skipping all intermediaries.
 
-The packaged [`useAsyncIterState`]() hook can lend this paradigm to your __component state__. It's like a [`React.useState`](https://react.dev/reference/react/useState) version that returns you _an async iterable of the state value instead of the state value_, paired with a setter function that causes the stateful iterable to yield the next states.
+The packaged [`useAsyncIterState`](#useasynciterstate) hook can lend this paradigm to your __component state__. It's like a [`React.useState`](https://react.dev/reference/react/useState) version that returns you _an async iterable of the state value instead of the state value_, paired with a setter function that causes the stateful iterable to yield the next states.
 
-The stateful iterable may be distributed via props down through any number of component levels the same way you would with classic React state, and used in conjunction with [`<It>`]() or [`useAsyncIter`](), etc. wherever it has to be rendered.
+The stateful iterable may be distributed via props down through any number of component levels the same way you would with classic React state, and used in conjunction with [`<It>`](#it) or [`useAsyncIter`](#useasynciter), etc. wherever it has to be rendered.
 
 In a glance, it's usage looks like this:
 
@@ -823,12 +825,12 @@ It's similar to [`<It>`](#it), only it works with any changeable number of async
             yield `Item ${i}`;
           }
         })();
-        setInputs(prev => [...prev, iterableValue]);
+        setInputs(prev => [iterableValue, ...prev]);
       };
     
       const addStaticValue = () => {
         const staticValue = `Static ${inputs.length + 1}`;
-        setInputs(prev => [...prev, staticValue]);
+        setInputs(prev => [staticValue, ...prev]);
       };
     
       return (
