@@ -35,6 +35,8 @@ What can `react-async-iterators` be used for?
 
 ### Illustration:
 
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-3?file=src%2FApp.tsx)
+
 ```tsx
 import { It } from 'react-async-iterators';
 
