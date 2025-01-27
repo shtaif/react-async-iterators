@@ -4,6 +4,8 @@ import { useRefWithInitialValue } from '../common/hooks/useRefWithInitialValue.j
 import { isAsyncIter } from '../common/isAsyncIter.js';
 import { type IterationResult } from '../useAsyncIter/index.js';
 import { type AsyncIterableSubject } from '../AsyncIterableSubject/index.js';
+import { type MaybeFunction } from '../common/MaybeFunction.js';
+import { callOrReturn } from '../common/callOrReturn.js';
 import { asyncIterSyncMap } from '../common/asyncIterSyncMap.js';
 import { parseReactAsyncIterable } from '../common/ReactAsyncIterable.js';
 import { iterateAsyncIterWithCallbacks } from '../common/iterateAsyncIterWithCallbacks.js';
@@ -79,8 +81,8 @@ export { useAsyncIterMulti, type IterationResult, type IterationResultSet };
  *
  * @param inputs An array of zero or more async iterable or plain values (mixable).
  * @param {object} opts An _optional_ object with options.
- * @param opts.initialValues An _optional_ array of initial values, each item of which is a starting value for the async iterable from `inputs` on the same array position. For every async iterable that has no corresponding item in this array, it would use the provided `opts.defaultInitialValue` as fallback.
- * @param opts.defaultInitialValue An _optional_ default starting value for every new async iterable in `inputs` if there is no corresponding one for it in `opts.initialValues`, defaults to `undefined`.
+ * @param opts.initialValues An _optional_ array of initial values or functions that return initial values, each item of which is a starting value for the async iterable from `inputs` on the same array position. For every async iterable that has no corresponding item here, the provided `opts.defaultInitialValue` will be used as fallback.
+ * @param opts.defaultInitialValue An _optional_ default starting value for every new async iterable in `inputs` if there is no corresponding one for it in `opts.initialValues`, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call for every new iterable added).
  *
  * @returns An array of objects that provide up-to-date information about each input's current value, completion status, whether it's still waiting for its first value and so on, correspondingly with the order in which they appear on `inputs` (see {@link IterationResultSet `IterationResultSet`}).
  *
@@ -206,12 +208,12 @@ function useAsyncIterMulti<
     initialValues?: TInitValues;
     defaultInitialValue?: TDefaultInitValue;
   }
-): IterationResultSet<TValues, TInitValues, TDefaultInitValue> {
+): IterationResultSet<TValues, MaybeFunctions<TInitValues>, TDefaultInitValue> {
   const update = useSimpleRerender();
 
   const ref = useRefWithInitialValue(() => ({
     currDiffCompId: 0,
-    prevResults: [] as IterationResultSet<TValues, TInitValues, TDefaultInitValue>,
+    prevResults: [] as IterationResultSet<TValues, MaybeFunctions<TInitValues>, TDefaultInitValue>,
     activeItersMap: new Map<
       AsyncIterable<unknown>,
       {
@@ -233,8 +235,10 @@ function useAsyncIterMulti<
     };
   }, []);
 
-  const initialValues = opts?.initialValues ?? [];
-  const defaultInitialValue = opts?.defaultInitialValue;
+  const optsNormed = {
+    initialValues: opts?.initialValues ?? [],
+    defaultInitialValue: opts?.defaultInitialValue,
+  };
 
   const nextDiffCompId = (ref.current.currDiffCompId = ref.current.currDiffCompId === 0 ? 1 : 0);
   let numOfPrevRunItersPreserved = 0;
@@ -279,9 +283,11 @@ function useAsyncIterMulti<
       startingValue =
         i < prevResults.length
           ? prevResults[i].value
-          : i < initialValues.length
-            ? initialValues[i]
-            : defaultInitialValue;
+          : callOrReturn(
+              i < optsNormed.initialValues.length
+                ? optsNormed.initialValues[i]
+                : optsNormed.defaultInitialValue
+            );
       pendingFirst = true;
     }
 
@@ -305,7 +311,7 @@ function useAsyncIterMulti<
     activeItersMap.set(baseIter, newIterState);
 
     return newIterState.currState;
-  }) as IterationResultSet<TValues, TInitValues, TDefaultInitValue>;
+  }) as IterationResultSet<TValues, MaybeFunctions<TInitValues>, TDefaultInitValue>;
 
   const numOfPrevRunItersDisappeared = numOfPrevRunIters - numOfPrevRunItersPreserved;
 
@@ -322,7 +328,9 @@ function useAsyncIterMulti<
     }
   }
 
-  return (ref.current.prevResults = nextResults);
+  ref.current.prevResults = nextResults;
+
+  return nextResults;
 }
 
 type IterationResultSet<
@@ -334,4 +342,8 @@ type IterationResultSet<
     TValues[I],
     I extends keyof TInitValues ? TInitValues[I] : TDefaultInitValue
   >;
+};
+
+type MaybeFunctions<T extends readonly unknown[]> = {
+  [I in keyof T]: T[I] extends MaybeFunction<infer J> ? J : T[I];
 };

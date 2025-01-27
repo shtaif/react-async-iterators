@@ -1,4 +1,4 @@
-import { it, describe, expect, afterEach } from 'vitest';
+import { it, describe, expect, afterEach, vi } from 'vitest';
 import { gray } from 'colorette';
 import { cleanup as cleanupMountedReactTrees, act, renderHook } from '@testing-library/react';
 import { iterateFormatted, useAsyncIterMulti } from '../../src/index.js';
@@ -167,19 +167,117 @@ describe('`useAsyncIterMulti` hook', () => {
 
   it(
     gray(
+      'When given multiple iterables with a default initial value as a function, calls it once on every added source iterable'
+    ),
+    async () => {
+      const channels = [
+        new IteratorChannelTestHelper<string>(),
+        new IteratorChannelTestHelper<string>(),
+      ];
+      const initialValueFn = vi.fn(() => '___');
+      let timesRerendered = 0;
+
+      const renderedHook = renderHook(() => {
+        timesRerendered++;
+        return useAsyncIterMulti(channels, { defaultInitialValue: initialValueFn });
+      });
+
+      await act(() => {});
+      expect(timesRerendered).toStrictEqual(1);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: '___', pendingFirst: true, done: false, error: undefined },
+        { value: '___', pendingFirst: true, done: false, error: undefined },
+      ]);
+
+      await act(() => {
+        channels[0].put('a');
+        channels[1].put('b');
+      });
+      expect(timesRerendered).toStrictEqual(2);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+        { value: 'b', pendingFirst: false, done: false, error: undefined },
+      ]);
+
+      await act(() => {
+        channels.push(new IteratorChannelTestHelper());
+        renderedHook.rerender();
+      });
+      expect(timesRerendered).toStrictEqual(3);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+        { value: 'b', pendingFirst: false, done: false, error: undefined },
+        { value: '___', pendingFirst: true, done: false, error: undefined },
+      ]);
+      expect(initialValueFn).toHaveBeenCalledTimes(3);
+    }
+  );
+
+  it(
+    gray(
+      'When given multiple iterables with initial values as a functions, calls each once when a corresponding iterable is added'
+    ),
+    async () => {
+      const channels = [new IteratorChannelTestHelper<string>()];
+      const [initialValueFn1, initialValueFn2] = [vi.fn(), vi.fn()];
+      let timesRerendered = 0;
+
+      const renderedHook = renderHook(() => {
+        timesRerendered++;
+        return useAsyncIterMulti(channels, {
+          initialValues: [
+            initialValueFn1.mockImplementation(() => '_1_'),
+            initialValueFn2.mockImplementation(() => '_2_'),
+          ],
+        });
+      });
+
+      await act(() => {});
+      expect(timesRerendered).toStrictEqual(1);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: '_1_', pendingFirst: true, done: false, error: undefined },
+      ]);
+
+      await act(() => channels[0].put('a'));
+      expect(timesRerendered).toStrictEqual(2);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+      ]);
+
+      await act(() => {
+        channels.push(new IteratorChannelTestHelper());
+        renderedHook.rerender();
+      });
+      expect(timesRerendered).toStrictEqual(3);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+        { value: '_2_', pendingFirst: true, done: false, error: undefined },
+      ]);
+      expect(initialValueFn1).toHaveBeenCalledOnce();
+      expect(initialValueFn2).toHaveBeenCalledOnce();
+    }
+  );
+
+  it(
+    gray(
       "When given multiple iterables with corresponding initial values for some and a default initial value, reflects each's state correctly, starting with its corresponding initial value or the default initial value if not present"
     ),
     async () => {
       const channels = [
         new IteratorChannelTestHelper<string>(),
         new IteratorChannelTestHelper<string>(),
-      ] as const;
+      ];
       let timesRerendered = 0;
 
       const renderedHook = renderHook(() => {
         timesRerendered++;
-        return useAsyncIterMulti(channels, { initialValues: ['_1_'], defaultInitialValue: '___' });
+        return useAsyncIterMulti(channels, {
+          initialValues: [() => '_1_' as const] as const,
+          defaultInitialValue: () => '___' as const,
+        });
       });
+
+      renderedHook.result.current[0].value;
 
       await act(() => {});
       expect(timesRerendered).toStrictEqual(1);
@@ -200,6 +298,17 @@ describe('`useAsyncIterMulti` hook', () => {
       expect(renderedHook.result.current).toStrictEqual([
         { value: 'a', pendingFirst: false, done: false, error: undefined },
         { value: 'b', pendingFirst: false, done: false, error: undefined },
+      ]);
+
+      await act(() => {
+        channels.push(new IteratorChannelTestHelper());
+        renderedHook.rerender();
+      });
+      expect(timesRerendered).toStrictEqual(4);
+      expect(renderedHook.result.current).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+        { value: 'b', pendingFirst: false, done: false, error: undefined },
+        { value: '___', pendingFirst: true, done: false, error: undefined },
       ]);
     }
   );
