@@ -87,7 +87,8 @@ export { IterateMulti, type IterateMultiProps };
  * ---
  *
  * @template TVals The type of the input set of async iterable or plain values as an array/tuple.
- * @template TInitVals The type of initial values for each of the input values as an array/tuple, corresponding by order. For input values which don't have a corrsponding initial value, the default is `undefined`.
+ * @template TInitVals The type of all initial values for each of the input values as an array/tuple, corresponding by order.
+ * @template TDefaultInitVal The type of the default initial value (the fallback from `TValues`). `undefined` by default.
  *
  * @param props Props for `<IterateMulti>`. See {@link IterateMultiProps `IterateMultiProps`}.
  *
@@ -97,7 +98,7 @@ export { IterateMulti, type IterateMultiProps };
  *
  * @example
  * ```tsx
- * // Using `<ItMulti>` with a dynamically-changed amount of inputs:
+ * // Using `<ItMulti>` with a dynamically changing amount of inputs:
  *
  * import { useState } from 'react';
  * import { ItMulti, type MaybeAsyncIterable } from 'react-async-iterators';
@@ -128,7 +129,7 @@ export { IterateMulti, type IterateMultiProps };
  *       <button onClick={addStaticValue}>🗿 Add Static Value</button>
  *
  *       <ul>
- *         <ItMulti values={inputs}>
+ *         <ItMulti values={inputs} defaultInitialValue="">
  *           {states =>
  *             states.map((state, i) => (
  *               <li key={i}>
@@ -151,10 +152,12 @@ export { IterateMulti, type IterateMultiProps };
  */
 function IterateMulti<
   const TVals extends readonly unknown[],
-  const TInitVals extends readonly unknown[] = undefined[],
->(props: IterateMultiProps<TVals, TInitVals>): ReactNode {
+  const TInitVals extends readonly unknown[] = readonly [],
+  const TDefaultInitVal = undefined,
+>(props: IterateMultiProps<TVals, TInitVals, TDefaultInitVal>): ReactNode {
   const nexts = useAsyncIterMulti(props.values, {
     initialValues: props.initialValues,
+    defaultInitialValue: props.defaultInitialValue,
   });
   return props.children(nexts);
 }
@@ -164,25 +167,37 @@ function IterateMulti<
  *
  * @template TVals The type of the input set of async iterable or plain values as an array/tuple.
  * @template TInitVals The type of initial values for each of the input values as an array/tuple, corresponding by order. For input values which don't have a corrsponding initial value, the default is `undefined`.
+ * @template TDefaultInitVal The type of the default initial value (the fallback from `TVals`). `undefined` by default.
  */
 type IterateMultiProps<
   TVals extends readonly unknown[],
-  TInitVals extends readonly unknown[] = readonly undefined[],
+  TInitVals extends readonly unknown[] = readonly [],
+  TDefaultInitVal = undefined,
 > = {
   /**
    * An array of values to iterate over simultaneously, which may include any mix of async iterables or
    * plain (non async iterable) values.
    */
   values: TVals;
+
   /**
-   * An optional array of initial values, defaults to `undefined`. Each value here will be the starting
-   * point for each of the async iterables on `values` (by corresponding array position) when it is
-   * rendered by the `children` render function for the first time and while it's pending its first
-   * yielded value.
+   * An optional array of initial values. The values here will be the starting points for all the
+   * async iterables from `values` (correspondingly by matching array positions) when they are
+   * rendered by the `children` render function for the first time and for each while it is pending
+   * its first yield. Async iterables from `values` that have no corresponding item in this array,
+   * will fall back to the {@link IterateMultiProps.defaultInitialValue `defaultInitialValue`} prop
+   * as the initial value.
    */
   initialValues?: TInitVals;
+
   /**
-   * A render function that is called on every progression in of any of the running iterations, returning
+   * An _optional_ default starting value for every new async iterable in `values` if there is no
+   * corresponding one for it in the `initialValues` prop, defaults to `undefined`.
+   */
+  defaultInitialValue?: TDefaultInitVal;
+
+  /**
+   * A render function that is called on every progression in any of the running iterations, returning
    * something to render for them.
    *
    * @param iterationStates - An array of the combined iteration state objects of all sources given with the `values` prop, which includes each source's last yielded value, whether completed, any associated error, etc. Each object is corresponding to the source on the `values` array in the same the position (array index). (see {@link IterationResultSet `IterationResultSet`}).
@@ -192,6 +207,6 @@ type IterateMultiProps<
    * @see {@link IterationResultSet `IterationResultSet`}
    */
   children: (
-    iterationStates: IterationResultSet<Writeable<TVals>, Writeable<TInitVals>>
+    iterationStates: IterationResultSet<Writeable<TVals>, Writeable<TInitVals>, TDefaultInitVal>
   ) => ReactNode;
 };

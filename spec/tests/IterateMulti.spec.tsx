@@ -169,64 +169,61 @@ describe('`IterateMulti` hook', () => {
     }
   );
 
-  it(
-    gray('When given multiple iterables, correctly renders with each of their states'),
-    async () => {
-      const renderFn = vi.fn() as Mock<
-        IterateMultiRenderFunc<[AsyncIterable<'a' | 'b' | 'c'>, AsyncIterable<'a' | 'b' | 'c'>]>
-      >;
-      const channels = [
-        new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
-        new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
-      ] as const;
+  it(gray("When given multiple iterables, correctly renders each's state"), async () => {
+    const renderFn = vi.fn() as Mock<
+      IterateMultiRenderFunc<[AsyncIterable<'a' | 'b' | 'c'>, AsyncIterable<'a' | 'b' | 'c'>]>
+    >;
+    const channels = [
+      new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
+      new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
+    ] as const;
 
-      const rendered = await act(() =>
-        render(
-          <IterateMulti values={channels}>
-            {renderFn.mockImplementation(() => (
-              <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
-            ))}
-          </IterateMulti>
-        )
-      );
+    const rendered = await act(() =>
+      render(
+        <IterateMulti values={channels}>
+          {renderFn.mockImplementation(() => (
+            <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+          ))}
+        </IterateMulti>
+      )
+    );
 
-      await act(() => {});
-      expect(renderFn.mock.calls).lengthOf(1);
-      expect(renderFn.mock.lastCall).toStrictEqual([
-        [
-          { value: undefined, pendingFirst: true, done: false, error: undefined },
-          { value: undefined, pendingFirst: true, done: false, error: undefined },
-        ],
-      ]);
-      expect(rendered.container.innerHTML).toStrictEqual(
-        `<div id="test-created-elem">Render count: 1</div>`
-      );
+    await act(() => {});
+    expect(renderFn.mock.calls).lengthOf(1);
+    expect(renderFn.mock.lastCall).toStrictEqual([
+      [
+        { value: undefined, pendingFirst: true, done: false, error: undefined },
+        { value: undefined, pendingFirst: true, done: false, error: undefined },
+      ],
+    ]);
+    expect(rendered.container.innerHTML).toStrictEqual(
+      `<div id="test-created-elem">Render count: 1</div>`
+    );
 
-      await act(() => channels[0].put('a'));
-      expect(renderFn.mock.calls).lengthOf(2);
-      expect(renderFn.mock.lastCall).toStrictEqual([
-        [
-          { value: 'a', pendingFirst: false, done: false, error: undefined },
-          { value: undefined, pendingFirst: true, done: false, error: undefined },
-        ],
-      ]);
-      expect(rendered.container.innerHTML).toStrictEqual(
-        `<div id="test-created-elem">Render count: 2</div>`
-      );
+    await act(() => channels[0].put('a'));
+    expect(renderFn.mock.calls).lengthOf(2);
+    expect(renderFn.mock.lastCall).toStrictEqual([
+      [
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+        { value: undefined, pendingFirst: true, done: false, error: undefined },
+      ],
+    ]);
+    expect(rendered.container.innerHTML).toStrictEqual(
+      `<div id="test-created-elem">Render count: 2</div>`
+    );
 
-      await act(() => channels[1].put('b'));
-      expect(renderFn.mock.calls).lengthOf(3);
-      expect(renderFn.mock.lastCall).toStrictEqual([
-        [
-          { value: 'a', pendingFirst: false, done: false, error: undefined },
-          { value: 'b', pendingFirst: false, done: false, error: undefined },
-        ],
-      ]);
-      expect(rendered.container.innerHTML).toStrictEqual(
-        `<div id="test-created-elem">Render count: 3</div>`
-      );
-    }
-  );
+    await act(() => channels[1].put('b'));
+    expect(renderFn.mock.calls).lengthOf(3);
+    expect(renderFn.mock.lastCall).toStrictEqual([
+      [
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+        { value: 'b', pendingFirst: false, done: false, error: undefined },
+      ],
+    ]);
+    expect(rendered.container.innerHTML).toStrictEqual(
+      `<div id="test-created-elem">Render count: 3</div>`
+    );
+  });
 
   it(
     gray("When given multiple iterables, some empty, reflects each's states correctly"),
@@ -260,9 +257,66 @@ describe('`IterateMulti` hook', () => {
     }
   );
 
+  it(
+    gray(
+      "When given multiple iterables with corresponding initial values for some and a default initial value, correctly renders each's state and corresponding initial value or the default initial value if not present"
+    ),
+    async () => {
+      const renderFn = vi.fn() as Mock<
+        (
+          nexts: IterationResultSet<[AsyncIterable<string>, AsyncIterable<string>], ['_1_'], '___'>
+        ) => any
+      >;
+      const channels = [
+        new IteratorChannelTestHelper<string>(),
+        new IteratorChannelTestHelper<string>(),
+      ] as const;
+
+      const rendered = await act(() =>
+        render(
+          <IterateMulti values={channels} initialValues={['_1_']} defaultInitialValue="___">
+            {renderFn.mockImplementation(() => (
+              <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+            ))}
+          </IterateMulti>
+        )
+      );
+
+      await act(() => {});
+      expect(renderFn.mock.calls).lengthOf(1);
+      expect(renderFn.mock.lastCall?.flat()).toStrictEqual([
+        { value: '_1_', pendingFirst: true, done: false, error: undefined },
+        { value: '___', pendingFirst: true, done: false, error: undefined },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        `<div id="test-created-elem">Render count: 1</div>`
+      );
+
+      await act(() => channels[0].put('a'));
+      expect(renderFn.mock.calls).lengthOf(2);
+      expect(renderFn.mock.lastCall?.flat()).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+        { value: '___', pendingFirst: true, done: false, error: undefined },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        `<div id="test-created-elem">Render count: 2</div>`
+      );
+
+      await act(() => channels[1].put('b'));
+      expect(renderFn.mock.calls).lengthOf(3);
+      expect(renderFn.mock.lastCall?.flat()).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+        { value: 'b', pendingFirst: false, done: false, error: undefined },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        `<div id="test-created-elem">Render count: 3</div>`
+      );
+    }
+  );
+
   describe(
     gray(
-      'When given multiple iterables with corresponding initial values, correctly renders with each of their states and corresponding initial values where present'
+      "When given multiple iterables with corresponding initial values, correctly renders each's state and corresponding initial value if present"
     ),
     () => {
       it(gray('with initial values for all given iterables'), async () => {
@@ -391,7 +445,7 @@ describe('`IterateMulti` hook', () => {
 
   describe(
     gray(
-      'When given multiple iterables that complete at different times, correctly renders with each of their states'
+      "When given multiple iterables that complete at different times, correctly renders each's state"
     ),
     () =>
       [
@@ -480,92 +534,107 @@ describe('`IterateMulti` hook', () => {
       })
   );
 
-  describe('When given multiple iterables that error out at different times, correctly renders with each of their states', () => {
-    [
-      {
-        initialValues: undefined,
-      },
-      {
-        initialValues: ['_1', '_2'],
-      },
-    ].forEach(({ initialValues = [] }) => {
-      it(
-        gray(`${!initialValues.length ? 'without initial values' : 'with initial values'}`),
-        async () => {
-          const renderFn = vi.fn() as Mock<
-            (
-              nexts: IterationResultSet<
-                [AsyncIterable<'a' | 'b' | 'c'>, AsyncIterable<'a' | 'b' | 'c'>],
-                string[]
-              >
-            ) => any
-          >;
-          const channels = [
-            new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
-            new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
-          ] as const;
+  describe(
+    gray(
+      "When given multiple iterables that error out at different times, correctly renders each's state"
+    ),
+    () => {
+      [
+        {
+          initialValues: undefined,
+        },
+        {
+          initialValues: ['_1', '_2'],
+        },
+      ].forEach(({ initialValues = [] }) => {
+        it(
+          gray(`${!initialValues.length ? 'without initial values' : 'with initial values'}`),
+          async () => {
+            const renderFn = vi.fn() as Mock<
+              (
+                nexts: IterationResultSet<
+                  [AsyncIterable<'a' | 'b' | 'c'>, AsyncIterable<'a' | 'b' | 'c'>],
+                  string[]
+                >
+              ) => any
+            >;
+            const channels = [
+              new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
+              new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
+            ] as const;
 
-          const rendered = await act(() =>
-            render(
-              <IterateMulti values={channels} initialValues={initialValues}>
-                {renderFn.mockImplementation(() => (
-                  <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
-                ))}
-              </IterateMulti>
-            )
-          );
+            const rendered = await act(() =>
+              render(
+                <IterateMulti values={channels} initialValues={initialValues}>
+                  {renderFn.mockImplementation(() => (
+                    <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+                  ))}
+                </IterateMulti>
+              )
+            );
 
-          await act(() => {});
-          expect(renderFn.mock.calls).lengthOf(1);
-          expect(renderFn.mock.lastCall).toStrictEqual([
-            [
-              { value: initialValues[0], pendingFirst: true, done: false, error: undefined },
-              { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
-            ],
-          ]);
-          expect(rendered.container.innerHTML).toStrictEqual(
-            `<div id="test-created-elem">Render count: 1</div>`
-          );
+            await act(() => {});
+            expect(renderFn.mock.calls).lengthOf(1);
+            expect(renderFn.mock.lastCall).toStrictEqual([
+              [
+                { value: initialValues[0], pendingFirst: true, done: false, error: undefined },
+                { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
+              ],
+            ]);
+            expect(rendered.container.innerHTML).toStrictEqual(
+              `<div id="test-created-elem">Render count: 1</div>`
+            );
 
-          await act(() => channels[0].put('a'));
-          expect(renderFn.mock.calls).lengthOf(2);
-          expect(renderFn.mock.lastCall).toStrictEqual([
-            [
-              { value: 'a', pendingFirst: false, done: false, error: undefined },
-              { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
-            ],
-          ]);
-          expect(rendered.container.innerHTML).toStrictEqual(
-            `<div id="test-created-elem">Render count: 2</div>`
-          );
+            await act(() => channels[0].put('a'));
+            expect(renderFn.mock.calls).lengthOf(2);
+            expect(renderFn.mock.lastCall).toStrictEqual([
+              [
+                { value: 'a', pendingFirst: false, done: false, error: undefined },
+                { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
+              ],
+            ]);
+            expect(rendered.container.innerHTML).toStrictEqual(
+              `<div id="test-created-elem">Render count: 2</div>`
+            );
 
-          await act(() => channels[1].error(simulatedError1));
-          expect(renderFn.mock.calls).lengthOf(3);
-          expect(renderFn.mock.lastCall).toStrictEqual([
-            [
-              { value: 'a', pendingFirst: false, done: false, error: undefined },
-              { value: initialValues[1], pendingFirst: false, done: true, error: simulatedError1 },
-            ],
-          ]);
-          expect(rendered.container.innerHTML).toStrictEqual(
-            `<div id="test-created-elem">Render count: 3</div>`
-          );
+            await act(() => channels[1].error(simulatedError1));
+            expect(renderFn.mock.calls).lengthOf(3);
+            expect(renderFn.mock.lastCall).toStrictEqual([
+              [
+                { value: 'a', pendingFirst: false, done: false, error: undefined },
+                {
+                  value: initialValues[1],
+                  pendingFirst: false,
+                  done: true,
+                  error: simulatedError1,
+                },
+              ],
+            ]);
+            expect(rendered.container.innerHTML).toStrictEqual(
+              `<div id="test-created-elem">Render count: 3</div>`
+            );
 
-          await act(() => channels[0].error(simulatedError2));
-          expect(renderFn.mock.calls).lengthOf(4);
-          expect(renderFn.mock.lastCall).toStrictEqual([
-            [
-              { value: 'a', pendingFirst: false, done: true, error: simulatedError2 },
-              { value: initialValues[1], pendingFirst: false, done: true, error: simulatedError1 },
-            ],
-          ]);
-          expect(rendered.container.innerHTML).toStrictEqual(
-            `<div id="test-created-elem">Render count: 4</div>`
-          );
-        }
-      );
-    });
-  });
+            await act(() => channels[0].error(simulatedError2));
+            expect(renderFn.mock.calls).lengthOf(4);
+            expect(renderFn.mock.lastCall).toStrictEqual([
+              [
+                { value: 'a', pendingFirst: false, done: true, error: simulatedError2 },
+                {
+                  value: initialValues[1],
+                  pendingFirst: false,
+                  done: true,
+                  error: simulatedError1,
+                },
+              ],
+            ]);
+            expect(rendered.container.innerHTML).toStrictEqual(
+              `<div id="test-created-elem">Render count: 4</div>`
+            );
+          }
+        );
+      });
+    }
+  );
 
   it(
     gray(
