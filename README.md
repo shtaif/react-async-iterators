@@ -983,8 +983,11 @@ const [nextNum, nextStr, nextArr] = useAsyncIterMulti([numberIter, stringIter, a
 - `values`:
   An array of values to iterate over simultaneously, which may include any mix of async iterables or plain (non async iterable) values. Source values may be added, removed or changed at any time and new iterations will be close and started accordingly as per [Iteration lifecycle](#iteration-lifecycle).
 
-- `initialValues`:
-  An optional array of initial values. The values here will be the starting points for all the async iterables from `values` (correspondingly by matching array positions) while they are rendered by the `children` render function __for the first time__ and for each while it is __pending its first yield__. Async iterables from `values` that have no initial value corresponding to them will assume `undefined` as initial value.
+- `opts`:
+  An _optional_ object with properties:
+
+  - `initialValues`:
+    An _optional_ array of initial values. The values here will be the starting points for all the async iterables from `values` (correspondingly by matching array positions) while they are rendered by the `children` render function __for the first time__ and for each while it is __pending its first yield__. Async iterables from `values` that have no initial value corresponding to them will assume `undefined` as initial value.
 
 ### Returns
 
