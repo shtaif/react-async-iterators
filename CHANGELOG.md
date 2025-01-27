@@ -1,3 +1,17 @@
+## [0.8.0](https://github.com/shtaif/react-async-iterators/compare/v0.7.1...v0.8.0) (2025-01-27)
+
+
+### Features
+
+* add default initial value parameters to `useAsyncIterMulti` and `IterateMulti` ([#69](https://github.com/shtaif/react-async-iterators/issues/69)) ([f5e214b](https://github.com/shtaif/react-async-iterators/commit/f5e214b1bbf57dfcd90f31fabb3d9f7a674bd12a))
+
+
+### Documentation
+
+* **readme:** fix documentation mistakes for `useAsyncIterMulti`'s options object argument ([#67](https://github.com/shtaif/react-async-iterators/issues/67)) ([bfbb352](https://github.com/shtaif/react-async-iterators/commit/bfbb352c5fe42f298e830d75340f0e14b44ee373))
+* **readme:** further content for `README.md` ([#65](https://github.com/shtaif/react-async-iterators/issues/65)) ([3a256e8](https://github.com/shtaif/react-async-iterators/commit/3a256e8f225f9ede95cad106816055e0b882f7dd))
+* **readme:** more edits ([#66](https://github.com/shtaif/react-async-iterators/issues/66)) ([8a6fc81](https://github.com/shtaif/react-async-iterators/commit/8a6fc81399e7a15402fe01dc7d28759a90e38ca7))
+
 ## [0.7.1](https://github.com/shtaif/react-async-iterators/compare/v0.7.0...v0.7.1) (2025-01-23)
 
 
