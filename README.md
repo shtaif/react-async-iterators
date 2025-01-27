@@ -990,11 +990,10 @@ const [nextNum, nextStr, nextArr] = useAsyncIterMulti([numberIter, stringIter, a
   An _optional_ object with properties:
 
   - `initialValues`:
-    An _optional_ array of initial values. The values here will be the starting points for all the async iterables from `values` (by corresponding array positions) while they are rendered by the `children` render function __for the first time__ and for each while it is __pending its first yield__. Async iterables from `values` that have no initial value corresponding to them will assume `undefined` as initial value.
+    An _optional_ array of initial values or functions that return initial values. The values will be the starting points for all the async iterables from `values` (by corresponding array positions) __for the first time__ and for each while it is __pending its first yield__. For async iterables from `values` that have no corresponding item here the provided `opts.defaultInitialValue` will be used as fallback.
 
   - `defaultInitialValue`:
-    An _optional_ default starting value for every new async iterable in `values` if there is no corresponding one for it in `opts.initialValues`, defaults to `undefined`.
-
+    An _optional_ default starting value for every new async iterable in `values` if there is no corresponding one for it in `opts.initialValues`, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call for every new iterable added).
 
 ### Returns
 
