@@ -75,12 +75,14 @@ export { useAsyncIterMulti, type IterationResult, type IterationResultSet };
  *
  * @template TValues The array/tuple type of the input set of async iterable or plain values.
  * @template TInitValues The type of all initial values corresponding to types of `TValues`.
+ * @template TDefaultInitValue The type of the default initial value (the fallback from `TValues`). `undefined` by default.
  *
- * @param inputs An array of zero or more async iterable or plain values (mixed).
+ * @param inputs An array of zero or more async iterable or plain values (mixable).
  * @param {object} opts An _optional_ object with options.
- * @param opts.initialValues An _optional_ array of initial values, in which each item provides a starting value for an async iterable on the same index in the `inputs` array. For every async iterable that has no corresponding initial value in this array, the default initial value is `undefined`.
+ * @param opts.initialValues An _optional_ array of initial values, each item of which is a starting value for the async iterable from `inputs` on the same array position. For every async iterable that has no corresponding item in this array, it would use the provided `opts.defaultInitialValue` as fallback.
+ * @param opts.defaultInitialValue An _optional_ default starting value for every new async iterable in `inputs` if there is no corresponding one for it in `opts.initialValues`, defaults to `undefined`.
  *
- * @returns An array of objects that provide up-to-date information about each input's current value, completion status, whether it's still waiting for its first value and so on, correspondingly with the order in which they appear on `inputs (see {@link IterationResultSet `IterationResultSet`}).
+ * @returns An array of objects that provide up-to-date information about each input's current value, completion status, whether it's still waiting for its first value and so on, correspondingly with the order in which they appear on `inputs` (see {@link IterationResultSet `IterationResultSet`}).
  *
  * @see {@link IterationResultSet `IterationResultSet`}
  *
@@ -144,7 +146,7 @@ export { useAsyncIterMulti, type IterationResult, type IterationResultSet };
  *
  * @example
  * ```tsx
- * // Using `useAsyncIterMulti` with a dynamically-changed amount of inputs:
+ * // Using `useAsyncIterMulti` with a dynamically changing amount of inputs:
  *
  * import { useState } from 'react';
  * import { useAsyncIterMulti, type MaybeAsyncIterable } from 'react-async-iterators';
@@ -196,18 +198,20 @@ export { useAsyncIterMulti, type IterationResult, type IterationResultSet };
  */
 function useAsyncIterMulti<
   const TValues extends readonly unknown[],
-  const TInitValues extends readonly unknown[] = readonly undefined[],
+  const TInitValues extends readonly unknown[] = readonly [],
+  const TDefaultInitValue = undefined,
 >(
   inputs: TValues,
   opts?: {
     initialValues?: TInitValues;
+    defaultInitialValue?: TDefaultInitValue;
   }
-): IterationResultSet<TValues, TInitValues> {
+): IterationResultSet<TValues, TInitValues, TDefaultInitValue> {
   const update = useSimpleRerender();
 
   const ref = useRefWithInitialValue(() => ({
     currDiffCompId: 0,
-    prevResults: [] as IterationResultSet<TValues, TInitValues>,
+    prevResults: [] as IterationResultSet<TValues, TInitValues, TDefaultInitValue>,
     activeItersMap: new Map<
       AsyncIterable<unknown>,
       {
@@ -230,6 +234,7 @@ function useAsyncIterMulti<
   }, []);
 
   const initialValues = opts?.initialValues ?? [];
+  const defaultInitialValue = opts?.defaultInitialValue;
 
   const nextDiffCompId = (ref.current.currDiffCompId = ref.current.currDiffCompId === 0 ? 1 : 0);
   let numOfPrevRunItersPreserved = 0;
@@ -271,7 +276,12 @@ function useAsyncIterMulti<
       startingValue = inputWithMaybeCurrentValue.value.current;
       pendingFirst = false;
     } else {
-      startingValue = prevResults[i] ? prevResults[i].value : initialValues[i]; // TODO: Sure this is the ideal behavior, to use prev iter that happened to be at that position as the value that a new one starts with, even though positions could have been shuffled?
+      startingValue =
+        i < prevResults.length
+          ? prevResults[i].value
+          : i < initialValues.length
+            ? initialValues[i]
+            : defaultInitialValue;
       pendingFirst = true;
     }
 
@@ -295,7 +305,7 @@ function useAsyncIterMulti<
     activeItersMap.set(baseIter, newIterState);
 
     return newIterState.currState;
-  }) as IterationResultSet<TValues, TInitValues>;
+  }) as IterationResultSet<TValues, TInitValues, TDefaultInitValue>;
 
   const numOfPrevRunItersDisappeared = numOfPrevRunIters - numOfPrevRunItersPreserved;
 
@@ -317,10 +327,11 @@ function useAsyncIterMulti<
 
 type IterationResultSet<
   TValues extends readonly unknown[],
-  TInitValues extends readonly unknown[] = undefined[],
+  TInitValues extends readonly unknown[] = readonly [],
+  TDefaultInitValue = undefined,
 > = {
   [I in keyof TValues]: IterationResult<
     TValues[I],
-    I extends keyof TInitValues ? TInitValues[I] : undefined
+    I extends keyof TInitValues ? TInitValues[I] : TDefaultInitValue
   >;
 };

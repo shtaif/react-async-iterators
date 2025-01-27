@@ -759,7 +759,10 @@ It's similar to [`<It>`](#it), only it works with any changeable number of async
   An array of values to iterate over simultaneously, which may include any mix of async iterables or plain (non async iterable) values. Source values may be added, removed or changed at any time and new iterations will be close and started accordingly as per [Iteration lifecycle](#iteration-lifecycle).
 
 - `initialValues`:
-  An optional array of initial values. The values here will be the starting points for all the async iterables from `values` (correspondingly by matching array positions) while they are rendered by the `children` render function __for the first time__ and for each while it is __pending its first yield__. Async iterables from `values` that have no initial value corresponding to them will assume `undefined` as initial value.
+  An _optional_ array of initial values. The values here will be the starting points for all the async iterables from `values` (by corresponding array positions) while they are rendered by the `children` render function __for the first time__ and for each while it is __pending its first yield__. Async iterables from `values` that have no initial value corresponding to them will assume `undefined` as initial value.
+
+- `defaultInitialValue`:
+  An _optional_ default starting value for every new async iterable in `values` if there is no corresponding one for it in the `initialValues` prop, defaults to `undefined`.
 
 - `children`:
   A render function that is called on every progression in any of the running iterations, returning something to render for them. The function is called with an array of the combined iteration state objects of all sources currently given by the `values` prop (see [Iteration state properties breakdown](#iteration-state-properties-breakdown)).
@@ -843,7 +846,7 @@ It's similar to [`<It>`](#it), only it works with any changeable number of async
           <button onClick={addStaticValue}>🗿 Add Static Value</button>
     
           <ul>
-            <ItMulti values={inputs}>
+            <ItMulti values={inputs} defaultInitialValue="">
               {states =>
                 states.map((state, i) => (
                   <li key={i}>
@@ -987,7 +990,11 @@ const [nextNum, nextStr, nextArr] = useAsyncIterMulti([numberIter, stringIter, a
   An _optional_ object with properties:
 
   - `initialValues`:
-    An _optional_ array of initial values. The values here will be the starting points for all the async iterables from `values` (correspondingly by matching array positions) while they are rendered by the `children` render function __for the first time__ and for each while it is __pending its first yield__. Async iterables from `values` that have no initial value corresponding to them will assume `undefined` as initial value.
+    An _optional_ array of initial values. The values here will be the starting points for all the async iterables from `values` (by corresponding array positions) while they are rendered by the `children` render function __for the first time__ and for each while it is __pending its first yield__. Async iterables from `values` that have no initial value corresponding to them will assume `undefined` as initial value.
+
+  - `defaultInitialValue`:
+    An _optional_ default starting value for every new async iterable in `values` if there is no corresponding one for it in `opts.initialValues`, defaults to `undefined`.
+
 
 ### Returns
 
@@ -1073,7 +1080,7 @@ const [nextNum, nextStr, nextArr] = useAsyncIterMulti([numberIter, stringIter, a
   function DynamicInputsComponent() {
     const [inputs, setInputs] = useState<MaybeAsyncIterable<string>[]>([]);
 
-    const states = useAsyncIterMulti(inputs);
+    const states = useAsyncIterMulti(inputs, { defaultInitialValue: '' });
 
     const addAsyncIterValue = () => {
       const iterableValue = (async function* () {
