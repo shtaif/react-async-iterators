@@ -186,97 +186,12 @@ describe('`useAsyncIterMulti` hook', () => {
     }
   );
 
-  it(
+  describe(
     gray(
-      "When given multiple iterables with corresponding initial values, reflects each's states correctly, starting with its corresponding initial value"
+      "When given multiple iterables with corresponding initial values, reflects each's states correctly, starting with its corresponding initial value where present"
     ),
-    async () => {
-      const channels = [
-        new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
-        new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
-      ] as const;
-      let timesRerendered = 0;
-
-      const renderedHook = renderHook(() => {
-        timesRerendered++;
-        return useAsyncIterMulti(channels, { initialValues: ['_1_', '_2_'] });
-      });
-
-      await act(() => {});
-      expect(timesRerendered).toStrictEqual(1);
-      expect(renderedHook.result.current).toStrictEqual([
-        { value: '_1_', pendingFirst: true, done: false, error: undefined },
-        { value: '_2_', pendingFirst: true, done: false, error: undefined },
-      ]);
-
-      await act(() => channels[0].put('a'));
-      expect(timesRerendered).toStrictEqual(2);
-      expect(renderedHook.result.current).toStrictEqual([
-        { value: 'a', pendingFirst: false, done: false, error: undefined },
-        { value: '_2_', pendingFirst: true, done: false, error: undefined },
-      ]);
-
-      await act(() => channels[1].put('b'));
-      expect(timesRerendered).toStrictEqual(3);
-      expect(renderedHook.result.current).toStrictEqual([
-        { value: 'a', pendingFirst: false, done: false, error: undefined },
-        { value: 'b', pendingFirst: false, done: false, error: undefined },
-      ]);
-    }
-  );
-
-  it(
-    gray(
-      "When given multiple iterables with corresponding initial values for only some, reflects each's states correctly, possibly starting with a corresponding initial value if present"
-    ),
-    async () => {
-      const channels = [
-        new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
-        new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
-      ] as const;
-      let timesRerendered = 0;
-
-      const renderedHook = renderHook(() => {
-        timesRerendered++;
-        return useAsyncIterMulti(channels, { initialValues: ['_1_'] });
-      });
-
-      await act(() => {});
-      expect(timesRerendered).toStrictEqual(1);
-      expect(renderedHook.result.current).toStrictEqual([
-        { value: '_1_', pendingFirst: true, done: false, error: undefined },
-        { value: undefined, pendingFirst: true, done: false, error: undefined },
-      ]);
-
-      await act(() => channels[0].put('a'));
-      expect(timesRerendered).toStrictEqual(2);
-      expect(renderedHook.result.current).toStrictEqual([
-        { value: 'a', pendingFirst: false, done: false, error: undefined },
-        { value: undefined, pendingFirst: true, done: false, error: undefined },
-      ]);
-
-      await act(() => channels[1].put('b'));
-      expect(timesRerendered).toStrictEqual(3);
-      expect(renderedHook.result.current).toStrictEqual([
-        { value: 'a', pendingFirst: false, done: false, error: undefined },
-        { value: 'b', pendingFirst: false, done: false, error: undefined },
-      ]);
-    }
-  );
-
-  [
-    {
-      initialValues: undefined,
-    },
-    {
-      initialValues: ['_1', '_2'],
-    },
-  ].forEach(({ initialValues = [] }) => {
-    it(
-      gray(
-        `When given multiple iterables ${initialValues.length ? 'with initial values' : ''} that complete at different times, reflects each's states correctly`
-      ),
-      async () => {
+    () => {
+      it(gray('with initial values for all given iterables'), async () => {
         const channels = [
           new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
           new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
@@ -285,53 +200,32 @@ describe('`useAsyncIterMulti` hook', () => {
 
         const renderedHook = renderHook(() => {
           timesRerendered++;
-          return useAsyncIterMulti(channels, { initialValues });
+          return useAsyncIterMulti(channels, { initialValues: ['_1_', '_2_'] });
         });
 
         await act(() => {});
         expect(timesRerendered).toStrictEqual(1);
         expect(renderedHook.result.current).toStrictEqual([
-          { value: initialValues[0], pendingFirst: true, done: false, error: undefined },
-          { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
+          { value: '_1_', pendingFirst: true, done: false, error: undefined },
+          { value: '_2_', pendingFirst: true, done: false, error: undefined },
         ]);
 
         await act(() => channels[0].put('a'));
         expect(timesRerendered).toStrictEqual(2);
         expect(renderedHook.result.current).toStrictEqual([
           { value: 'a', pendingFirst: false, done: false, error: undefined },
-          { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
+          { value: '_2_', pendingFirst: true, done: false, error: undefined },
         ]);
 
-        await act(() => channels[1].complete());
+        await act(() => channels[1].put('b'));
         expect(timesRerendered).toStrictEqual(3);
         expect(renderedHook.result.current).toStrictEqual([
           { value: 'a', pendingFirst: false, done: false, error: undefined },
-          { value: initialValues[1], pendingFirst: false, done: true, error: undefined },
+          { value: 'b', pendingFirst: false, done: false, error: undefined },
         ]);
+      });
 
-        await act(() => channels[0].complete());
-        expect(timesRerendered).toStrictEqual(4);
-        expect(renderedHook.result.current).toStrictEqual([
-          { value: 'a', pendingFirst: false, done: true, error: undefined },
-          { value: initialValues[1], pendingFirst: false, done: true, error: undefined },
-        ]);
-      }
-    );
-  });
-
-  [
-    {
-      initialValues: undefined,
-    },
-    {
-      initialValues: ['_1', '_2'],
-    },
-  ].forEach(({ initialValues = [] }) => {
-    it(
-      gray(
-        `When given multiple iterables ${initialValues.length ? 'with initial values' : ''} that error out at different times, reflects each's states correctly`
-      ),
-      async () => {
+      it(gray('with initial values only for some given iterables'), async () => {
         const channels = [
           new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
           new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
@@ -340,39 +234,152 @@ describe('`useAsyncIterMulti` hook', () => {
 
         const renderedHook = renderHook(() => {
           timesRerendered++;
-          return useAsyncIterMulti(channels, { initialValues });
+          return useAsyncIterMulti(channels, { initialValues: ['_1_'] });
         });
 
         await act(() => {});
         expect(timesRerendered).toStrictEqual(1);
         expect(renderedHook.result.current).toStrictEqual([
-          { value: initialValues[0], pendingFirst: true, done: false, error: undefined },
-          { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
+          { value: '_1_', pendingFirst: true, done: false, error: undefined },
+          { value: undefined, pendingFirst: true, done: false, error: undefined },
         ]);
 
         await act(() => channels[0].put('a'));
         expect(timesRerendered).toStrictEqual(2);
         expect(renderedHook.result.current).toStrictEqual([
           { value: 'a', pendingFirst: false, done: false, error: undefined },
-          { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
+          { value: undefined, pendingFirst: true, done: false, error: undefined },
         ]);
 
-        await act(() => channels[1].error(simulatedError1));
+        await act(() => channels[1].put('b'));
         expect(timesRerendered).toStrictEqual(3);
         expect(renderedHook.result.current).toStrictEqual([
           { value: 'a', pendingFirst: false, done: false, error: undefined },
-          { value: initialValues[1], pendingFirst: false, done: true, error: simulatedError1 },
+          { value: 'b', pendingFirst: false, done: false, error: undefined },
         ]);
+      });
+    }
+  );
 
-        await act(() => channels[0].error(simulatedError2));
-        expect(timesRerendered).toStrictEqual(4);
-        expect(renderedHook.result.current).toStrictEqual([
-          { value: 'a', pendingFirst: false, done: true, error: simulatedError2 },
-          { value: initialValues[1], pendingFirst: false, done: true, error: simulatedError1 },
-        ]);
-      }
-    );
-  });
+  describe(
+    gray(
+      `When given multiple iterables that complete at different times, reflects each's states correctly`
+    ),
+    () => {
+      [
+        {
+          initialValues: undefined,
+        },
+        {
+          initialValues: ['_1', '_2'],
+        },
+      ].forEach(({ initialValues = [] }) => {
+        it(
+          gray(`${!initialValues.length ? 'without initial values' : 'with initial values'}`),
+          async () => {
+            const channels = [
+              new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
+              new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
+            ] as const;
+            let timesRerendered = 0;
+
+            const renderedHook = renderHook(() => {
+              timesRerendered++;
+              return useAsyncIterMulti(channels, { initialValues });
+            });
+
+            await act(() => {});
+            expect(timesRerendered).toStrictEqual(1);
+            expect(renderedHook.result.current).toStrictEqual([
+              { value: initialValues[0], pendingFirst: true, done: false, error: undefined },
+              { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
+            ]);
+
+            await act(() => channels[0].put('a'));
+            expect(timesRerendered).toStrictEqual(2);
+            expect(renderedHook.result.current).toStrictEqual([
+              { value: 'a', pendingFirst: false, done: false, error: undefined },
+              { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
+            ]);
+
+            await act(() => channels[1].complete());
+            expect(timesRerendered).toStrictEqual(3);
+            expect(renderedHook.result.current).toStrictEqual([
+              { value: 'a', pendingFirst: false, done: false, error: undefined },
+              { value: initialValues[1], pendingFirst: false, done: true, error: undefined },
+            ]);
+
+            await act(() => channels[0].complete());
+            expect(timesRerendered).toStrictEqual(4);
+            expect(renderedHook.result.current).toStrictEqual([
+              { value: 'a', pendingFirst: false, done: true, error: undefined },
+              { value: initialValues[1], pendingFirst: false, done: true, error: undefined },
+            ]);
+          }
+        );
+      });
+    }
+  );
+
+  describe(
+    gray(
+      `When given multiple iterables that error out at different times, reflects each's states correctly`
+    ),
+    () => {
+      [
+        {
+          initialValues: undefined,
+        },
+        {
+          initialValues: ['_1', '_2'],
+        },
+      ].forEach(({ initialValues = [] }) => {
+        it(
+          gray(`${!initialValues.length ? 'without initial values' : 'with initial values'}`),
+          async () => {
+            const channels = [
+              new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
+              new IteratorChannelTestHelper<'a' | 'b' | 'c'>(),
+            ] as const;
+            let timesRerendered = 0;
+
+            const renderedHook = renderHook(() => {
+              timesRerendered++;
+              return useAsyncIterMulti(channels, { initialValues });
+            });
+
+            await act(() => {});
+            expect(timesRerendered).toStrictEqual(1);
+            expect(renderedHook.result.current).toStrictEqual([
+              { value: initialValues[0], pendingFirst: true, done: false, error: undefined },
+              { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
+            ]);
+
+            await act(() => channels[0].put('a'));
+            expect(timesRerendered).toStrictEqual(2);
+            expect(renderedHook.result.current).toStrictEqual([
+              { value: 'a', pendingFirst: false, done: false, error: undefined },
+              { value: initialValues[1], pendingFirst: true, done: false, error: undefined },
+            ]);
+
+            await act(() => channels[1].error(simulatedError1));
+            expect(timesRerendered).toStrictEqual(3);
+            expect(renderedHook.result.current).toStrictEqual([
+              { value: 'a', pendingFirst: false, done: false, error: undefined },
+              { value: initialValues[1], pendingFirst: false, done: true, error: simulatedError1 },
+            ]);
+
+            await act(() => channels[0].error(simulatedError2));
+            expect(timesRerendered).toStrictEqual(4);
+            expect(renderedHook.result.current).toStrictEqual([
+              { value: 'a', pendingFirst: false, done: true, error: simulatedError2 },
+              { value: initialValues[1], pendingFirst: false, done: true, error: simulatedError1 },
+            ]);
+          }
+        );
+      });
+    }
+  );
 
   it(
     gray(
