@@ -1,3 +1,17 @@
+## [0.9.0](https://github.com/shtaif/react-async-iterators/compare/v0.8.0...v0.9.0) (2025-01-28)
+
+
+### Features
+
+* **ItMulti:** support for handling initializer functions as initial values ([#71](https://github.com/shtaif/react-async-iterators/issues/71)) ([4435461](https://github.com/shtaif/react-async-iterators/commit/4435461b664ebac6f6448228d0833e65ea2d3cf4))
+* **useAsyncIterMulti:** support getting initial values as initializer functions ([#70](https://github.com/shtaif/react-async-iterators/issues/70)) ([57056b2](https://github.com/shtaif/react-async-iterators/commit/57056b2bc12e2f4a195b00b7514686d2348e5c1e))
+
+
+### Documentation
+
+* **readme:** various edits ([#74](https://github.com/shtaif/react-async-iterators/issues/74)) ([79d0834](https://github.com/shtaif/react-async-iterators/commit/79d083462efadf8b6393c2730a2cee4e26c47b88))
+* various edits ([#72](https://github.com/shtaif/react-async-iterators/issues/72)) ([6f8da52](https://github.com/shtaif/react-async-iterators/commit/6f8da5202df10718300bf714dcf25b085887631e))
+
 ## [0.8.0](https://github.com/shtaif/react-async-iterators/compare/v0.7.1...v0.8.0) (2025-01-27)
 
 
