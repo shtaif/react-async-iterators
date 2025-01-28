@@ -47,7 +47,7 @@ export { useAsyncIter, type IterationResult };
  * across component updates as long as `input` keeps getting passed the same object reference every
  * time (similar to the behavior of a `useEffect(() => {...}, [input])`), therefore care should be taken
  * to avoid constantly recreating the iterable on every render, by e.g; declaring it outside the component
- * body, control __when__ it should be recreated with React's
+ * body, controlling __when__ it should be recreated with React's
  * [`useMemo`](https://react.dev/reference/react/useMemo) or alternatively use the library's
  * {@link iterateFormatted `iterateFormatted`} util for a formatted version of an iterable which
  * preserves its identity.
@@ -123,7 +123,7 @@ const useAsyncIter: {
   const rerender = useSimpleRerender();
 
   const stateRef = useRefWithInitialValue<IterationResult<any, any>>(() => ({
-    value: callOrReturn(initialVal) /*as any*/,
+    value: callOrReturn(initialVal),
     pendingFirst: true,
     done: false,
     error: undefined,
@@ -136,63 +136,63 @@ const useAsyncIter: {
     useEffect(() => {}, [undefined]);
 
     stateRef.current = {
-      value: latestInputRef.current /*as unknown*/,
+      value: latestInputRef.current,
       pendingFirst: false,
       done: false,
       error: undefined,
     };
 
     return stateRef.current;
-  } else {
-    const iterSourceRefToUse =
-      latestInputRef.current[reactAsyncIterSpecialInfoSymbol]?.origSource ?? latestInputRef.current;
+  }
 
-    useMemo((): void => {
-      const latestInputRefCurrent = latestInputRef.current!;
+  const iterSourceRefToUse =
+    latestInputRef.current[reactAsyncIterSpecialInfoSymbol]?.origSource ?? latestInputRef.current;
 
-      let value;
-      let pendingFirst;
+  useMemo((): void => {
+    const latestInputRefCurrent = latestInputRef.current!;
 
-      if (latestInputRefCurrent.value) {
-        value = latestInputRefCurrent.value.current;
-        pendingFirst = false;
-      } else {
-        const prevSourceLastestVal = stateRef.current.value;
-        value = prevSourceLastestVal;
-        pendingFirst = true;
-      }
+    let value;
+    let pendingFirst;
+
+    if (latestInputRefCurrent.value) {
+      value = latestInputRefCurrent.value.current;
+      pendingFirst = false;
+    } else {
+      const prevSourceLastestVal = stateRef.current.value;
+      value = prevSourceLastestVal;
+      pendingFirst = true;
+    }
+
+    stateRef.current = {
+      value,
+      pendingFirst,
+      done: false,
+      error: undefined,
+    };
+  }, [iterSourceRefToUse]);
+
+  useEffect(() => {
+    let iterationIdx = 0;
+
+    return iterateAsyncIterWithCallbacks(iterSourceRefToUse, stateRef.current.value, next => {
+      const possibleGivenFormatFn =
+        latestInputRef.current?.[reactAsyncIterSpecialInfoSymbol]?.formatFn;
+
+      const formattedValue = possibleGivenFormatFn
+        ? possibleGivenFormatFn(next.value, iterationIdx++)
+        : next.value;
 
       stateRef.current = {
-        value,
-        pendingFirst,
-        done: false,
-        error: undefined,
+        ...next,
+        pendingFirst: false,
+        value: formattedValue,
       };
-    }, [iterSourceRefToUse]);
 
-    useEffect(() => {
-      let iterationIdx = 0;
+      rerender();
+    });
+  }, [iterSourceRefToUse]);
 
-      return iterateAsyncIterWithCallbacks(iterSourceRefToUse, stateRef.current.value, next => {
-        const possibleGivenFormatFn =
-          latestInputRef.current?.[reactAsyncIterSpecialInfoSymbol]?.formatFn;
-
-        const formattedValue = possibleGivenFormatFn
-          ? possibleGivenFormatFn(next.value, iterationIdx++)
-          : next.value; /*as unknown*/
-
-        stateRef.current = {
-          ...next,
-          pendingFirst: false,
-          value: formattedValue,
-        };
-
-        rerender();
-      });
-    }, [iterSourceRefToUse]);
-
-    return stateRef.current;
-  }
+  return stateRef.current;
 };
 
 /**
