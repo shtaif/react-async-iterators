@@ -156,7 +156,7 @@ export { useAsyncIterMulti, type IterationResult, type IterationResultSet };
  * function DynamicInputsComponent() {
  *   const [inputs, setInputs] = useState<MaybeAsyncIterable<string>[]>([]);
  *
- *   const states = useAsyncIterMulti(inputs);
+ *   const states = useAsyncIterMulti(inputs, { defaultInitialValue: '' });
  *
  *   const addAsyncIterValue = () => {
  *     const iterableValue = (async function* () {
