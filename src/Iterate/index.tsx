@@ -6,7 +6,7 @@ import { useAsyncIter, type IterationResult } from '../useAsyncIter/index.js';
 export { Iterate, type IterateProps };
 
 /**
- * The `<Iterate>` helper component (also exported as `<It>`) is used to format and render an async
+ * The `<Iterate>` component (also exported as `<It>`) is used to format and render an async
  * iterable (or a plain non-iterable value) directly onto a piece of UI.
  *
  * Essentially, can be seen as a {@link useAsyncIter `useAsyncIter`} hook in a component form,
@@ -46,15 +46,15 @@ export { Iterate, type IterateProps };
  * {@link useAsyncIter `useAsyncIter`} being a hook it has to re-render an entire
  * component's output for every new value.
  *
- * Given an async iterable as the `value` prop, this component will iterate it and render each new
+ * Given an async iterable as the `value` prop, this component will iterate it and render every new
  * value that becomes available together with any possible completion or error it may run into.
- * If `value` is a plain (non async iterable) value, it will simply be rendered over as-is.
+ * If `value` is a plain (non async iterable) value, it will simply be rendered as-is.
  *
  * Whenever given `value` is changed from the previous one seen, `<Iterate>` will close the previous
  * if it was async iterable before proceeding to iterate the new `value`. Care should be taken to
- * avoid passing a constantly recreated iterable object across re-renders, e.g; by declaring it outside the component body or control __when__ it
- * should be recreated with React's [`useMemo`](https://react.dev/reference/react/useMemo).
- * `<Iterate>` will automatically close its iterated iterable as soon as it gets unmounted.
+ * avoid passing a constantly recreated iterable object across re-renders, e.g; by declaring it outside
+ * the component body or by controlling __when__ it should be recreated with React's
+ * [`useMemo`](https://react.dev/reference/react/useMemo). `<Iterate>` will automatically close its iterated iterable as soon as it gets unmounted.
  *
  * ---
  *
@@ -141,7 +141,7 @@ type IterateProps<TVal, TInitialVal = undefined> =
 
 type IteratePropsWithRenderFunction<TVal, TInitialVal = undefined> = {
   /**
-   * The source value to iterate over, an async iterable or a plain (non async iterable) value.
+   * The source value to iterate over - an async iterable or a plain (non async iterable) value.
    */
   value: TVal;
   /**
