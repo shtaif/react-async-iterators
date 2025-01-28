@@ -654,10 +654,10 @@ Essentially, can be seen as a [`useAsyncIter`](#useasynciter) hook in a componen
   The source value to iterate over - an async iterable or a plain (non async iterable) value. The input value may be changed any time, starting a new iteration in the background, per [Iteration lifecycle](#iteration-lifecycle). If using the "simplified" form, `value` is ignored and the source value should be provided as `children` instead.
 
 - `initialValue`:
-  An optional starting value, defaults to `undefined`. Will be the value inserted into the child render function when [`<It>`](#it) first renders during mount and while it's pending first yield. You can pass an actual value, or a function that returns a value (which [`<It>`](#it) will call once during mounting).
+  An _optional_ starting value, defaults to `undefined`. Will be the value inserted into the child render function when [`<It>`](#it) first renders during mount and while it's pending first yield. You can pass an actual value, or a function that returns a value (which [`<It>`](#it) will call once during mounting).
 
 - `children`:
-  A render function that is called for each step of the iteration, returning something to render out of it, with the current state object as the argument (see [Iteration state properties breakdown](#iteration-state-properties-breakdown)). If using the "simplified" form, the source value is directly passed as children and yielded values are rendered just as-are without any formatting on top of.
+  A render function that is called for each step of the iteration, returning something to render out of it, with the current state object as the argument (see [Iteration state properties breakdown](#iteration-state-properties-breakdown)). If using the "simplified" form instead - the source value should be directly passed as children and yielded values are rendered just as-are without any formatting on top.
 
 ### Notes
 
@@ -896,7 +896,7 @@ next.error;
   The source value to iterate over - an async iterable or a plain (non async iterable) value. The input value may be changed any time, starting a new iteration in the background, per [Iteration lifecycle](#iteration-lifecycle).
 
 - `initialValue`:
-  An optional starting value for the hook to return prior to the ___first yield___ of the ___first given___ async iterable, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call once during mounting).
+  An _optional_ starting value for the hook to return prior to the ___first yield___ of the ___first given___ async iterable, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call once during mounting).
 
 ### Returns
 
@@ -1151,7 +1151,7 @@ function handleValueSubmit() {
 ### Parameters
 
 - `initialValue`:
-  Any optional starting value for the state iterable's `.value.current` property, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call once during mounting).
+  Any _optional_ starting value for the state iterable's `.value.current` property, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call once during mounting).
 
 ### Returns
 
