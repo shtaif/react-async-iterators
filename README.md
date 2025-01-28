@@ -488,8 +488,11 @@ function MyComponent() {
 }
 ```
 
-> <br/>ℹ️ Each call to [`iterateFormatted`](#iterateformatted) returns a _formatted_ versions of `currenciesIter` with some transparent metadata, which the library's consumers (like [`<It>`](#it)) use to associate every transformed iterable with its original source iterable, and this way existing iteration states can be persisted properly. It's therefore safe to recreate and pass on formatted iterables from repeated calls to [`iterateFormatted`](#iterateformatted) across re-renders (as long the same source is used with it consistently).<br/><br/>
-So unless you require some more elaborate transformation than simply formatting values - it might be more ergonomic to use [`iterateFormatted`](#iterateformatted) vs manual compositions within [`React.useMemo`](https://react.dev/reference/react/useMemo), especially if dealing with multiple iterables to transform.<br/><br/>
+<br/>
+
+> <br/>ℹ️ As seen above, unless you require some more elaborate transformation than simply formatting values - it might be more ergonomic to use [`iterateFormatted`](#iterateformatted) vs manual compositions within [`React.useMemo`](https://react.dev/reference/react/useMemo)s - especially if you're having to transform multiple iterables.<br/><br/>
+
+Every call to [`iterateFormatted`](#iterateformatted) returns a _formatted_ versions of `currenciesIter` with some transparent metadata, which the library's consumers (like [`<It>`](#it)) use to associate every transformed iterable with its original source iterable, and this way existing iteration states can be persisted properly. It's therefore safe to recreate and pass on formatted iterables from repeated calls to [`iterateFormatted`](#iterateformatted) across re-renders (as long the same source is used with it consistently).
 
 
 
