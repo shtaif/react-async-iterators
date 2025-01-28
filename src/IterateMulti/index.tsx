@@ -9,7 +9,7 @@ export { IterateMulti, type IterateMultiProps };
 // TODO: The initial values should be able to be given in function/s form, with consideration for iterable sources that could be added in dynamically.
 
 /**
- * The `<IterateMulti>` helper component (also exported as `<ItMulti>`) is used to combine and render
+ * The `<IterateMulti>` component (also exported as `<ItMulti>`) is used to combine and render
  * any number of async iterables (or plain non-iterable values) directly onto a piece of UI.
  *
  * It's similar to `<Iterate>`, only it works with any changeable number of async iterables or plain values
