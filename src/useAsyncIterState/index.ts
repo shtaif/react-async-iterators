@@ -12,11 +12,13 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableChannel
 
 /**
  * Basically like {@link https://react.dev/reference/react/useState `React.useState`}, only that the value
- * is provided back __wrapped as an async iterable__.
+ * is provided back __wrapped in an async iterable__.
  *
- * This hook allows a component to declare and manage a piece of state while easily letting you control
- * what specifically area(s) within the UI should be bound to it (should re-render in reaction to changes
- * in it) - for example, if combined with one or more {@link Iterate `<Iterate>`}s.
+ * This hook allows a component to declare and manage a piece of state as an async iterable thus
+ * letting you easily control what specific places in the app UI tree should be bound to it,
+ * re-rendering in reaction to its changes (if used in conjunction with {@link Iterate `<Iterate>`}
+ * for example).
+
  *
  * @example
  * ```tsx
@@ -44,9 +46,9 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableChannel
  *
  * The returned async iterable can be passed over to any level down the component tree and rendered
  * using `<Iterate>`, `useAsyncIter`, and others. It also contains a `.value.current` property which shows
- * the current up to date state value at all times. Use this any time you need to read the immediate
+ * the current up to date state value at any time. Use this any time you need to read the immediate
  * current state (for example as part of side effect logic) rather than directly rendering it, since
- * for rendering you may simply iterate values as part of an `<Iterate>`.
+ * for rendering you may simply iterate the values as part of an `<Iterate>`.
  *
  * Returned also alongside the async iterable is a function for updating the state. Calling it with a new
  * value will cause the paired iterable to yield the updated state value as well as immediately set the
@@ -84,9 +86,7 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableChannel
  * }
  * ```
  *
- * The returned async iterable is a shared iterable - can be iterated by multiple consumers simultaneously
- * (e.g multiple {@link Iterate `<Iterate>`}s) and each would pick up the same yielded values and at the
- * same time.
+ * The returned async iterable is a shared iterable so that if iterated by multiple consumers simultaneously (e.g multiple {@link Iterate `<Iterate>`}s) then all would pick up the same yields at the same time.
  *
  * The returned async iterable is automatically closed on host component unmount.
  *
@@ -97,7 +97,7 @@ export { useAsyncIterState, type AsyncIterStateResult, type AsyncIterableChannel
  *
  * @param initialValue Any optional starting value for the state iterable's `.value.current` property, defaults to `undefined`. You can pass an actual value, or a function that returns a value (which the hook will call once during mounting).
  *
- * @returns a stateful async iterable and a function with which to yield an update, both maintain stable references across re-renders.
+ * @returns a stateful async iterable and a function for yielding an update. Both maintain stable references across re-renders.
  *
  * @see {@link Iterate `<Iterate>`}
  */
