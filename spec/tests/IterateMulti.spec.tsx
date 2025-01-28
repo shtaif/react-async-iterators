@@ -226,7 +226,7 @@ describe('`IterateMulti` hook', () => {
   });
 
   it(
-    gray("When given multiple iterables, some empty, reflects each's states correctly"),
+    gray("When given multiple iterables, some empty, renders each's state correctly"),
     async () => {
       const renderFn = vi.fn() as Mock<
         IterateMultiProps<[AsyncIterable<'a'>, AsyncIterable<never>]>['children']
@@ -254,6 +254,123 @@ describe('`IterateMulti` hook', () => {
       expect(rendered.container.innerHTML).toStrictEqual(
         `<div id="test-created-elem">Render count: 2</div>`
       );
+    }
+  );
+
+  it(
+    gray(
+      'When given multiple iterables with a default initial value as a function, calls it once whenever a new iterable is added'
+    ),
+    async () => {
+      const channels = [
+        new IteratorChannelTestHelper<string>(),
+        new IteratorChannelTestHelper<string>(),
+      ];
+      const initialValueFn = vi.fn(() => '___');
+      const renderFn = vi.fn() as Mock<
+        (nexts: IterationResultSet<AsyncIterable<string>[], [], '___'>) => any
+      >;
+
+      const Component = ({ values }: { values: AsyncIterable<string>[] }) => (
+        <IterateMulti values={values} defaultInitialValue={initialValueFn}>
+          {renderFn.mockImplementation(() => (
+            <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+          ))}
+        </IterateMulti>
+      );
+
+      const rendered = render(<></>);
+
+      await act(() => rendered.rerender(<Component values={channels} />));
+      expect(renderFn.mock.calls).lengthOf(1);
+      expect(renderFn.mock.lastCall?.flat()).toStrictEqual([
+        { value: '___', pendingFirst: true, done: false, error: undefined },
+        { value: '___', pendingFirst: true, done: false, error: undefined },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        `<div id="test-created-elem">Render count: 1</div>`
+      );
+
+      await act(() => {
+        channels[0].put('a');
+        channels[1].put('b');
+      });
+      expect(renderFn.mock.calls).lengthOf(2);
+      expect(renderFn.mock.lastCall?.flat()).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+        { value: 'b', pendingFirst: false, done: false, error: undefined },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        `<div id="test-created-elem">Render count: 2</div>`
+      );
+
+      await act(() => {
+        channels.push(new IteratorChannelTestHelper());
+        rendered.rerender(<Component values={channels} />);
+      });
+      expect(renderFn.mock.calls).lengthOf(3);
+      expect(renderFn.mock.lastCall?.flat()).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+        { value: 'b', pendingFirst: false, done: false, error: undefined },
+        { value: '___', pendingFirst: true, done: false, error: undefined },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        `<div id="test-created-elem">Render count: 3</div>`
+      );
+      expect(initialValueFn).toHaveBeenCalledTimes(3);
+    }
+  );
+
+  it(
+    gray(
+      'When given multiple iterables with initial values as a functions, calls each once whenever a corresponding iterable is added'
+    ),
+    async () => {
+      const channels = [new IteratorChannelTestHelper<string>()];
+      const [initialValueFn1, initialValueFn2] = [vi.fn(), vi.fn()];
+      const renderFn = vi.fn() as Mock<
+        (nexts: IterationResultSet<AsyncIterable<string>[], ['_1_', '_2_']>) => any
+      >;
+
+      const Component = ({ values }: { values: AsyncIterable<string>[] }) => (
+        <IterateMulti
+          values={values}
+          initialValues={[
+            initialValueFn1.mockImplementation(() => '_1_'),
+            initialValueFn2.mockImplementation(() => '_2_'),
+          ]}
+        >
+          {renderFn.mockImplementation(() => (
+            <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+          ))}
+        </IterateMulti>
+      );
+
+      const rendered = render(<></>);
+
+      await act(() => rendered.rerender(<Component values={channels} />));
+      expect(renderFn.mock.calls).lengthOf(1);
+      expect(renderFn.mock.lastCall?.flat()).toStrictEqual([
+        { value: '_1_', pendingFirst: true, done: false, error: undefined },
+      ]);
+
+      await act(() => channels[0].put('a'));
+      expect(renderFn.mock.calls).lengthOf(2);
+      expect(renderFn.mock.lastCall?.flat()).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+      ]);
+
+      await act(() => {
+        channels.push(new IteratorChannelTestHelper());
+        rendered.rerender(<Component values={channels} />);
+      });
+      expect(renderFn.mock.calls).lengthOf(3);
+      expect(renderFn.mock.lastCall?.flat()).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+        { value: '_2_', pendingFirst: true, done: false, error: undefined },
+      ]);
+      expect(initialValueFn1).toHaveBeenCalledOnce();
+      expect(initialValueFn2).toHaveBeenCalledOnce();
     }
   );
 

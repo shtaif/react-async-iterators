@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { type Writeable } from '../common/Writeable.js';
 import { useAsyncIterMulti, type IterationResultSet } from '../useAsyncIterMulti/index.js';
+import { type MaybeFunction } from '../common/MaybeFunction.js';
 import { type iterateFormatted } from '../iterateFormatted/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export { IterateMulti, type IterateMultiProps };
@@ -154,7 +155,7 @@ function IterateMulti<
   const TVals extends readonly unknown[],
   const TInitVals extends readonly unknown[] = readonly [],
   const TDefaultInitVal = undefined,
->(props: IterateMultiProps<TVals, TInitVals, TDefaultInitVal>): ReactNode {
+>(props: IterateMultiProps<TVals, MaybeFunctions<TInitVals>, TDefaultInitVal>): ReactNode {
   const nexts = useAsyncIterMulti(props.values, {
     initialValues: props.initialValues,
     defaultInitialValue: props.defaultInitialValue,
@@ -181,18 +182,20 @@ type IterateMultiProps<
   values: TVals;
 
   /**
-   * An optional array of initial values. The values here will be the starting points for all the
-   * async iterables from `values` (correspondingly by matching array positions) when they are
-   * rendered by the `children` render function for the first time and for each while it is pending
-   * its first yield. Async iterables from `values` that have no corresponding item in this array,
-   * will fall back to the {@link IterateMultiProps.defaultInitialValue `defaultInitialValue`} prop
-   * as the initial value.
+   * An _optional_ array of initial values or functions that return initial values. These values
+   * will be the starting points for all the async iterables from `values` (correspondingly by
+   * matching array positions) when they are rendered by the `children` render function for the
+   * first time and for each while it is pending its first yield. Async iterables from `values`
+   * that have no corresponding item in this array, will fall back to the
+   * {@link IterateMultiProps.defaultInitialValue `defaultInitialValue`} prop as the initial value.
    */
   initialValues?: TInitVals;
 
   /**
    * An _optional_ default starting value for every new async iterable in `values` if there is no
-   * corresponding one for it in the `initialValues` prop, defaults to `undefined`.
+   * corresponding one for it in the `initialValues` prop, defaults to `undefined`. You can pass
+   * an actual value, or a function that returns a value (which the hook will call for every new
+   * iterable added).
    */
   defaultInitialValue?: TDefaultInitVal;
 
@@ -209,4 +212,8 @@ type IterateMultiProps<
   children: (
     iterationStates: IterationResultSet<Writeable<TVals>, Writeable<TInitVals>, TDefaultInitVal>
   ) => ReactNode;
+};
+
+type MaybeFunctions<T extends readonly unknown[]> = {
+  [I in keyof T]: T[I] extends MaybeFunction<infer J> ? J : T[I];
 };

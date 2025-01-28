@@ -167,7 +167,7 @@ describe('`useAsyncIterMulti` hook', () => {
 
   it(
     gray(
-      'When given multiple iterables with a default initial value as a function, calls it once on every added source iterable'
+      'When given multiple iterables with a default initial value as a function, calls it once whenever a new iterable is added'
     ),
     async () => {
       const channels = [
@@ -215,7 +215,7 @@ describe('`useAsyncIterMulti` hook', () => {
 
   it(
     gray(
-      'When given multiple iterables with initial values as a functions, calls each once when a corresponding iterable is added'
+      'When given multiple iterables with initial values as a functions, calls each once whenever a corresponding iterable is added'
     ),
     async () => {
       const channels = [new IteratorChannelTestHelper<string>()];
@@ -276,8 +276,6 @@ describe('`useAsyncIterMulti` hook', () => {
           defaultInitialValue: () => '___' as const,
         });
       });
-
-      renderedHook.result.current[0].value;
 
       await act(() => {});
       expect(timesRerendered).toStrictEqual(1);
