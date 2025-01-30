@@ -1,3 +1,10 @@
+## [0.9.1](https://github.com/shtaif/react-async-iterators/compare/v0.9.0...v0.9.1) (2025-01-30)
+
+
+### Documentation
+
+* **readme:** more edits ([#75](https://github.com/shtaif/react-async-iterators/issues/75)) ([c0229fa](https://github.com/shtaif/react-async-iterators/commit/c0229fa2274b530ed48efd37163e7fc5af3cb9e4))
+
 ## [0.9.0](https://github.com/shtaif/react-async-iterators/compare/v0.8.0...v0.9.0) (2025-01-28)
 
 
