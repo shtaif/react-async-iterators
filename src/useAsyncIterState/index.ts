@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
 import { callOrReturn } from '../common/callOrReturn.js';
 import { useRefWithInitialValue } from '../common/hooks/useRefWithInitialValue.js';
+import { useEffectStrictModeSafe } from '../common/hooks/useEffectStrictModeSafe.js';
 import { type MaybeFunction } from '../common/MaybeFunction.js';
 import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import {
@@ -118,7 +118,7 @@ function useAsyncIterState<TVal, TInitVal>(
     channel: AsyncIterableChannel<TVal, TInitVal>;
     result: AsyncIterStateResult<TVal, TInitVal>;
   }>(() => {
-    const initialValueCalced = callOrReturn(initialValue) as TInitVal;
+    const initialValueCalced = callOrReturn(initialValue)!;
     const channel = new AsyncIterableChannel<TVal, TInitVal>(initialValueCalced);
     return {
       channel,
@@ -128,9 +128,9 @@ function useAsyncIterState<TVal, TInitVal>(
 
   const { channel, result } = ref.current;
 
-  useEffect(() => {
+  useEffectStrictModeSafe(() => {
     return () => channel.close();
-  }, []);
+  });
 
   return result;
 }
