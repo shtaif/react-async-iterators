@@ -1,13 +1,26 @@
-import { it, describe, expect, afterEach, vi } from 'vitest';
+import { it, describe, expect, afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { gray } from 'colorette';
 import { range } from 'lodash-es';
-import { renderHook, cleanup as cleanupMountedReactTrees, act } from '@testing-library/react';
+import {
+  configure as configureReactTestingLib,
+  renderHook,
+  cleanup as cleanupMountedReactTrees,
+  act,
+} from '@testing-library/react';
 import { useAsyncIterState } from '../../src/index.js';
 import { asyncIterToArray } from '../utils/asyncIterToArray.js';
 import { asyncIterTake } from '../utils/asyncIterTake.js';
 import { asyncIterTakeFirst } from '../utils/asyncIterTakeFirst.js';
 import { checkPromiseState } from '../utils/checkPromiseState.js';
 import { pipe } from '../utils/pipe.js';
+
+beforeAll(() => {
+  configureReactTestingLib({ reactStrictMode: true });
+});
+
+afterAll(() => {
+  configureReactTestingLib({ reactStrictMode: false });
+});
 
 afterEach(() => {
   cleanupMountedReactTrees();
@@ -165,7 +178,7 @@ describe('`useAsyncIterState` hook', () => {
       'Updating states iteratively with the returned setter *in the functional form* works correctly'
     ),
     async () => {
-      const renderFn = vi.fn<(prevState: number | undefined) => number>();
+      const valueUpdateInput = vi.fn<(prevState: number | undefined) => number>();
       const [values, setValue] = renderHook(() => useAsyncIterState<number>()).result.current;
 
       const rounds = 3;
@@ -175,12 +188,12 @@ describe('`useAsyncIterState` hook', () => {
 
       for (let i = 0; i < rounds; ++i) {
         await act(() => {
-          setValue(renderFn.mockImplementation(_prev => i));
+          setValue(valueUpdateInput.mockImplementation(_prev => i));
           currentValues.push(values.value.current);
         });
       }
 
-      expect(renderFn.mock.calls).toStrictEqual([[undefined], [0], [1]]);
+      expect(valueUpdateInput.mock.calls).toStrictEqual([[undefined], [0], [1]]);
       expect(currentValues).toStrictEqual([undefined, 0, 1, 2]);
       expect(await yieldsPromise).toStrictEqual([0, 1, 2]);
     }
@@ -191,7 +204,7 @@ describe('`useAsyncIterState` hook', () => {
       'Updating states as rapidly as possible with the returned setter *in the functional form* works correctly'
     ),
     async () => {
-      const renderFn = vi.fn<(prevState: number | undefined) => number>();
+      const valueUpdateInput = vi.fn<(prevState: number | undefined) => number>();
 
       const [values, setValue] = renderHook(() => useAsyncIterState<number>()).result.current;
 
@@ -200,11 +213,12 @@ describe('`useAsyncIterState` hook', () => {
       const currentValues = [values.value.current];
 
       for (let i = 0; i < 3; ++i) {
-        setValue(renderFn.mockImplementation(_prev => i));
+        setValue(valueUpdateInput.mockImplementation(_prev => i));
         currentValues.push(values.value.current);
+        // await undefined;
       }
 
-      expect(renderFn.mock.calls).toStrictEqual([[undefined], [0], [1]]);
+      expect(valueUpdateInput.mock.calls).toStrictEqual([[undefined], [0], [1]]);
       expect(currentValues).toStrictEqual([undefined, 0, 1, 2]);
       expect(await yieldPromise).toStrictEqual(2);
     }
