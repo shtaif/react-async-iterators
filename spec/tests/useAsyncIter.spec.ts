@@ -1,7 +1,8 @@
 import { it, describe, expect, afterEach, vi } from 'vitest';
 import { gray } from 'colorette';
 import { cleanup as cleanupMountedReactTrees, act, renderHook } from '@testing-library/react';
-import { useAsyncIter } from '../../src/index.js';
+import { useAsyncIter, iterateFormatted } from '../../src/index.js';
+import { asyncIterOf } from '../utils/asyncIterOf.js';
 import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
 
 afterEach(() => {
@@ -54,7 +55,7 @@ describe('`useAsyncIter` hook', () => {
 
   it(
     gray(
-      'When given a non-iterable value in conjunction with some initial value will return correct results'
+      'When given a non-iterable value starting in some initial value will return correct results'
     ),
     async () => {
       let timesRerendered = 0;
@@ -98,7 +99,7 @@ describe('`useAsyncIter` hook', () => {
 
   it(
     gray(
-      'When given an iterable that yields a value in conjunction with some initial value will return correct results'
+      'When given an iterable that yields a value starting in some initial value will return correct results'
     ),
     async () => {
       const channel = new IteratorChannelTestHelper<string>();
@@ -182,7 +183,7 @@ describe('`useAsyncIter` hook', () => {
 
   it(
     gray(
-      'When given an iterable that completes without yielding values in conjunction with some initial value will return correct results'
+      'When given an iterable that completes without yielding values starting in some initial value will return correct results'
     ),
     async () => {
       let timesRerendered = 0;
@@ -268,7 +269,7 @@ describe('`useAsyncIter` hook', () => {
 
   it(
     gray(
-      'When given an iterable that errors without yielding values in conjunction with some initial value will return correct results'
+      'When given an iterable that errors without yielding values starting in some initial value will return correct results'
     ),
     async () => {
       let timesRerendered = 0;
@@ -338,11 +339,6 @@ describe('`useAsyncIter` hook', () => {
         new IteratorChannelTestHelper<string>(),
       ];
 
-      const [channelReturnSpy1, channelReturnSpy2] = [
-        vi.spyOn(channel1, 'return'),
-        vi.spyOn(channel2, 'return'),
-      ];
-
       const renderedHook = renderHook(({ value }) => useAsyncIter(value), {
         initialProps: {
           value: (async function* () {})() as AsyncIterable<string>,
@@ -352,8 +348,8 @@ describe('`useAsyncIter` hook', () => {
       {
         renderedHook.rerender({ value: channel1 });
 
-        expect(channelReturnSpy1).not.toHaveBeenCalled();
-        expect(channelReturnSpy2).not.toHaveBeenCalled();
+        expect(channel1.return).not.toHaveBeenCalled();
+        expect(channel2.return).not.toHaveBeenCalled();
         expect(renderedHook.result.current).toStrictEqual({
           value: undefined,
           pendingFirst: true,
@@ -374,8 +370,8 @@ describe('`useAsyncIter` hook', () => {
       {
         renderedHook.rerender({ value: channel2 });
 
-        expect(channelReturnSpy1).toHaveBeenCalledOnce();
-        expect(channelReturnSpy2).not.toHaveBeenCalled();
+        expect(channel1.return).toHaveBeenCalledOnce();
+        expect(channel2.return).not.toHaveBeenCalled();
         expect(renderedHook.result.current).toStrictEqual({
           value: 'a',
           pendingFirst: true,
@@ -396,8 +392,8 @@ describe('`useAsyncIter` hook', () => {
       {
         renderedHook.rerender({ value: (async function* () {})() });
 
-        expect(channelReturnSpy1).toHaveBeenCalledOnce();
-        expect(channelReturnSpy2).toHaveBeenCalledOnce();
+        expect(channel1.return).toHaveBeenCalledOnce();
+        expect(channel2.return).toHaveBeenCalledOnce();
         expect(renderedHook.result.current).toStrictEqual({
           value: 'b',
           pendingFirst: true,
@@ -408,9 +404,92 @@ describe('`useAsyncIter` hook', () => {
     }
   );
 
+  it(
+    gray(
+      'When given an initial value as a function, calls it once on mount and uses its result as the initial value correctly'
+    ),
+    async () => {
+      const channel = new IteratorChannelTestHelper<string>();
+      const initValFn = vi.fn(() => '_');
+
+      const renderedHook = await act(() => renderHook(() => useAsyncIter(channel, initValFn)));
+      const results = [renderedHook.result.current];
+
+      await act(() => renderedHook.rerender());
+      results.push(renderedHook.result.current);
+
+      await act(() => channel.put('a'));
+      results.push(renderedHook.result.current);
+
+      expect(initValFn).toHaveBeenCalledOnce();
+      expect(results).toStrictEqual([
+        { value: '_', pendingFirst: true, done: false, error: undefined },
+        { value: '_', pendingFirst: true, done: false, error: undefined },
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+      ]);
+    }
+  );
+
+  describe(
+    gray(
+      'When given an iterable with a `.value.current` property at any point, uses that as the current value and skips the pending stage'
+    ),
+    () =>
+      ([{ initialValue: undefined }, { initialValue: '_' }] as const).forEach(
+        ({ initialValue }) => {
+          it(
+            gray(
+              `${!initialValue ? 'without initial value' : 'with initial value and ignoring it'}`
+            ),
+            async () => {
+              const [channel1, channel2] = ['a_current', 'b_current'].map(current =>
+                Object.assign(new IteratorChannelTestHelper<string>(), {
+                  value: { current },
+                })
+              );
+
+              const renderedHook = renderHook(props => useAsyncIter(props.value, initialValue), {
+                initialProps: { value: undefined as undefined | AsyncIterable<string> },
+              });
+
+              const results: any[] = [];
+
+              for (const run of [
+                () =>
+                  act(() =>
+                    renderedHook.rerender({
+                      value: channel1,
+                    })
+                  ),
+                () => act(() => channel1.put('a')),
+                () =>
+                  act(() =>
+                    renderedHook.rerender({
+                      value: iterateFormatted(channel2, (val, i) => `${val}_formatted_${i}`),
+                    })
+                  ),
+                () => act(() => channel2.put('b')),
+              ]) {
+                await run();
+                results.push(renderedHook.result.current);
+              }
+
+              expect(results).toStrictEqual(
+                ['a_current', 'a', 'b_current_formatted_0', 'b_formatted_0'].map(value => ({
+                  value,
+                  pendingFirst: false,
+                  done: false,
+                  error: undefined,
+                }))
+              );
+            }
+          );
+        }
+      )
+  );
+
   it(gray('When unmounted will close the last active iterator it held'), async () => {
     const channel = new IteratorChannelTestHelper<string>();
-    const channelReturnSpy = vi.spyOn(channel, 'return');
 
     const renderedHook = renderHook(({ value }) => useAsyncIter(value), {
       initialProps: {
@@ -421,7 +500,7 @@ describe('`useAsyncIter` hook', () => {
     {
       renderedHook.rerender({ value: channel });
 
-      expect(channelReturnSpy).not.toHaveBeenCalled();
+      expect(channel.return).not.toHaveBeenCalled();
       expect(renderedHook.result.current).toStrictEqual({
         value: undefined,
         pendingFirst: true,
@@ -441,19 +520,17 @@ describe('`useAsyncIter` hook', () => {
 
     {
       renderedHook.unmount();
-      expect(channelReturnSpy).toHaveBeenCalledOnce();
+      expect(channel.return).toHaveBeenCalledOnce();
     }
   });
 
   it(
     gray(
-      'When given a rapid yielding iterable, consecutive values are batched into a single render that takes only the last value'
+      'When given a rapid-yielding iterable, consecutive values are batched into a single render that takes only the last value'
     ),
     async () => {
       let timesRerendered = 0;
-      const iter = (async function* () {
-        yield* ['a', 'b', 'c'];
-      })();
+      const iter = asyncIterOf('a', 'b', 'c');
 
       const renderedHook = renderHook(() => {
         timesRerendered++;
@@ -474,7 +551,7 @@ describe('`useAsyncIter` hook', () => {
 
   it(
     gray(
-      'When given iterable yields consecutive identical values the hook will not consequently re-render'
+      'When given iterable yields consecutive identical values after the first, the hook will not re-render'
     ),
     async () => {
       let timesRerendered = 0;
@@ -492,6 +569,93 @@ describe('`useAsyncIter` hook', () => {
       expect(timesRerendered).toStrictEqual(2);
       expect(renderedHook.result.current).toStrictEqual({
         value: 'a',
+        pendingFirst: false,
+        done: false,
+        error: undefined,
+      });
+    }
+  );
+
+  it(
+    gray(
+      "When given iterable's first yield is identical to the previous value, the hook does re-render"
+    ),
+    async () => {
+      let timesRerendered = 0;
+      const channel1 = new IteratorChannelTestHelper<string>();
+
+      const renderedHook = await act(() =>
+        renderHook(
+          ({ channel }) => {
+            timesRerendered++;
+            return useAsyncIter(channel);
+          },
+          { initialProps: { channel: channel1 } }
+        )
+      );
+
+      await act(() => channel1.put('a'));
+
+      const channel2 = new IteratorChannelTestHelper<string>();
+      await act(() => renderedHook.rerender({ channel: channel2 }));
+      expect(timesRerendered).toStrictEqual(3);
+      expect(renderedHook.result.current).toStrictEqual({
+        value: 'a',
+        pendingFirst: true,
+        done: false,
+        error: undefined,
+      });
+
+      await act(() => channel2.put('a'));
+      expect(timesRerendered).toStrictEqual(4);
+      expect(renderedHook.result.current).toStrictEqual({
+        value: 'a',
+        pendingFirst: false,
+        done: false,
+        error: undefined,
+      });
+    }
+  );
+
+  it(
+    gray(
+      'When given a `ReactAsyncIterable` yielding `undefined`s or `null`s that wraps an iter which originally yields non-nullable values, returns the `undefined`s and `null`s in the result as expected (https://github.com/shtaif/react-async-iterators/pull/32)'
+    ),
+    async () => {
+      const channel = new IteratorChannelTestHelper<string>();
+      let timesRerendered = 0;
+
+      const renderedHook = await act(() =>
+        renderHook(
+          ({ formatInto }) => {
+            timesRerendered++;
+            return useAsyncIter(iterateFormatted(channel, _ => formatInto));
+          },
+          {
+            initialProps: { formatInto: '' as string | null | undefined },
+          }
+        )
+      );
+
+      await act(() => {
+        channel.put('a');
+        renderedHook.rerender({ formatInto: null });
+      });
+      expect(timesRerendered).toStrictEqual(3);
+      expect(renderedHook.result.current).toStrictEqual({
+        value: null,
+        pendingFirst: false,
+        done: false,
+        error: undefined,
+      });
+
+      await act(() => {
+        channel.put('b');
+        renderedHook.rerender({ formatInto: undefined });
+      });
+      expect(timesRerendered).toStrictEqual(5);
+      expect(renderedHook.result.current).toStrictEqual({
+        value: undefined,
         pendingFirst: false,
         done: false,
         error: undefined,

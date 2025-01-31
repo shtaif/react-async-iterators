@@ -1,7 +1,8 @@
-import { it, describe, expect, afterEach, vi } from 'vitest';
+import { it, describe, expect, afterEach, vi, type Mock } from 'vitest';
 import { gray } from 'colorette';
 import { render, cleanup as cleanupMountedReactTrees, act } from '@testing-library/react';
-import { Iterate, It, type IterationResult } from '../../src/index.js';
+import { Iterate, It, iterateFormatted, type IterationResult } from '../../src/index.js';
+import { asyncIterOf } from '../utils/asyncIterOf.js';
 import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
 
 afterEach(() => {
@@ -44,7 +45,7 @@ describe('`Iterate` component', () => {
 
   it(
     gray(
-      'When used in the no-render-function form and given an iterable that yields a value in conjunction with some initial value will render correctly'
+      'When used in the no-render-function form and given an iterable that yields a value starting with some initial value will render correctly'
     ),
     async () => {
       const channel = new IteratorChannelTestHelper<string>();
@@ -59,7 +60,7 @@ describe('`Iterate` component', () => {
 
   it(
     gray(
-      'When used in the no-render-function form and updated with non-iterable values consecutively in conjunction with some initial value will render correctly'
+      'When used in the no-render-function form and updated with non-iterable values consecutively starting with some initial value will render correctly'
     ),
     async () => {
       const rendered = render(<></>);
@@ -75,7 +76,7 @@ describe('`Iterate` component', () => {
     gray('When updated with non-iterable values consecutively will render correctly'),
     async () => {
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
       const rendered = render(<></>);
 
@@ -105,12 +106,10 @@ describe('`Iterate` component', () => {
   );
 
   it(
-    gray(
-      'When given a non-iterable value in conjunction with some initial value will render correctly'
-    ),
+    gray('When given a non-iterable value starting with some initial value will render correctly'),
     async () => {
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
       const rendered = render(
         <Iterate initialValue="_" value="a">
@@ -138,7 +137,7 @@ describe('`Iterate` component', () => {
   it(gray('When given an iterable that yields a value will render correctly'), async () => {
     const channel = new IteratorChannelTestHelper<string>();
     let timesRerendered = 0;
-    let lastRenderFnInput: undefined | IterationResult<string | undefined>;
+    let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
     const rendered = render(
       <Iterate value={channel}>
@@ -177,12 +176,12 @@ describe('`Iterate` component', () => {
 
   it(
     gray(
-      'When given an iterable that yields a value in conjunction with some initial value will render correctly'
+      'When given an iterable that yields a value starting with some initial value will render correctly'
     ),
     async () => {
       const channel = new IteratorChannelTestHelper<string>();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
       const rendered = render(
         <Iterate initialValue="_" value={channel}>
@@ -223,7 +222,7 @@ describe('`Iterate` component', () => {
   it(gray('When given an iterable that yields multiple values will render correctly'), async () => {
     const channel = new IteratorChannelTestHelper<string>();
     let timesRerendered = 0;
-    let lastRenderFnInput: undefined | IterationResult<string | undefined>;
+    let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
     const rendered = render(
       <Iterate value={channel}>
@@ -267,7 +266,7 @@ describe('`Iterate` component', () => {
     async () => {
       const emptyIter = (async function* () {})();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
+      let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
       const rendered = render(
         <Iterate value={emptyIter}>
@@ -296,12 +295,12 @@ describe('`Iterate` component', () => {
 
   it(
     gray(
-      'When given an iterable that completes without yielding values in conjunction with some initial value will render correctly'
+      'When given an iterable that completes without yielding values starting with some initial value will render correctly'
     ),
     async () => {
       const emptyIter = (async function* () {})();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
       const rendered = render(
         <Iterate initialValue="_" value={emptyIter}>
@@ -333,7 +332,7 @@ describe('`Iterate` component', () => {
     async () => {
       const channel = new IteratorChannelTestHelper<string>();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
+      let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
       const rendered = render(
         <Iterate value={channel}>
@@ -380,7 +379,7 @@ describe('`Iterate` component', () => {
         throw simulatedError;
       })();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
+      let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
       const rendered = render(
         <Iterate value={erroringIter}>
@@ -409,14 +408,14 @@ describe('`Iterate` component', () => {
 
   it(
     gray(
-      'When given an iterable that errors without yielding values in conjunction with some initial value will render correctly'
+      'When given an iterable that errors without yielding values starting with some initial value will render correctly'
     ),
     async () => {
       const erroringIter = (async function* () {
         throw simulatedError;
       })();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string>;
+      let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
       const rendered = render(
         <Iterate initialValue="_" value={erroringIter}>
@@ -448,7 +447,7 @@ describe('`Iterate` component', () => {
     async () => {
       const channel = new IteratorChannelTestHelper<string>();
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
+      let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
       const simulatedErr = new Error('...');
 
@@ -495,16 +494,11 @@ describe('`Iterate` component', () => {
       "When consecutively updated with new iterables will close the previous one's iterator every time and render accordingly"
     ),
     async () => {
-      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
+      let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
       const [channel1, channel2] = [
         new IteratorChannelTestHelper<string>(),
         new IteratorChannelTestHelper<string>(),
-      ];
-
-      const [channelReturnSpy1, channelReturnSpy2] = [
-        vi.spyOn(channel1, 'return'),
-        vi.spyOn(channel2, 'return'),
       ];
 
       const buildTestContent = (value: AsyncIterable<string>) => {
@@ -523,8 +517,8 @@ describe('`Iterate` component', () => {
       {
         rendered.rerender(buildTestContent(channel1));
 
-        expect(channelReturnSpy1).not.toHaveBeenCalled();
-        expect(channelReturnSpy2).not.toHaveBeenCalled();
+        expect(channel1.return).not.toHaveBeenCalled();
+        expect(channel2.return).not.toHaveBeenCalled();
         expect(lastRenderFnInput).toStrictEqual({
           value: undefined,
           pendingFirst: true,
@@ -547,8 +541,8 @@ describe('`Iterate` component', () => {
       {
         rendered.rerender(buildTestContent(channel2));
 
-        expect(channelReturnSpy1).toHaveBeenCalledOnce();
-        expect(channelReturnSpy2).not.toHaveBeenCalled();
+        expect(channel1.return).toHaveBeenCalledOnce();
+        expect(channel2.return).not.toHaveBeenCalled();
         expect(lastRenderFnInput).toStrictEqual({
           value: 'a',
           pendingFirst: true,
@@ -571,8 +565,8 @@ describe('`Iterate` component', () => {
       {
         rendered.rerender(buildTestContent((async function* () {})()));
 
-        expect(channelReturnSpy1).toHaveBeenCalledOnce();
-        expect(channelReturnSpy2).toHaveBeenCalledOnce();
+        expect(channel1.return).toHaveBeenCalledOnce();
+        expect(channel2.return).toHaveBeenCalledOnce();
         expect(lastRenderFnInput).toStrictEqual({
           value: 'b',
           pendingFirst: true,
@@ -584,11 +578,123 @@ describe('`Iterate` component', () => {
     }
   );
 
+  it(
+    gray(
+      'When given an initial value as a function, calls it once on mount and uses its result as the initial value correctly'
+    ),
+    async () => {
+      const channel = new IteratorChannelTestHelper<string>();
+      const initValFn = vi.fn(() => '_');
+      const renderFn = vi.fn() as Mock<
+        (next: IterationResult<AsyncIterable<string>, string>) => any
+      >;
+
+      const Component = (props: { value: AsyncIterable<string> }) => (
+        <Iterate value={props.value} initialValue={initValFn}>
+          {renderFn.mockImplementation(() => (
+            <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+          ))}
+        </Iterate>
+      );
+
+      const rendered = render(<></>);
+
+      await act(() => rendered.rerender(<Component value={channel} />));
+      const renderedHtmls = [rendered.container.innerHTML];
+
+      await act(() => rendered.rerender(<Component value={channel} />));
+      renderedHtmls.push(rendered.container.innerHTML);
+
+      await act(() => channel.put('a'));
+      renderedHtmls.push(rendered.container.innerHTML);
+
+      expect(initValFn).toHaveBeenCalledOnce();
+      expect(renderFn.mock.calls).toStrictEqual([
+        [{ value: '_', pendingFirst: true, done: false, error: undefined }],
+        [{ value: '_', pendingFirst: true, done: false, error: undefined }],
+        [{ value: 'a', pendingFirst: false, done: false, error: undefined }],
+      ]);
+      expect(renderedHtmls).toStrictEqual([
+        '<div id="test-created-elem">Render count: 1</div>',
+        '<div id="test-created-elem">Render count: 2</div>',
+        '<div id="test-created-elem">Render count: 3</div>',
+      ]);
+    }
+  );
+
+  describe(
+    gray(
+      'When given an iterable with a `.value.current` property at any point, uses that as the current value and skips the pending stage'
+    ),
+    () =>
+      ([{ initialValue: undefined }, { initialValue: '_' }] as const).forEach(
+        ({ initialValue }) => {
+          it(
+            gray(
+              `${!initialValue ? 'without initial value' : 'with initial value and ignoring it'}`
+            ),
+            async () => {
+              const renderFn = vi.fn() as Mock<
+                (next: IterationResult<AsyncIterable<string>, string>) => any
+              >;
+              const [channel1, channel2] = ['a_current', 'b_current'].map(current =>
+                Object.assign(new IteratorChannelTestHelper<string>(), {
+                  value: { current },
+                })
+              );
+
+              const Component = (props: { value: AsyncIterable<string> }) => (
+                <Iterate value={props.value} initialValue={initialValue}>
+                  {renderFn.mockImplementation(() => (
+                    <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+                  ))}
+                </Iterate>
+              );
+
+              const rendered = render(<></>);
+              const renderedHtmls = [];
+
+              for (const run of [
+                () => act(() => rendered.rerender(<Component value={channel1} />)),
+                () => act(() => channel1.put('a')),
+                () =>
+                  act(() =>
+                    rendered.rerender(
+                      <Component
+                        value={iterateFormatted(channel2, (val, i) => `${val}_formatted_${i}`)}
+                      />
+                    )
+                  ),
+                () => act(() => channel2.put('b')),
+              ]) {
+                await run();
+                renderedHtmls.push(rendered.container.innerHTML);
+              }
+
+              expect(renderFn.mock.calls.flat()).toStrictEqual(
+                ['a_current', 'a', 'b_current_formatted_0', 'b_formatted_0'].map(value => ({
+                  value,
+                  pendingFirst: false,
+                  done: false,
+                  error: undefined,
+                }))
+              );
+              expect(renderedHtmls).toStrictEqual([
+                '<div id="test-created-elem">Render count: 1</div>',
+                '<div id="test-created-elem">Render count: 2</div>',
+                '<div id="test-created-elem">Render count: 3</div>',
+                '<div id="test-created-elem">Render count: 4</div>',
+              ]);
+            }
+          );
+        }
+      )
+  );
+
   it(gray('When unmounted will close the last active iterator it held'), async () => {
-    let lastRenderFnInput: undefined | IterationResult<string | undefined>;
+    let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
     const channel = new IteratorChannelTestHelper<string>();
-    const channelReturnSpy = vi.spyOn(channel, 'return');
 
     const buildTestContent = (value: AsyncIterable<string>) => {
       return (
@@ -606,7 +712,7 @@ describe('`Iterate` component', () => {
     {
       rendered.rerender(buildTestContent(channel));
 
-      expect(channelReturnSpy).not.toHaveBeenCalled();
+      expect(channel.return).not.toHaveBeenCalled();
       expect(lastRenderFnInput).toStrictEqual({
         value: undefined,
         pendingFirst: true,
@@ -628,32 +734,30 @@ describe('`Iterate` component', () => {
 
     {
       rendered.unmount();
-      expect(channelReturnSpy).toHaveBeenCalledOnce();
+      expect(channel.return).toHaveBeenCalledOnce();
     }
   });
 
   it(
     gray(
-      'When given a rapid yielding iterable, consecutive values are batched into a single render that takes only the last value'
+      'When given a rapid-yielding iterable, consecutive values are batched into a single render that takes only the last value'
     ),
     async () => {
-      const iter = (async function* () {
-        yield* ['a', 'b', 'c'];
-      })();
+      const iter = asyncIterOf('a', 'b', 'c');
       let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
+      let lastRenderFnInput: undefined | IterationResult<AsyncIterable<string>>;
 
-      const rendered = render(
-        <Iterate value={iter}>
-          {next => {
-            timesRerendered++;
-            lastRenderFnInput = next;
-            return <div id="test-created-elem">Render count: {timesRerendered}</div>;
-          }}
-        </Iterate>
+      const rendered = await act(() =>
+        render(
+          <Iterate value={iter}>
+            {next => {
+              timesRerendered++;
+              lastRenderFnInput = next;
+              return <div id="test-created-elem">Render count: {timesRerendered}</div>;
+            }}
+          </Iterate>
+        )
       );
-
-      await act(() => {});
 
       expect(lastRenderFnInput).toStrictEqual({
         value: 'c',
@@ -670,20 +774,17 @@ describe('`Iterate` component', () => {
 
   it(
     gray(
-      'When given iterable yields consecutive identical values the hook will not consequently re-render'
+      'When given iterable yields consecutive identical values after the first, the component will not re-render'
     ),
     async () => {
-      let timesRerendered = 0;
-      let lastRenderFnInput: undefined | IterationResult<string | undefined>;
       const channel = new IteratorChannelTestHelper<string>();
+      const renderFn = vi.fn() as Mock<(next: IterationResult<AsyncIterable<string>>) => any>;
 
       const rendered = render(
         <Iterate value={channel}>
-          {next => {
-            timesRerendered++;
-            lastRenderFnInput = next;
-            return <div id="test-created-elem">Render count: {timesRerendered}</div>;
-          }}
+          {renderFn.mockImplementation(() => (
+            <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+          ))}
         </Iterate>
       );
 
@@ -691,15 +792,111 @@ describe('`Iterate` component', () => {
         await act(() => channel.put('a'));
       }
 
-      expect(timesRerendered).toStrictEqual(2);
-      expect(lastRenderFnInput).toStrictEqual({
-        value: 'a',
-        pendingFirst: false,
-        done: false,
-        error: undefined,
-      });
+      expect(renderFn.mock.calls).lengthOf(2);
+      expect(renderFn.mock.lastCall).toStrictEqual([
+        { value: 'a', pendingFirst: false, done: false, error: undefined },
+      ]);
       expect(rendered.container.innerHTML).toStrictEqual(
         '<div id="test-created-elem">Render count: 2</div>'
+      );
+    }
+  );
+
+  it(
+    gray(
+      "When given iterable's first yield is identical to the previous value, the component does re-render"
+    ),
+    async () => {
+      const renderFn = vi.fn() as Mock<(next: IterationResult<AsyncIterable<string>>) => any>;
+      const channel = new IteratorChannelTestHelper<string>();
+
+      const Component = (props: { value: AsyncIterable<string> }) => {
+        return (
+          <Iterate value={props.value}>
+            {renderFn.mockImplementation(() => (
+              <div id="test-created-elem">Render count: {renderFn.mock.calls.length}</div>
+            ))}
+          </Iterate>
+        );
+      };
+
+      const rendered = await act(() => render(<Component value={channel} />));
+
+      await act(() => channel.put('a'));
+
+      const channel2 = new IteratorChannelTestHelper<string>();
+      await act(() => rendered.rerender(<Component value={channel2} />));
+      expect(renderFn.mock.calls).lengthOf(3);
+      expect(renderFn.mock.lastCall).toStrictEqual([
+        {
+          value: 'a',
+          pendingFirst: true,
+          done: false,
+          error: undefined,
+        },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        '<div id="test-created-elem">Render count: 3</div>'
+      );
+
+      await act(() => channel2.put('a'));
+      expect(renderFn.mock.calls).lengthOf(4);
+      expect(renderFn.mock.lastCall).toStrictEqual([
+        {
+          value: 'a',
+          pendingFirst: false,
+          done: false,
+          error: undefined,
+        },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        '<div id="test-created-elem">Render count: 4</div>'
+      );
+    }
+  );
+
+  it(
+    gray(
+      'When given a `ReactAsyncIterable` yielding `undefined`s or `null`s that wraps an iter which originally yields non-nullable values, processes the `undefined`s and `null` values expected'
+    ),
+    async () => {
+      const channel = new IteratorChannelTestHelper<string>();
+      const renderFn = vi.fn() as Mock<
+        (next: IterationResult<AsyncIterable<string | null | undefined>>) => any
+      >;
+
+      const buildContent = (iter: AsyncIterable<string>, formatInto: string | null | undefined) => {
+        return (
+          <Iterate value={iterateFormatted(iter, _ => formatInto)}>
+            {renderFn.mockImplementation(next => (
+              <div id="test-created-elem">{next.value + ''}</div>
+            ))}
+          </Iterate>
+        );
+      };
+
+      const rendered = render(<></>);
+
+      rendered.rerender(buildContent(channel, ''));
+
+      await act(() => {
+        channel.put('a');
+        rendered.rerender(buildContent(channel, null));
+      });
+      expect(renderFn.mock.lastCall).toStrictEqual([
+        { value: null, pendingFirst: false, done: false, error: undefined },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual('<div id="test-created-elem">null</div>');
+
+      await act(() => {
+        channel.put('b');
+        rendered.rerender(buildContent(channel, undefined));
+      });
+      expect(renderFn.mock.lastCall).toStrictEqual([
+        { value: undefined, pendingFirst: false, done: false, error: undefined },
+      ]);
+      expect(rendered.container.innerHTML).toStrictEqual(
+        '<div id="test-created-elem">undefined</div>'
       );
     }
   );
