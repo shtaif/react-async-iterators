@@ -65,7 +65,9 @@ class AsyncIterableChannel<T, TInit = T> {
  * meaning that multiple iterators can be consumed (iterated) simultaneously and each one would pick up
  * the same values as others the moment they were generated through state updates.
  */
-type AsyncIterableChannelSubject<T, TCurrVal = T> = AsyncIterableSubject<T, TCurrVal> & {
+type AsyncIterableChannelSubject<T, TCurrVal = T> = {
+  value: AsyncIterableSubject<T, TCurrVal>['value'];
+
   /**
    * Returns an async iterator to iterate over. All iterators returned by this share the same source
    * values - they can be iterated by multiple consumers simultaneously and each would pick up the
