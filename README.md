@@ -21,7 +21,7 @@
 
 Async iterables/iterators are a native language construct in JS that can be viewed as a counterpart to [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), in the sense that while a promise asynchronously resolves one value - an async iterable is a stream that asynchronously yields any number of values.
 
-Somewhat obvious to say, the React ecosystem features many methods and tools that have to do with integrating promise-based data into your React components; from higher level SDK libraries, state managers - to generic async utilities, which make the different promise states available to the rendering. And just like that - `react-async-iterators` packs hooks, components and utilities written in TypeScript with the aim to make async iterables into __first-class citizens to React__ as they become gradually more prevalent across the JavaScript platform.
+Somewhat obvious to say, the React ecosystem features many methods and tools that have to do with integrating promise-based data into your React components; from higher level SDK libraries, state managers - to generic async utilities, which make the different promise states available to the rendering. And just like that - `react-async-iterators` packs hooks, components and utilities written in TypeScript with the aim to make async iterables into __first-class citizens to React__ as they become gradually more prevalent across JavaScript platforms.
 
 What can `react-async-iterators` be used for?
 
@@ -669,8 +669,8 @@ Essentially, can be seen as a [`useAsyncIter`](#useasynciter) hook in a componen
 
 <details>
   <summary><b><i>Additional examples</i></b></summary>
-
   <br/>
+  <ul>
 
   ```tsx
   import { It } from 'react-async-iterators';
@@ -736,6 +736,8 @@ Essentially, can be seen as a [`useAsyncIter`](#useasynciter) hook in a componen
     );
   }
   ```
+
+  </ul>
 </details>
 
 
@@ -778,97 +780,96 @@ It's similar to [`<It>`](#it), only it works with any changeable number of async
 <details>
   <summary><b><i>Additional examples</i></b></summary>
   <br/>
-
   <ul>
 
-    ```tsx
-    import { useMemo } from 'react';
-    import { ItMulti } from 'react-async-iterators';
+  ```tsx
+  import { useMemo } from 'react';
+  import { ItMulti } from 'react-async-iterators';
 
-    function MyComponent() {
-      const numberIter = useMemo(() => createNumberIter(), []);
-      const arrayIter = useMemo(() => createArrayIter(), []);
-      return (
-        <>
-          <Header />
-          <SideMenu />
-          <main>
-            <ItMulti values={[numberIter, arrayIter]} initialValues={[0, []]}>
-              {([numState, arrState]) => (
-                <>
-                  <div>
-                    {numState.pendingFirst
-                      ? '⏳ Loading number...'
-                      : `Current number: ${numState.value}`}
-                  </div>
-                  <div>
-                    {arrState.pendingFirst
-                      ? '⏳ Loading items...'
-                      : arrState.value.map((item, i) => <div key={i}>{item}</div>)}
-                  </div>
-                </>
-              )}
-            </ItMulti>
-          </main>
-        </>
-      )
-    }
-    ```
+  function MyComponent() {
+    const numberIter = useMemo(() => createNumberIter(), []);
+    const arrayIter = useMemo(() => createArrayIter(), []);
+    return (
+      <>
+        <Header />
+        <SideMenu />
+        <main>
+          <ItMulti values={[numberIter, arrayIter]} initialValues={[0, []]}>
+            {([numState, arrState]) => (
+              <>
+                <div>
+                  {numState.pendingFirst
+                    ? '⏳ Loading number...'
+                    : `Current number: ${numState.value}`}
+                </div>
+                <div>
+                  {arrState.pendingFirst
+                    ? '⏳ Loading items...'
+                    : arrState.value.map((item, i) => <div key={i}>{item}</div>)}
+                </div>
+              </>
+            )}
+          </ItMulti>
+        </main>
+      </>
+    )
+  }
+  ```
 
-    <br/>
+  <br/>
 
-    ```tsx
-    // Using `<ItMulti>` with a dynamically changing amount of inputs:
-    
-    import { useState } from 'react';
-    import { ItMulti, type MaybeAsyncIterable } from 'react-async-iterators';
-    
-    function DynamicInputsComponent() {
-      const [inputs, setInputs] = useState<MaybeAsyncIterable<string>[]>([]);
-    
-      const addAsyncIterValue = () => {
-        const iterableValue = (async function* () {
-          for (let i = 0; i < 10; i++) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            yield `Item ${i}`;
-          }
-        })();
-        setInputs(prev => [iterableValue, ...prev]);
-      };
-    
-      const addStaticValue = () => {
-        const staticValue = `Static ${inputs.length + 1}`;
-        setInputs(prev => [staticValue, ...prev]);
-      };
-    
-      return (
-        <div>
-          <h3>Dynamic Concurrent Async Iteration</h3>
-    
-          <button onClick={addAsyncIterValue}>🔄 Add Async Iterable</button>
-          <button onClick={addStaticValue}>🗿 Add Static Value</button>
-    
-          <ul>
-            <ItMulti values={inputs} defaultInitialValue="">
-              {states =>
-                states.map((state, i) => (
-                  <li key={i}>
-                    {state.done
-                      ? state.error
-                        ? `Error: ${state.error}`
-                        : 'Done'
-                      : state.pendingFirst
-                        ? 'Pending...'
-                        : `Value: ${state.value}`}
-                  </li>
-                ))
-              }
-            </ItMulti>
-          </ul>
-        </div>
-      );
-    }
-    ```
+  ```tsx
+  // Using `<ItMulti>` with a dynamically changing amount of inputs:
+  
+  import { useState } from 'react';
+  import { ItMulti, type MaybeAsyncIterable } from 'react-async-iterators';
+  
+  function DynamicInputsComponent() {
+    const [inputs, setInputs] = useState<MaybeAsyncIterable<string>[]>([]);
+  
+    const addAsyncIterValue = () => {
+      const iterableValue = (async function* () {
+        for (let i = 0; i < 10; i++) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          yield `Item ${i}`;
+        }
+      })();
+      setInputs(prev => [iterableValue, ...prev]);
+    };
+  
+    const addStaticValue = () => {
+      const staticValue = `Static ${inputs.length + 1}`;
+      setInputs(prev => [staticValue, ...prev]);
+    };
+  
+    return (
+      <div>
+        <h3>Dynamic Concurrent Async Iteration</h3>
+  
+        <button onClick={addAsyncIterValue}>🔄 Add Async Iterable</button>
+        <button onClick={addStaticValue}>🗿 Add Static Value</button>
+  
+        <ul>
+          <ItMulti values={inputs} defaultInitialValue="">
+            {states =>
+              states.map((state, i) => (
+                <li key={i}>
+                  {state.done
+                    ? state.error
+                      ? `Error: ${state.error}`
+                      : 'Done'
+                    : state.pendingFirst
+                      ? 'Pending...'
+                      : `Value: ${state.value}`}
+                </li>
+              ))
+            }
+          </ItMulti>
+        </ul>
+      </div>
+    );
+  }
+  ```
 
   </ul>
 
@@ -915,8 +916,8 @@ next.error;
 
 <details>
   <summary><b><i>Additional examples</i></b></summary>
-
   <br/>
+  <ul>
 
   ```tsx
   import { useAsyncIter } from 'react-async-iterators';
@@ -964,6 +965,8 @@ next.error;
     );
   }
   ```
+
+  <ul>
 </details>
 
 
@@ -1009,9 +1012,7 @@ const [nextNum, nextStr, nextArr] = useAsyncIterMulti([numberIter, stringIter, a
   
 <details>
   <summary><b><i>Additional examples</i></b></summary>
-
   <br/>
-
   <ul>
 
   ```tsx
@@ -1172,9 +1173,7 @@ function handleValueSubmit() {
 
 <details>
   <summary><b><i>Additional examples</i></b></summary>
-
   <br/>
-
   <ul>
 
   ```tsx
@@ -1277,7 +1276,6 @@ iterateFormatted(myIter, (value, idx) => {
 <details>
   <summary><b><i>Additional examples</i></b></summary>
   <br/>
-  
   <ul>
 
   ```tsx
