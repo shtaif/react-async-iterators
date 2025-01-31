@@ -500,7 +500,7 @@ Every call to [`iterateFormatted`](#iterateformatted) returns a _formatted_ vers
 
 <!-- TODO: Add a more comprehensive and elaborate code example of some kind of an interactive form? -->
 
-As illustrated throughout this library and docs - when dealing with data in your app that's presented as an async iterable, an interesting pattern emerges; instead of a transition in app state traditionally sending down a cascading re-render through the entire tree of components underneath it to propagate the new state - your __async iterable__ objects can be distributed __once__ when the whole tree is first mounted, and when new data is then communicated through them it directly gets right to the edges of the UI tree that are concerned with it, re-rendering them exclusively and thus skipping all intermediaries.
+As illustrated throughout this library and docs - when dealing with data in your app that's presented as an async iterable, an interesting pattern emerges; instead of a transition in app state traditionally sending down a cascading re-render through the entire tree of components underneath it to propagate the new state - your __async iterable__ objects can be distributed __once__ when the whole tree is first mounted, and new data is then communicated through them so it directly gets to the components that are concerned with displaying it, at the edges of the UI tree, re-rendering them exclusively and thus skipping all intermediaries.
 
 The packaged [`useAsyncIterState`](#useasynciterstate) hook can lend this paradigm to your __component state__. It's like a [`React.useState`](https://react.dev/reference/react/useState) version that returns you _an async iterable of the state value instead of the state value_, paired with a setter function that causes the stateful iterable to yield the next states.
 
@@ -553,6 +553,10 @@ function MyForm() {
   );
 }
 ```
+
+_Play with [`useAsyncIterState`](#useasynciterstate) an interactive example:_
+
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-4?file=src%2FApp.tsx)
 
 <!-- TODO: Go over all mentions of [`<It>`](...), [`useAsyncIter`](...) and so on and make sure their links are are valid -->
 
