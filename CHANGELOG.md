@@ -1,3 +1,15 @@
+## [0.9.2](https://github.com/shtaif/react-async-iterators/compare/v0.9.1...v0.9.2) (2025-01-31)
+
+
+### Bug Fixes
+
+* **useAsyncIterState:** individual iterators types' `.return` method should not be optional ([#78](https://github.com/shtaif/react-async-iterators/issues/78)) ([ae5d546](https://github.com/shtaif/react-async-iterators/commit/ae5d5460bc8ee0d4f08ddde8b4b02222d68167b4))
+
+
+### Documentation
+
+* **readme:** edit some wordings, fix some code blocks rendered unformatted ([#77](https://github.com/shtaif/react-async-iterators/issues/77)) ([af888c9](https://github.com/shtaif/react-async-iterators/commit/af888c90273d36fc35ddf4e3a44afecb2391d0e3))
+
 ## [0.9.1](https://github.com/shtaif/react-async-iterators/compare/v0.9.0...v0.9.1) (2025-01-30)
 
 
