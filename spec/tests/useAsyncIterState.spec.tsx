@@ -215,7 +215,6 @@ describe('`useAsyncIterState` hook', () => {
       for (let i = 0; i < 3; ++i) {
         setValue(valueUpdateInput.mockImplementation(_prev => i));
         currentValues.push(values.value.current);
-        // await undefined;
       }
 
       expect(valueUpdateInput.mock.calls).toStrictEqual([[undefined], [0], [1]]);
