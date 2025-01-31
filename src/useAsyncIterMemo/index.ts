@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
-import { type FixedRefFormattedIterable } from '../iterateFormatted/index.js';
 import {
   reactAsyncIterSpecialInfoSymbol,
+  type ReactAsyncIterable,
   type ReactAsyncIterSpecialInfo,
-} from '../common/reactAsyncIterSpecialInfoSymbol.js';
+} from '../common/ReactAsyncIterable.js';
 import { useLatest } from '../common/hooks/useLatest.js';
 import { asyncIterSyncMap } from '../common/asyncIterSyncMap.js';
-import { type ExtractAsyncIterValue } from '../common/ExtractAsyncIterValue.js';
+import { type DeasyncIterized } from '../common/DeasyncIterized.js';
 
 export { useAsyncIterMemo };
 
@@ -41,7 +41,7 @@ const useAsyncIterMemo: {
             return asyncIterSyncMap(
               specialInfo.origSource,
               value =>
-                (latestDepsRef.current[i] as FixedRefFormattedIterable<unknown, unknown>)[
+                (latestDepsRef.current[i] as ReactAsyncIterable<unknown, unknown>)[
                   reactAsyncIterSpecialInfoSymbol
                 ].formatFn(value, iterationIdx++) // TODO: Any change there won't be a `.formatFn` here if its possible that this might be called somehow at the moment the deps were changed completely?
             );
@@ -59,13 +59,11 @@ type DepsWithReactAsyncItersWrapped<TDeps extends React.DependencyList> = {
     [Symbol.asyncIterator](): AsyncIterator<unknown>;
     [reactAsyncIterSpecialInfoSymbol]: ReactAsyncIterSpecialInfo<unknown, unknown>;
   }
-    ? AsyncIterable<ExtractAsyncIterValue<TDeps[I]>>
+    ? AsyncIterable<DeasyncIterized<TDeps[I]>>
     : TDeps[I];
 };
 
-function isReactAsyncIterable<T>(
-  input: T
-): input is T & FixedRefFormattedIterable<unknown, unknown> {
+function isReactAsyncIterable<T>(input: T): input is T & ReactAsyncIterable<unknown, unknown> {
   const inputAsAny = input as any;
   return !!inputAsAny?.[reactAsyncIterSpecialInfoSymbol];
 }
