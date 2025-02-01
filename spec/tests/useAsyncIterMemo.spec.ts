@@ -2,7 +2,7 @@ import { nextTick } from 'node:process';
 import { it, describe, expect, afterEach } from 'vitest';
 import { gray } from 'colorette';
 import { renderHook, cleanup as cleanupMountedReactTrees } from '@testing-library/react';
-import { useAsyncIterMemo, iterateFormatted } from '../../src/index.js';
+import { useAsyncIterMemo, iterateFormatted } from '../libEntrypoint.js';
 import { pipe } from '../utils/pipe.js';
 import { asyncIterToArray } from '../utils/asyncIterToArray.js';
 import { asyncIterTake } from '../utils/asyncIterTake.js';
