@@ -7,7 +7,7 @@ import {
   cleanup as cleanupMountedReactTrees,
   act,
 } from '@testing-library/react';
-import { useAsyncIterState } from '../../src/index.js';
+import { useAsyncIterState } from '../libEntrypoint.js';
 import { asyncIterToArray } from '../utils/asyncIterToArray.js';
 import { asyncIterTake } from '../utils/asyncIterTake.js';
 import { asyncIterTakeFirst } from '../utils/asyncIterTakeFirst.js';
