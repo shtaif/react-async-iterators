@@ -43,7 +43,7 @@ const useAsyncIterMemo: {
               value =>
                 (latestDepsRef.current[i] as ReactAsyncIterable<unknown, unknown>)[
                   reactAsyncIterSpecialInfoSymbol
-                ].formatFn(value, iterationIdx++) // TODO: Any change there won't be a `.formatFn` here if its possible that this might be called somehow at the moment the deps were changed completely?
+                ].formatFn(value, iterationIdx++) // TODO: Any chance there won't be a `.formatFn` here if its possible that this might be called somehow at the moment the deps were changed completely?
             );
           })();
     }) as DepsWithReactAsyncItersWrapped<TDeps>;
