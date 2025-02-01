@@ -1,7 +1,7 @@
 import { it, describe, expect, afterEach, vi, type Mock } from 'vitest';
 import { gray } from 'colorette';
 import { render, cleanup as cleanupMountedReactTrees, act } from '@testing-library/react';
-import { Iterate, It, iterateFormatted, type IterationResult } from '../../src/index.js';
+import { Iterate, It, iterateFormatted, type IterationResult } from '../libEntrypoint.js';
 import { asyncIterOf } from '../utils/asyncIterOf.js';
 import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
 
