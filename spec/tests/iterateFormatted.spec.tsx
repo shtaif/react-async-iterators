@@ -1,7 +1,7 @@
 import { it, describe, expect, afterEach } from 'vitest';
 import { gray } from 'colorette';
 import { render, cleanup as cleanupMountedReactTrees, act } from '@testing-library/react';
-import { iterateFormatted, Iterate } from '../../src/index.js';
+import { iterateFormatted, Iterate } from '../libEntrypoint.js';
 import { pipe } from '../utils/pipe.js';
 import { asyncIterOf } from '../utils/asyncIterOf.js';
 import { asyncIterToArray } from '../utils/asyncIterToArray.js';
