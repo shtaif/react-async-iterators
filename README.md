@@ -554,7 +554,7 @@ function MyForm() {
 }
 ```
 
-_Play with [`useAsyncIterState`](#useasynciterstate) an interactive example:_
+_Play with [`useAsyncIterState`](#useasynciterstate) inside a StackBlitz playground:_
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-4?file=src%2FApp.tsx)
 
