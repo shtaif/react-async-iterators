@@ -7,7 +7,7 @@ import {
   ItMulti,
   type IterateMultiProps,
   type IterationResultSet,
-} from '../../src/index.js';
+} from '../libEntrypoint.js';
 import { pipe } from '../utils/pipe.js';
 import { asyncIterOf } from '../utils/asyncIterOf.js';
 import { IteratorChannelTestHelper } from '../utils/IteratorChannelTestHelper.js';
