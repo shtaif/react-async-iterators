@@ -5,17 +5,20 @@
 <br />
 
 <p>
-  <a href="https://www.npmjs.com/package/react-async-iterators">
+  <a href="https://www.npmjs.com/package/react-async-iterators" style="text-decoration: unset;">
     <img alt="npm published version" src="https://img.shields.io/npm/v/react-async-iterators.svg?logo=npm" />
   </a>
-  <a href="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-tests.yaml">
-    <img alt="" src="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-tests.yaml/badge.svg" />
+  <a href="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-tests.yaml" style="text-decoration: unset;">
+    <img alt="Tests status" src="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-run-tests.yaml/badge.svg" />
   </a>
-  <a href="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-build-check.yaml">
-    <img alt="" src="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-build-check.yaml/badge.svg" />
+  <a href="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-build-check.yaml" style="text-decoration: unset;">
+    <img alt="Build status" src="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-ts-build-check.yaml/badge.svg" />
   </a>
-  <a href="https://semver.org">
+  <a href="https://semver.org" style="text-decoration: unset;">
     <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg" />
+  </a>
+  <a href="https://github.com/shtaif/react-async-iterators/blob/master/LICENSE.txt" style="text-decoration: unset;">
+    <img alt="MIT License" src="https://img.shields.io/npm/l/better-sse?color=3178c6&style=flat-square" />
   </a>
 <p>
 
@@ -554,7 +557,7 @@ function MyForm() {
 }
 ```
 
-_Play with [`useAsyncIterState`](#useasynciterstate) an interactive example:_
+_Play with [`useAsyncIterState`](#useasynciterstate) inside a StackBlitz playground:_
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-4?file=src%2FApp.tsx)
 
