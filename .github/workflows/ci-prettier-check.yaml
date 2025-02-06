@@ -1,4 +1,4 @@
-name: CI
+name: CI - prettier check
 
 on:
   pull_request:

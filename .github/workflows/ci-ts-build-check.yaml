@@ -1,4 +1,4 @@
-name: CI
+name: CI - ts build check
 
 on:
   pull_request:

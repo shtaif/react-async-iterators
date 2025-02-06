@@ -1,4 +1,4 @@
-name: CI
+name: CI - run tests type check
 
 on:
   pull_request:
@@ -14,5 +14,5 @@ jobs:
 
       - uses: ./.github/actions/ci-common-setup-locally-packaged
 
-      - name: Type-check tests code
+      - name: Type-check tests code against packaged build
         run: pnpm run test-typings-check
