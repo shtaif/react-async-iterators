@@ -28,7 +28,7 @@ function parseReactAsyncIterable<T>(
 
 const reactAsyncIterSpecialInfoSymbol = Symbol('reactAsyncIterSpecialInfoSymbol');
 
-type ReactAsyncIterable<TVal, TValFormatted> = AsyncIterable<TValFormatted, void, void> & {
+type ReactAsyncIterable<TVal, TValFormatted> = AsyncIterable<TValFormatted /*, void, void*/> & {
   [reactAsyncIterSpecialInfoSymbol]: ReactAsyncIterSpecialInfo<TVal, TValFormatted>;
 };
 
