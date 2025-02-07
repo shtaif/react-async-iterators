@@ -1,7 +1,8 @@
 import { it, describe, expect, afterEach } from 'vitest';
 import { gray } from 'colorette';
 import { renderHook, cleanup as cleanupMountedReactTrees } from '@testing-library/react';
-import { useAsyncIterMemo, iterateFormatted } from '../libEntrypoint.js';
+import { /*useAsyncIterMemo, */ iterateFormatted } from '../libEntrypoint.js';
+import { useAsyncIterMemo } from '../../src/common/hooks/useAsyncIterMemo/index.js';
 import { pipe } from '../utils/pipe.js';
 import { IterableChannelTestHelper } from '../utils/IterableChannelTestHelper.js';
 import { feedChannelAcrossTicks } from '../utils/feedChannelAcrossTicks.js';
