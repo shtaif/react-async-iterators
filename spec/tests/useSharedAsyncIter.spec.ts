@@ -72,7 +72,7 @@ describe('`useSharedAsyncIter` hook', () => {
       const yieldP2 = iterator2.next();
 
       {
-        await iterator1.return!();
+        await iterator1.return();
         const promiseStates = await Promise.all([yieldP1, yieldP2].map(checkPromiseState));
         expect(promiseStates).toStrictEqual([
           { state: 'FULFILLED', value: { done: true, value: undefined } },
@@ -81,7 +81,7 @@ describe('`useSharedAsyncIter` hook', () => {
       }
 
       {
-        await iterator2.return!();
+        await iterator2.return();
         const promiseStates = await Promise.all([yieldP1, yieldP2].map(checkPromiseState));
         expect(promiseStates).toStrictEqual([
           { state: 'FULFILLED', value: { done: true, value: undefined } },
@@ -174,16 +174,16 @@ describe('`useSharedAsyncIter` hook', () => {
         await Promise.all(iterators.map(it => it.next()));
         expect(mockSourceIterator.return).not.toHaveBeenCalled();
 
-        await iterators[2].return!();
+        await iterators[2].return();
         expect(mockSourceIterator.return).not.toHaveBeenCalled();
 
-        await iterators[1].return!();
+        await iterators[1].return();
         expect(mockSourceIterator.return).not.toHaveBeenCalled();
 
-        await iterators[0].return!();
+        await iterators[0].return();
         expect(mockSourceIterator.return).toHaveBeenCalledOnce();
 
-        await Promise.all(iterators.map(it => it.return!()));
+        await Promise.all(iterators.map(it => it.return()));
         expect(mockSourceIterator.return).toHaveBeenCalledOnce();
       });
 
@@ -205,12 +205,12 @@ describe('`useSharedAsyncIter` hook', () => {
         await Promise.all(iterators.map(it => it.next()));
         expect(mockSourceIterator.return).not.toHaveBeenCalled();
 
-        const returnCallsPromise = Promise.all(iterators.map(it => it.return!()));
+        const returnCallsPromise = Promise.all(iterators.map(it => it.return()));
         expect(mockSourceIterator.return).toHaveBeenCalledOnce();
 
         await returnCallsPromise;
 
-        await Promise.all(iterators.map(it => it.return!()));
+        await Promise.all(iterators.map(it => it.return()));
         expect(mockSourceIterator.return).toHaveBeenCalledOnce();
       });
     }

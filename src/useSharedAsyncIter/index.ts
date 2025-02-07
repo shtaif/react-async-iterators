@@ -74,7 +74,12 @@ export { useSharedAsyncIter };
  * }
  * ```
  */
-function useSharedAsyncIter<T>(value: AsyncIterable<T>): AsyncIterable<T>;
+function useSharedAsyncIter<T>(value: AsyncIterable<T>): {
+  [Symbol.asyncIterator](): {
+    next(): Promise<IteratorResult<T, undefined>>;
+    return(): Promise<IteratorReturnResult<undefined>>;
+  };
+};
 function useSharedAsyncIter<T>(value: T): T;
 function useSharedAsyncIter(value: unknown): MaybeAsyncIterable<unknown> {
   return useAsyncIterMemo(
@@ -82,5 +87,3 @@ function useSharedAsyncIter(value: unknown): MaybeAsyncIterable<unknown> {
     [value]
   );
 }
-
-// TODO: Enhance `useSharedAsyncIter`'s returned iter to have the `.return` method as NOT optional?
