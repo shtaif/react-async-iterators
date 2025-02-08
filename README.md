@@ -5,22 +5,14 @@
 <br />
 
 <p>
-  <a href="https://www.npmjs.com/package/react-async-iterators" style="text-decoration: unset;">
-    <img alt="npm published version" src="https://img.shields.io/npm/v/react-async-iterators.svg?logo=npm" />
-  </a>
-  <a href="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-tests.yaml" style="text-decoration: unset;">
-    <img alt="Tests status" src="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-run-tests.yaml/badge.svg" />
-  </a>
-  <a href="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-build-check.yaml" style="text-decoration: unset;">
-    <img alt="Build status" src="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-ts-build-check.yaml/badge.svg" />
-  </a>
-  <a href="https://semver.org" style="text-decoration: unset;">
-    <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg" />
-  </a>
-  <a href="https://github.com/shtaif/react-async-iterators/blob/master/LICENSE.txt" style="text-decoration: unset;">
-    <img alt="MIT License" src="https://img.shields.io/npm/l/better-sse?color=3178c6&style=flat-square" />
-  </a>
-<p>
+
+  [![npm published version](https://img.shields.io/npm/v/react-async-iterators.svg?logo=npm)](https://www.npmjs.com/package/react-async-iterators)
+  [![Tests status](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-run-tests.yaml/badge.svg)](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-run-tests.yaml)
+  [![Build status](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-ts-build-check.yaml/badge.svg)](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-ts-build-check.yaml)
+  [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://semver.org)
+  [![MIT License](https://img.shields.io/npm/l/better-sse?color=3178c6&style=flat-square)](https://github.com/shtaif/react-async-iterators/blob/master/LICENSE.txt)
+
+</p>
 
 Async iterables/iterators are a native language construct in JS that can be viewed as a counterpart to [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), in the sense that while a promise asynchronously resolves one value - an async iterable is a stream that asynchronously yields any number of values.
 
