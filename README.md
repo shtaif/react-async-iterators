@@ -2,31 +2,20 @@
 
 > Hooks, components and utilities for working with JavaScript [async iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator) values in React.js.
 
-<br />
-
 <p>
 
-  [![npm published version](https://img.shields.io/npm/v/react-async-iterators.svg?logo=npm)](https://www.npmjs.com/package/react-async-iterators)
+  [![npm published version](https://img.shields.io/npm/v/react-async-iterators?logo=npm&color=cb3837
+  )](https://www.npmjs.com/package/react-async-iterators)
   [![Tests status](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-run-tests.yaml/badge.svg)](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-run-tests.yaml)
   [![Build status](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-ts-build-check.yaml/badge.svg)](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-ts-build-check.yaml)
   [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://semver.org)
-  [![MIT License](https://img.shields.io/npm/l/better-sse?color=3178c6&style=flat-square)](https://github.com/shtaif/react-async-iterators/blob/master/LICENSE.txt)
+  [![MIT License](https://img.shields.io/npm/l/react-async-iterators?color=3178c6&style=flat-square)](https://github.com/shtaif/react-async-iterators/blob/master/LICENSE.txt)
 
 </p>
 
-Async iterables/iterators are a native language construct in JS that can be viewed as a counterpart to [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), in the sense that while a promise asynchronously resolves one value - an async iterable is a stream that asynchronously yields any number of values.
+A React.js library that makes it __easy and satisfying__ to integrate and render JS async iterators across and throughout your app's components. Expanding from that, it allows you to describe and propagate various aspects and states of your app in actual async iterator form, letting it tap into the full benefits and flexibility in this JS construct.
 
-Somewhat obvious to say, the React ecosystem features many methods and tools that have to do with integrating promise-based data into your React components; from higher level SDK libraries, state managers - to generic async utilities, which make the different promise states available to the rendering. And just like that - `react-async-iterators` packs hooks, components and utilities written in TypeScript with the aim to make async iterables into __first-class citizens to React__ as they become gradually more prevalent across JavaScript platforms.
 
-## What can `react-async-iterators` be used for?
-
-- easily consuming async iterables obtained from any library, web API or composed manually - in a React-friendly declarative fashion.
-<!-- ...Dynamically plug and unplug them at any place across your app's component tree with automatic teardown... -->
-
-- unlocking new ways of expressing data flow in or between components efficiently, constricting redundant re-rendering.
-<!-- ...made possible by the async iterables' unique properties (more on that later)... -->
-
-<!-- TODO: Should mention here (or anywhere else?) about the state of the `async-iterator-helpers-proposal`, as well as existing possibilities to create and compose async iterables via `iter-tools` and `IxJS`? -->
 
 ### Illustration:
 
@@ -69,8 +58,27 @@ const randoms = {
 //   etc.
 ```
 
-<!-- TODO: Include this example somewhere? -->
-<!-- ```tsx
+Below is another interactive demo showing how to consume the `EventSource` web API (A.K.A [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)) converted into async iterable using the [`iterified`](https://github.com/shtaif/iterified) package:
+
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-5?file=src%2FApp.tsx)
+
+
+
+<!-- 
+```tsx
+const gqlWsClient = createGqlWsClient({ url: 'wss://my-api-backend/graphql' });
+
+const subscription = gqlWsClient.iterate<PositionDataSubscriptionResult>({
+  query: `...`,
+});
+
+// ...
+```
+-->
+
+<!--
+TODO: Include this example somewhere?
+```tsx
 import { useMemo } from 'react';
 import { useAsyncIter } from 'react-async-iterators';
 
@@ -95,7 +103,8 @@ function LiveUserProfile(props: { userId: string }) {
     </div>
   );
 }
-``` -->
+```
+-->
 
 
 
@@ -103,7 +112,7 @@ function LiveUserProfile(props: { userId: string }) {
 
 ✔️ Fully written in TypeScript with comprehensive inferring typings<br />
 ✔️ Fully tree-shakeable exports<br />
-✔️ Light weight, zero run-time dependencies<br />
+✔️ Light weight, ZERO run-time dependencies<br />
 ✔️ ESM build<br />
 ✔️ [Semver](https://semver.org) compliant<br />
 
@@ -111,15 +120,19 @@ function LiveUserProfile(props: { userId: string }) {
 
 # Table of Contents
 
+- [Introduction](#introduction)
+  - [Who is react-async-iterators for?](#who-is-react-async-iterators-for)
+  - [When should you use react-async-iterators?](#when-should-you-use-react-async-iterators)
+  - [What can react-async-iterators do?](#what-can-react-async-iterators-do)
 - [Installation](#installation)
-- [Walkthrough](#walkthrough)
+- [Overview](#overview)
   - [Consuming async iterables](#consuming-async-iterables)
   - [Plain values](#plain-values)
   - [Iteration lifecycle](#iteration-lifecycle)
     - [Lifecycle phases](#lifecycle-phases)
   - [Async iterables with current values](#async-iterables-with-current-values)
   - [Formatting values](#formatting-values)
-  - [Component state as an async iterable](#component-state-as-an-async-iterable)
+  - [State as an async iterable](#state-as-an-async-iterable)
 - [API](#api)
   - [Iteration state properties breakdown](#iteration-state-properties-breakdown)
   - [Components](#components)
@@ -133,6 +146,49 @@ function LiveUserProfile(props: { userId: string }) {
   - [Utils](#utils)
     - [`iterateFormatted`](#iterateformatted)
 - [License](#license)
+
+
+
+# Introduction
+
+Async iterables and iterators are a native JavaScript construct that can be seen as a counterpart to [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)s in a way that is captured by the following:
+
+> _A promise resolves __a single__ value asynchronously, whereas an async iterable is a stream yielding __any number__ of values asynchronously._
+
+Slightly obvious to say, the React ecosystem is featuring many methods and tools that have to do with integration of promise-based data into your React components; from higher level SDK libraries, state managers - to generic async utilities, which make the different promise states accessible during render. And to the same extent, `react-async-iterators` packs hooks, components and utilities, written in 100% TypeScript, with the aim to make async iterables into __first-class citizens to React__ as they become gradually more prevalent across the JavaScript ecosystem.
+
+<!-- TODO: Should mention here (or anywhere else?) about the state of the `async-iterator-helpers-proposal`, as well as existing possibilities to create and compose async iterables via `iter-tools` and `IxJS`? -->
+
+
+
+## Who is `react-async-iterators` for?
+
+`react-async-iterators` is designed for React developers aiming to seamlessly integrate asynchronous data streams into their apps, as well as enhance and optimize how they build their interactive data-driven apps in general. This library offers a declarative approach to manage real-time updates, push or pull based data sources, or any asynchronous series of values easily and effectively within React components.
+
+
+
+## When should you use `react-async-iterators`?
+
+- When integrating any async iterable obtained from a library, a web API, or composed manually.
+
+- When apps involve any _asynchronously-generated series_ of data, such as data updated via recurring timers, WebSocket messages, GraphQL subscriptions, Geolocation watching and more...
+
+- When rendering a complex form or dynamic widget with large nested component tree for which UI updates might impact UI performance.
+
+
+
+## What can `react-async-iterators` do?
+
+- Easily render any async iterable in a declarative, React-friendly style.
+<!-- ...Dynamically plug and unplug them at any place across your app's component tree with automatic teardown... -->
+
+- Convert any series of data into an async iterable, enabling it the full functionality of this library.
+
+- Unlock new patterns for expressing data flow within and between components which greatly minimize redundant re-renders by embracing async iterables __as data__.
+
+- Compose and refine your data in the form of async iterables, enabling specialized behaviors and optimizations in propagating your data which are otherwise very hard to achieve in a typical React environment.
+
+- Build better apps and components by relying on async iterables' consistent semantics for completion and error, composability and resource encapsulation. Handle any async sequence of values perceivable via a single generic interface; ___the native one___, instead of grasping various methods and opinionated APIs coupled to every type of operation.
 
 
 
@@ -159,7 +215,7 @@ import { It, type IterationResult } from 'react-async-iterators';
 
 
 
-# Walkthrough
+# Overview
 
 
 
@@ -399,7 +455,7 @@ When any consumer hook/component from the library detects the presence of a curr
 
 This rule bridges the gap between async iterables which always yield asynchronously (as their yields are wrapped in promises) and React's component model in which render outputs are strictly synchronous. Due to this discrepency, for example, if the first value for an async iterable is known in advance and yielded as soon as possible - React could only grab the yielded value from it via a subsequent (immediate) run/render of the consumer hook/component (since the promise can resolve only _after_ such initial sync run/render). This issue is therefore solved by async iterables that expose a current value.
 
-For example, the stateful iterable created from the [`useAsyncIterState`](#useasynciterstate) hook (_see [Component state as an async iterable](#component-state-as-an-async-iterable)_) applies this convention from its design, acting like a "topic" with an always-available current value that's able to signal out future changes, skipping pending phases, so there's no need to set initial starting states.
+For example, the stateful iterable created from the [`useAsyncIterState`](#useasynciterstate) hook (_see [State as an async iterable](#state-as-an-async-iterable)_) applies this convention from its design, acting like a "topic" with an always-available current value that's able to signal out future changes, skipping pending phases, so there's no need to set initial starting states.
 
 <!-- TODO: Any code sample that can/should go in here?... -->
 
@@ -457,7 +513,7 @@ function MyComponent() {
 }
 ```
 
-Alternatively, such transformation can be also achieved (_entirely legitimately_) with help from [`React.useMemo`](https://react.dev/reference/react/useMemo) and some generic mapping operator like [`iter-tools`](https://github.com/iter-tools/iter-tools)'s `asyncMap`, among the multitude of available operators from such libraries:
+Alternatively, such transformation can be also achieved (_entirely legitimately_) with help from [`React.useMemo`](https://react.dev/reference/react/useMemo) and some generic mapping operator like [`iter-tools`](https://github.com/iter-tools/iter-tools)'s `asyncMap`, among the breadth of operators available from such libraries:
 
 ```tsx
 import { useMemo } from 'react';
@@ -492,7 +548,7 @@ Every call to [`iterateFormatted`](#iterateformatted) returns a _formatted_ vers
 
 
 
-## Component state as an async iterable
+## State as an async iterable
 
 <!-- TODO: Add a more comprehensive and elaborate code example of some kind of an interactive form? -->
 
@@ -523,7 +579,7 @@ function MyCounter() {
 }
 ```
 
-The stateful iterable let's you directly access the current state any time via its `.value.current` property (see [Async iterables with current values](#async-iterables-with-current-values)) so you may read it when you need to get only the current state alone, for example - as part of a certain side effect logic;
+The stateful iterable let's you access the current state any time via its `.value.current` property (see [Async iterables with current values](#async-iterables-with-current-values)) so you may read it when you need to get only the current state alone, for example - as part of some side effect logic;
 
 ```tsx
 // Using the state iterable's `.value.current` property to read the immediate current state:
@@ -549,6 +605,10 @@ function MyForm() {
   );
 }
 ```
+
+<br/>
+
+> <br/>ℹ️ Remember that merely accessing `.value.current` will only get the current state at that point in time and is not meant for picking up future updates in it. To be in sync with current and future states, simply render the state iterable through a [`<It>`](#it).<br/><br/>
 
 _Play with [`useAsyncIterState`](#useasynciterstate) inside a StackBlitz playground:_
 
