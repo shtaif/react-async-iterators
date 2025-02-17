@@ -1,3 +1,17 @@
+## [0.10.0](https://github.com/shtaif/react-async-iterators/compare/v0.9.2...v0.10.0) (2025-02-07)
+
+
+### Features
+
+* new `useSharedAsyncIter` hook ([#87](https://github.com/shtaif/react-async-iterators/issues/87)) ([b1568b5](https://github.com/shtaif/react-async-iterators/commit/b1568b56c5b389f6f172f119ed2b8d3d1c178d32))
+
+
+### Documentation
+
+* **readme:** add license badge ([#86](https://github.com/shtaif/react-async-iterators/issues/86)) ([e5e94dd](https://github.com/shtaif/react-async-iterators/commit/e5e94dd20894754c1301d231a23a544243c7054f))
+* **readme:** fix StackBlitz link adjacent text ([#84](https://github.com/shtaif/react-async-iterators/issues/84)) ([08cd00b](https://github.com/shtaif/react-async-iterators/commit/08cd00bc0a821bd633350c64f471f1c6a42e67af))
+* **readme:** various edits ([#81](https://github.com/shtaif/react-async-iterators/issues/81)) ([2c34532](https://github.com/shtaif/react-async-iterators/commit/2c3453223cca54f00ccce25a672055ac6eec54d8))
+
 ## [0.9.2](https://github.com/shtaif/react-async-iterators/compare/v0.9.1...v0.9.2) (2025-01-31)
 
 

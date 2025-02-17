@@ -283,7 +283,7 @@ describe('`useAsyncIterState` hook', () => {
 
   it(
     gray(
-      "The returned iterable's values are each shared between all its parallel consumers so that each will receives all values that will yield from the time it started consuming"
+      "The returned iterable's values are each shared between all its parallel consumers so that each will receive every value that will yield from the time it started consuming"
     ),
     async () => {
       const [values, setValue] = renderHook(() => useAsyncIterState<string>()).result.current;

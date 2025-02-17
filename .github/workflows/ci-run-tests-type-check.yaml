@@ -1,0 +1,18 @@
+name: CI - run tests type check
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  run_tests_type_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: ./.github/actions/ci-common-setup-locally-packaged
+
+      - name: Type-check tests code against packaged build
+        run: pnpm run test-typings-check

@@ -5,25 +5,20 @@
 <br />
 
 <p>
-  <a href="https://www.npmjs.com/package/react-async-iterators">
-    <img alt="npm published version" src="https://img.shields.io/npm/v/react-async-iterators.svg?logo=npm" />
-  </a>
-  <a href="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-tests.yaml">
-    <img alt="" src="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-tests.yaml/badge.svg" />
-  </a>
-  <a href="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-build-check.yaml">
-    <img alt="" src="https://github.com/shtaif/react-async-iterators/actions/workflows/ci-build-check.yaml/badge.svg" />
-  </a>
-  <a href="https://semver.org">
-    <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg" />
-  </a>
-<p>
+
+  [![npm published version](https://img.shields.io/npm/v/react-async-iterators.svg?logo=npm)](https://www.npmjs.com/package/react-async-iterators)
+  [![Tests status](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-run-tests.yaml/badge.svg)](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-run-tests.yaml)
+  [![Build status](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-ts-build-check.yaml/badge.svg)](https://github.com/shtaif/react-async-iterators/actions/workflows/ci-ts-build-check.yaml)
+  [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://semver.org)
+  [![MIT License](https://img.shields.io/npm/l/better-sse?color=3178c6&style=flat-square)](https://github.com/shtaif/react-async-iterators/blob/master/LICENSE.txt)
+
+</p>
 
 Async iterables/iterators are a native language construct in JS that can be viewed as a counterpart to [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), in the sense that while a promise asynchronously resolves one value - an async iterable is a stream that asynchronously yields any number of values.
 
 Somewhat obvious to say, the React ecosystem features many methods and tools that have to do with integrating promise-based data into your React components; from higher level SDK libraries, state managers - to generic async utilities, which make the different promise states available to the rendering. And just like that - `react-async-iterators` packs hooks, components and utilities written in TypeScript with the aim to make async iterables into __first-class citizens to React__ as they become gradually more prevalent across JavaScript platforms.
 
-What can `react-async-iterators` be used for?
+## What can `react-async-iterators` be used for?
 
 - easily consuming async iterables obtained from any library, web API or composed manually - in a React-friendly declarative fashion.
 <!-- ...Dynamically plug and unplug them at any place across your app's component tree with automatic teardown... -->
@@ -134,6 +129,7 @@ function LiveUserProfile(props: { userId: string }) {
     - [`useAsyncIter`](#useasynciter)
     - [`useAsyncIterMulti`](#useasyncitermulti)
     - [`useAsyncIterState`](#useasynciterstate)
+    - [`useSharedAsyncIter`](#usesharedasynciter)
   - [Utils](#utils)
     - [`iterateFormatted`](#iterateformatted)
 - [License](#license)
@@ -1007,7 +1003,11 @@ const [nextNum, nextStr, nextArr] = useAsyncIterMulti([numberIter, stringIter, a
 
 ### Returns
 
+<ul>
+
   An array of objects with up-to-date information about each input's current value, completion status, and more - corresponding to the order by which they appear on `values` (see [Iteration state properties breakdown](#iteration-state-properties-breakdown)).
+
+</ul>
 
 ### Notes
 
@@ -1163,7 +1163,11 @@ function handleValueSubmit() {
 
 ### Returns
 
-  A stateful async iterable with accessible current value and a function for yielding an update. The returned async iterable is a shared iterable such that multiple simultaneous consumers (e.g multiple [`<It>`](#it)s) all pick up the same yields at the same times. The setter function, like[`React.useState`'s setter](https://react.dev/reference/react/useState#setstate), can be provided the next state directly, or a function that calculates it from the previous state.
+<ul>
+
+  A stateful async iterable with accessible current value and a function for yielding an update. The returned async iterable is a shared iterable such that multiple simultaneous consumers (e.g multiple [`<It>`](#it)s) all pick up the same yields at the same times. The setter function, like[`React.useState`'s setter](https://react.dev/reference/react/useState#setstate), can be provided either the next state directly, or a function that calculates it from the previous state.
+
+</ul>
 
 ### Notes
 
@@ -1229,6 +1233,89 @@ function handleValueSubmit() {
 
 
 
+### useSharedAsyncIter
+
+Hook that takes a source async iterable and returns a version of it that will always initialize up to
+just one single instance of the source at any point in time, sharing it to any number of simultaneous consumers
+the result iterable might have (e.g multiple [`<It>`](#it)s).
+
+```tsx
+const sharedIter = useSharedAsyncIter(iter);
+// ...
+```
+
+Any number of iterators for the resulting iterable you create and consume simultaneously will only ever
+create a single iterator internally for the original source and distribute every yielded value, completion or
+possible error among each of them.
+
+In a _reference-counting_ fashion, only when the last remaining iterator is closed will the shared
+source iterator be finally closed as well, disposing of resources it held, after which instantiating a new iterator will restart the cycle. This way, async iterables that instantiate server connections, streams, etc. - can easily be consumed or rendered concurrently by multiple components without possibly opening duplicate resources or other undesired effects, depending on the way these source iterables were constructed.
+
+If given a plain non-iterable value, this hook would seamlessly return it as-is without additional effect.
+
+### Parameters
+
+- `value`:
+  The source async iterable or plain value.
+
+### Returns
+
+<ul>
+
+  A "_shared_" version of the source async iterable or the source value itself in case it was a plain value.
+
+</ul>
+
+### Notes
+
+<ul>
+
+  > <br/>ℹ️ Repeated calls with the same source iterable will return the same memoized result iterable, as well as calls with [`iterateFormatted`](#iterateformatted)-returned iterables based of the same source for that matter.<br/><br/>
+
+</ul>
+
+<details>
+  <summary><b><i>Additional examples</i></b></summary>
+  <br/>
+  <ul>
+
+  ```tsx
+  import { useSharedAsyncIter, It } from 'react-async-iterators';
+
+  function MyComponent(props) {
+    const messagesIter = useSharedAsyncIter(props.messagesIter);
+
+    return (
+      <div>
+        Number of unread messages:
+        <It value={messagesIter}>
+          {next => (
+            next.value?.filter(msg => msg.isRead).length ?? 0
+          )}
+        </It>
+
+        Message list:
+        <It value={messagesIter}>
+          {next => (
+            next.value?.map(msg => (
+              <div>
+                From: {msg.from},
+                Date: {msg.date},
+                Was read: {msg.isRead ? 'Y' : 'N'}
+              </div>
+            ))
+          )}
+        </It>
+      </div>
+    );
+  }
+  ```
+
+  </ul>
+</details>
+
+
+
 ## Utils
 
 
@@ -1263,7 +1350,7 @@ iterateFormatted(myIter, (value, idx) => {
   Any async iterable or plain value.
 
 - `formatFn`:
-  Function that performs formatting/mapping logic for each value of `source`.
+  Function that performs formatting/mapping logic for each value of `source`. It is called with current value and the iteration index as arguments.
 
 ### Returns
 
