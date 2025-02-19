@@ -13,11 +13,15 @@
 
 </p>
 
-A React.js library that makes it __easy and satisfying__ to integrate and render JS async iterators across and throughout your app's components. Expanding from that, it allows you to describe and propagate various aspects and states of your app in actual async iterator form, letting it tap into the full benefits and flexibility in this JS construct.
+A React.js library that makes it __easy and satisfying__ to integrate and render JS async iterators across and throughout your app's components. Expanding from that, it enables you to describe and propagate states and various aspects of your app in actual async iterator form, tapping into the full benefits and flexibility of this JS construct.
+
+The goal behind this library is to promote a mental model where fundamentally every piece of data in a JavaScript program can be expressed in either a plain and static form, or in a ___dynamic, self-evolving form - an async iterable___. By simply wrapping a value in an async iterator or iterable, it becomes a self-updating entity while remaining first-class data. From this, it follows naturally that every interface should and could accommodate either kind of inputs, seamlessly adapting to changes over time as intuitively expected.
+
+To facilitate this, `react-async-iterators` offers a set of tools specifically tailored for the frontend and React which and embraces composability with the upcoming standardization of [Async Iterator Helpers proposal](https://github.com/tc39/proposal-async-iterator-helpers) as well as projects such as [iter-tools](https://github.com/iter-tools/iter-tools), [IxJS](https://github.com/ReactiveX/IxJS) and more.
 
 
 
-### Illustration:
+### Illustration
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-3?file=src%2FApp.tsx)
 
@@ -27,7 +31,7 @@ import { It } from 'react-async-iterators';
 const randoms = {
   async *[Symbol.asyncIterator]() {
     while (true) {
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 500));
       const x = Math.random();
       yield Math.round(x * 10);
     }
@@ -58,11 +62,15 @@ const randoms = {
 //   etc.
 ```
 
-Below is another interactive demo showing how to consume the `EventSource` web API (A.K.A [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)) converted into async iterable using the [`iterified`](https://github.com/shtaif/iterified) package:
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-5?file=src%2FApp.tsx)
 
 
+### More examples
+
+  - Interactive demo showing how to consume the `EventSource` web API ([Server-Sent-Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)) converted into async iterable using the [`iterified`](https://github.com/shtaif/iterified) package:
+  <br/><br/>[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-5?file=src%2FApp.tsx)
+
+  - Interactive demo showing how to consume a [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) converted into async iterable using the [`iterified`](https://github.com/shtaif/iterified) package:
+  <br/><br/>[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-6?file=src%2FApp.tsx)
 
 <!-- 
 ```tsx
@@ -173,7 +181,7 @@ Slightly obvious to say, the React ecosystem is featuring many methods and tools
 
 - When apps involve any _asynchronously-generated series_ of data, such as data updated via recurring timers, WebSocket messages, GraphQL subscriptions, Geolocation watching and more...
 
-- When rendering a complex form or dynamic widget with large nested component tree for which UI updates might impact UI performance.
+- When rendering a complex form or dynamic widget with large nested component tree for which updates might impact UI performance.
 
 
 
@@ -223,7 +231,7 @@ import { It, type IterationResult } from 'react-async-iterators';
 
 Async iterables can be hooked into your components and consumed using [`<It>`](#it) and [`<ItMulti>`](#itmulti), or their hook counterparts [`useAsyncIter`](#useasynciter) and [`useAsyncIterMulti`](#useasyncitermulti) respectively.
 
-The iteration values and states are expressed via a consistent structure (see exaustive list in [this breakdown](#iteration-state-object-detailed-breakdown)).<br/>
+The iteration values and states are expressed via a consistent structure (see exaustive list in [this breakdown](#iteration-state-properties-breakdown)).<br/>
 They may be accessed as follows:
 
 ```tsx
