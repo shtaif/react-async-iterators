@@ -17,7 +17,7 @@ A React.js library that makes it __easy and satisfying__ to integrate and render
 
 The goal behind this library is to promote a mental model where fundamentally every piece of data in a JavaScript program can be expressed in either a plain and static form, or in a ___dynamic, self-evolving form - an async iterable___. By simply wrapping a value in an async iterator or iterable, it becomes a self-updating entity while remaining first-class data. From this, it follows naturally that every interface should and could accommodate either kind of inputs, seamlessly adapting to changes over time as intuitively expected.
 
-To facilitate this, `react-async-iterators` offers a set of tools specifically tailored for the frontend and React which and embraces composability with the upcoming standardization of [Async Iterator Helpers proposal](https://github.com/tc39/proposal-async-iterator-helpers) as well as projects such as [iter-tools](https://github.com/iter-tools/iter-tools), [IxJS](https://github.com/ReactiveX/IxJS) and more.
+To facilitate this, `react-async-iterators` offers a set of tools specifically tailored for the frontend and React and embraces composability with the upcoming standardization of [Async Iterator Helpers proposal](https://github.com/tc39/proposal-async-iterator-helpers) as well as projects such as [iter-tools](https://github.com/iter-tools/iter-tools), [IxJS](https://github.com/ReactiveX/IxJS) and more.
 
 
 
