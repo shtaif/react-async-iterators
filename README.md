@@ -72,6 +72,14 @@ const randoms = {
   - Interactive demo showing how to consume a [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) converted into async iterable using the [`iterified`](https://github.com/shtaif/iterified) package:
   <br/><br/>[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-6?file=src%2FApp.tsx)
 
+
+
+## 🔥 🔥 🔥
+
+If you find this package helpful, please consider giving it a star! ⭐️<br/>
+Something isn't right? don't hesitate to open an issue! 👍<br/>
+Thanks a lot for viewing this project! 🙏🏻
+
 <!-- 
 ```tsx
 const gqlWsClient = createGqlWsClient({ url: 'wss://my-api-backend/graphql' });
