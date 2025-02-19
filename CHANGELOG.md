@@ -1,3 +1,11 @@
+## [0.10.2](https://github.com/shtaif/react-async-iterators/compare/v0.10.1...v0.10.2) (2025-02-19)
+
+
+### Documentation
+
+* **readme:** various edits ([#90](https://github.com/shtaif/react-async-iterators/issues/90)) ([27a8d41](https://github.com/shtaif/react-async-iterators/commit/27a8d41f3cb3f7591c9b0566d63a9f0aa3a388ee))
+* **readme:** various edits for `README.md` ([#91](https://github.com/shtaif/react-async-iterators/issues/91)) ([0f91ca4](https://github.com/shtaif/react-async-iterators/commit/0f91ca4fc9e929cafbfb70b0f4b01e5b455a77b5))
+
 ## [0.10.1](https://github.com/shtaif/react-async-iterators/compare/v0.10.0...v0.10.1) (2025-02-17)
 
 
