@@ -19,6 +19,8 @@ The goal behind this library is to promote a mental model where every piece of d
 
 To facilitate this, `react-async-iterators` offers a set of tools specifically tailored for the frontend and React and embraces composability with the upcoming standardization of [Async Iterator Helpers proposal](https://github.com/tc39/proposal-async-iterator-helpers) as well as projects such as [iter-tools](https://github.com/iter-tools/iter-tools), [IxJS](https://github.com/ReactiveX/IxJS) and more.
 
+The library will continue to expand with new tools over time.
+
 
 
 ### Illustration
