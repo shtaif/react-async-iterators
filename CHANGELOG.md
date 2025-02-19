@@ -1,3 +1,11 @@
+## [0.10.1](https://github.com/shtaif/react-async-iterators/compare/v0.10.0...v0.10.1) (2025-02-17)
+
+
+### Documentation
+
+* **readme:** fix badges links unintended underlining ([#88](https://github.com/shtaif/react-async-iterators/issues/88)) ([dad90bf](https://github.com/shtaif/react-async-iterators/commit/dad90bfa9a3de6dcf80aecf30eee09f7fdf9547b))
+* **readme:** readme edits ([#89](https://github.com/shtaif/react-async-iterators/issues/89)) ([eb9b573](https://github.com/shtaif/react-async-iterators/commit/eb9b5736b951e9c8981fc3761439009302d384c1))
+
 ## [0.10.0](https://github.com/shtaif/react-async-iterators/compare/v0.9.2...v0.10.0) (2025-02-07)
 
 
