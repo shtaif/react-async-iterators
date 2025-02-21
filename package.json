@@ -48,7 +48,7 @@
     "test-typings-check": "tsc --noEmit -p ./spec/tsconfig.json",
     "build": "rm -rf ./dist && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && tsx ./scripts/set-module-type-in-dist-builds.ts",
     "build-check": "tsc --noEmit -p ./tsconfig.json",
-    "prepack": "npm run build"
+    "prepack": "pnpm run build"
   },
   "peerDependencies": {
     "react": ">=17"
