@@ -18,7 +18,10 @@ export default [
   ...eslintTs.configs.recommended,
   eslintConfigPrettierTypeForced,
   {
-    files: ['**/*.{ts,ts,tsx,js,mjs,jsx}'],
+    ignores: ['dist/**/*'],
+  },
+  {
+    files: ['**/*.{ts,mts,tsx,js,mjs,jsx}'],
     plugins: {},
     languageOptions: {
       globals: { ...globals.browser },
