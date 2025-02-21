@@ -20,6 +20,7 @@ plugins:
           - { type: perf, section: Performance, hidden: false }
           - { type: revert, section: Reverts, hidden: false }
           - { type: refactor, section: Refactor, hidden: true }
+          - { type: chore, section: Chores, hidden: true }
           - { type: test, section: Tests, hidden: true }
           - { type: ci, section: Continuous Integration, hidden: true }
 
