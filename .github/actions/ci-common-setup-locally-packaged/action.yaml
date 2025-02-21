@@ -4,7 +4,7 @@ description: Reusable common setup with locally packaged library code for projec
 
 inputs:
   node-version:
-    description: Specific Node.js version to override the common one that's gonna be selected by default
+    description: Optional specific Node.js version to install (default is v22.5.0)
     required: false
     default: v22.5.0
 
@@ -36,7 +36,7 @@ runs:
         PACKAGE_FILENAME=$(ls ${{ steps.package-json-info.outputs.package_name }}-${{ steps.package-json-info.outputs.package_version }}.tgz)
         pnpm i packaged-react-async-iterators@file:./$PACKAGE_FILENAME
 
-    - name: Type-check tests code
+    - name: Redirect code entrypoint from the source code to packaged code
       shell: bash
       run: |
         [[ -e ./src ]] && mv ./src ./src-ignored-for-packaged-testing
