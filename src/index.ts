@@ -1,5 +1,6 @@
 import { useAsyncIter, type IterationResult } from './useAsyncIter/index.js';
 import { useAsyncIterMulti, type IterationResultSet } from './useAsyncIterMulti/index.js';
+import { useAsyncIterEffect } from './useAsyncIterEffect/index.js';
 import { Iterate, type IterateProps } from './Iterate/index.js';
 import { IterateMulti, type IterateMultiProps } from './IterateMulti/index.js';
 import { iterateFormatted } from './iterateFormatted/index.js';
@@ -14,6 +15,7 @@ export {
   type IterationResult,
   useAsyncIterMulti,
   type IterationResultSet,
+  useAsyncIterEffect,
   Iterate,
   Iterate as It,
   type IterateProps,

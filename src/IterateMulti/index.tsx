@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { type Writeable } from '../common/Writeable.js';
+import { type Writable } from '../common/Writable.js';
 import { useAsyncIterMulti, type IterationResultSet } from '../useAsyncIterMulti/index.js';
 import { type MaybeFunction } from '../common/MaybeFunction.js';
 import { type iterateFormatted } from '../iterateFormatted/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -210,7 +210,7 @@ type IterateMultiProps<
    * @see {@link IterationResultSet `IterationResultSet`}
    */
   children: (
-    iterationStates: IterationResultSet<Writeable<TVals>, Writeable<TInitVals>, TDefaultInitVal>
+    iterationStates: IterationResultSet<Writable<TVals>, Writable<TInitVals>, TDefaultInitVal>
   ) => ReactNode;
 };
 
