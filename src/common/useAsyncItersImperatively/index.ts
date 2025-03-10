@@ -33,7 +33,7 @@ function useAsyncItersImperatively<
 
   const ref = useRefWithInitialValue(() => ({
     currDiffCompId: 0,
-    prevResults: [] as IterationResultSet<TInputs>,
+    currResults: [] as IterationResultSet<TInputs>,
     activeItersMap: new Map<
       AsyncIterable<unknown>,
       {
@@ -45,7 +45,7 @@ function useAsyncItersImperatively<
     >(),
   }));
 
-  const { prevResults, activeItersMap } = ref.current;
+  const { activeItersMap } = ref.current;
 
   useEffect(() => {
     return () => {
@@ -59,7 +59,7 @@ function useAsyncItersImperatively<
   let numOfPrevRunItersPreserved = 0;
   const numOfPrevRunIters = activeItersMap.size;
 
-  const nextResults = inputs.map((input, i) => {
+  ref.current.currResults = inputs.map((input, i) => {
     if (!isAsyncIter(input)) {
       return {
         value: input,
@@ -82,7 +82,7 @@ function useAsyncItersImperatively<
 
     const formattedIter: AsyncIterable<unknown> = (() => {
       let iterationIdx = 0;
-      return asyncIterSyncMap(baseIter, value => newIterState.formatFn(value, iterationIdx++));
+      return asyncIterSyncMap(baseIter, value => iterState.formatFn(value, iterationIdx++));
     })();
 
     const inputWithMaybeCurrentValue = input as typeof input & {
@@ -98,8 +98,8 @@ function useAsyncItersImperatively<
     } else {
       pendingFirst = true;
       startingValue =
-        i < prevResults.length
-          ? prevResults[i].value
+        i < ref.current.currResults.length
+          ? ref.current.currResults[i].value
           : callOrReturn(
               i < optsNormed.initialValues.length
                 ? optsNormed.initialValues[i]
@@ -108,12 +108,14 @@ function useAsyncItersImperatively<
     }
 
     const destroyFn = iterateAsyncIterWithCallbacks(formattedIter, startingValue, next => {
-      newIterState.currState = { pendingFirst: false, ...next };
-      nextResults[i] = newIterState.currState;
-      onYieldCb(nextResults);
+      iterState.currState = { pendingFirst: false, ...next };
+      const newPrevResults = ref.current.currResults.slice(0); // Using `.slice(0)` in attempt to copy the array faster than `[...ref.current.currResults]` would
+      newPrevResults[i] = iterState.currState;
+      ref.current.currResults = newPrevResults as typeof ref.current.currResults;
+      onYieldCb(ref.current.currResults);
     });
 
-    const newIterState = {
+    const iterState = {
       diffCompId: nextDiffCompId,
       destroy: destroyFn,
       formatFn,
@@ -125,12 +127,12 @@ function useAsyncItersImperatively<
       } as IterationResult<unknown, unknown>,
     };
 
-    activeItersMap.set(baseIter, newIterState);
+    activeItersMap.set(baseIter, iterState);
 
-    return newIterState.currState;
+    return iterState.currState;
   }) as Writable<IterationResultSet<TInputs>>;
 
-  // TODO: If the consumers of `useAsyncItersImperatively` are intending to use it in conjunction with `React.useEffect` - do we really need to do such individual length comparisons and cleanups like the following? `React.useEffect` enforces strict static-length deps anyways
+  // TODO: If the consumers of `useAsyncItersImperatively` within the library are intending to use it in conjunction with `React.useEffect` (e.g. `useAsyncIterEffect`) - do we really need to do such individual length comparisons and cleanups like the following? `React.useEffect` enforces strict static-length deps anyways
   const numOfPrevRunItersDisappeared = numOfPrevRunIters - numOfPrevRunItersPreserved;
 
   if (numOfPrevRunItersDisappeared > 0) {
@@ -146,7 +148,5 @@ function useAsyncItersImperatively<
     }
   }
 
-  ref.current.prevResults = nextResults;
-
-  return nextResults;
+  return ref.current.currResults;
 }
