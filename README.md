@@ -159,6 +159,7 @@ function LiveUserProfile(props: { userId: string }) {
   - [Hooks](#hooks)
     - [`useAsyncIter`](#useasynciter)
     - [`useAsyncIterMulti`](#useasyncitermulti)
+    - [`useAsyncIterEffect`](#useasyncitereffect)
     - [`useAsyncIterState`](#useasynciterstate)
     - [`useSharedAsyncIter`](#usesharedasynciter)
   - [Utils](#utils)
@@ -1207,6 +1208,76 @@ const [nextNum, nextStr, nextArr] = useAsyncIterMulti([numberIter, stringIter, a
   }
   ```
 </details>
+
+
+
+### `useAsyncIterEffect`
+
+Given some async iterables, a side-effect function and a computed list of dependencies - runs the provided side-effect whenever any of the provided dependencies change from the previously seen ones, letting you derive them from the values yielded by the async iterables.
+
+This hook is like an _async-iterable-aware_ version for [`React.useEffect`](https://react.dev/reference/react/useEffect), allowing dependencies to be also computed from values yielded by the given async iterables each time, and letting the effect fire directly in reaction to particular async iterable yields rather than only just component scope values being changed across re-renders (as does the classic [`React.useEffect`](https://react.dev/reference/react/useEffect)).
+
+```tsx
+useAsyncIterEffect(
+  [fooIter, barIter],
+  (foo, bar) => [
+    () => {
+      runMyEffect(foo.value, bar.value, otherValue);
+    },
+    [foo.value, bar.value, otherValue],
+  ]
+);
+
+// Or if returning an effect destructor function:
+useAsyncIterEffect(
+  [fooIter, barIter],
+  (foo, bar) => [
+    () => {
+      runMyEffect(foo.value, bar.value, otherValue);
+      return () => {
+        cancelMyEffect();
+      }
+    },
+    [foo.value, bar.value, otherValue],
+  ]
+);
+```
+
+This hook is a consuming hook; any given item on the base deps array (first argument) that is async iterable will immediately start being iterated internally and continue for as long as its underlying iterable remains present in the array. Like most other hooks - plain (non async iterable) values can also be provided within the base deps at any time be conveyed as if are immediate, singular yields.
+
+Whenever either of following events occur;
+
+- Any of the base deps yields a value
+- Hook is called again due to component re-render
+
+-> the hook will call the effect resolver function (second argument) again, providing all the last states of the actively iterated items as individual arguments corresponding to their order within the base deps array. From there, you use it exactly like [`React.useEffect`](https://react.dev/reference/react/useEffect) while having the last yields accesible to use for your actual effect dependencies and/or your effect function's logic itself. The hook supports returning from the effect function an optional function to serve as the effect tear down/destructor, like the original [`React.useEffect`](https://react.dev/reference/react/useEffect).
+
+### Parameters
+
+- `baseDeps`:
+  An array of zero or more async iterable or plain values (mixable). In response to their yields, effect dependencies will re-evaluate and possibly fire the effect.
+
+- `effectResolverFn`:
+  A user-provided function to be called by the hook whenever any yield occurres, getting the last states of all the actively iterated base deps as arguments. It should return a tuple with the effect function as the first item (_required_) and the next array of dependencies as the second (_optional_). The effect function may _optionally_ itself return a function to serve as a effect teardown/destructor.
+
+
+### Returns
+
+<ul>
+
+  _Nothing_
+
+</ul>
+
+### Notes
+
+<ul>
+
+  > <br/>ℹ️ While you may optionally omit the dependency array in the effect resolver function's returned tuple as mentioned, note that this produces a similar behavior to calling [`React.useEffect`](https://react.dev/reference/react/useEffect) with dependencies omitted - the effect will be fired __on every re-render__ and __on every yield__ by the async iterable base dependencies.<br/><br/>
+
+  > <br/>ℹ️ It's important to remember that when using [`useAsyncIterEffect`](#useasyncitereffect) and [`<It>`](#it) to operate on the same async iterable, whether across components or within the same one - each of these two consumers would individually attempt to obtain an iterator from the same source iterable. Depending on how the source iterable's implementation it could lead to duplicate resources (e.g. WebSocket connections) being started. If this is undesirable, just ensure to pass that source iterable through a [`useSharedAsyncIter`](#usesharedasynciter) call anywhere along its route, ___before___ it encounters any consuming hooks like the latter ones.<br/><br/>
+
+</ul>
 
 
 
