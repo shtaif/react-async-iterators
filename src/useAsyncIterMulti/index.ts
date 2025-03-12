@@ -1,7 +1,9 @@
 import { useSimpleRerender } from '../common/hooks/useSimpleRerender.js';
 import { type IterationResult } from '../useAsyncIter/index.js';
-import { type MaybeFunction } from '../common/MaybeFunction.js';
-import { useAsyncItersImperatively } from '../common/useAsyncItersImperatively/index.js';
+import {
+  useAsyncItersImperatively,
+  type IterationResultSet,
+} from '../common/useAsyncItersImperatively/index.js';
 
 export { useAsyncIterMulti, type IterationResult, type IterationResultSet };
 
@@ -201,34 +203,13 @@ function useAsyncIterMulti<
     initialValues?: TInitValues;
     defaultInitialValue?: TDefaultInitValue;
   }
-): IterationResultSet<TValues, MaybeFunctions<TInitValues>, TDefaultInitValue> {
+): IterationResultSet<TValues, TInitValues, TDefaultInitValue> {
   const update = useSimpleRerender();
 
   const currValues = useAsyncItersImperatively(inputs, () => update(), {
-    initialValues: opts?.initialValues ?? [],
-    defaultInitialValue: opts?.defaultInitialValue,
+    initialValues: (opts?.initialValues ?? []) as TInitValues,
+    defaultInitialValue: opts?.defaultInitialValue as TDefaultInitValue,
   });
 
-  const currValuesTypePatched = currValues as IterationResultSet<
-    TValues,
-    MaybeFunctions<TInitValues>,
-    TDefaultInitValue
-  >;
-
-  return currValuesTypePatched;
+  return currValues;
 }
-
-type IterationResultSet<
-  TValues extends readonly unknown[],
-  TInitValues extends readonly unknown[] = readonly [],
-  TDefaultInitValue = undefined,
-> = {
-  [I in keyof TValues]: IterationResult<
-    TValues[I],
-    I extends keyof TInitValues ? TInitValues[I] : TDefaultInitValue
-  >;
-};
-
-type MaybeFunctions<T extends readonly unknown[]> = {
-  [I in keyof T]: T[I] extends MaybeFunction<infer J> ? J : T[I];
-};
