@@ -1,14 +1,7 @@
-import { useEffect } from 'react';
 import { useSimpleRerender } from '../common/hooks/useSimpleRerender.js';
-import { useRefWithInitialValue } from '../common/hooks/useRefWithInitialValue.js';
-import { isAsyncIter } from '../common/isAsyncIter.js';
 import { type IterationResult } from '../useAsyncIter/index.js';
-import { type AsyncIterableSubject } from '../AsyncIterableSubject/index.js';
 import { type MaybeFunction } from '../common/MaybeFunction.js';
-import { callOrReturn } from '../common/callOrReturn.js';
-import { asyncIterSyncMap } from '../common/asyncIterSyncMap.js';
-import { parseReactAsyncIterable } from '../common/ReactAsyncIterable.js';
-import { iterateAsyncIterWithCallbacks } from '../common/iterateAsyncIterWithCallbacks.js';
+import { useAsyncItersImperatively } from '../common/useAsyncItersImperatively/index.js';
 
 export { useAsyncIterMulti, type IterationResult, type IterationResultSet };
 
@@ -211,126 +204,18 @@ function useAsyncIterMulti<
 ): IterationResultSet<TValues, MaybeFunctions<TInitValues>, TDefaultInitValue> {
   const update = useSimpleRerender();
 
-  const ref = useRefWithInitialValue(() => ({
-    currDiffCompId: 0,
-    prevResults: [] as IterationResultSet<TValues, MaybeFunctions<TInitValues>, TDefaultInitValue>,
-    activeItersMap: new Map<
-      AsyncIterable<unknown>,
-      {
-        diffCompId: number;
-        destroy: () => void;
-        formatFn: (value: unknown, i: number) => unknown;
-        currState: IterationResult<unknown, unknown>;
-      }
-    >(),
-  }));
-
-  const { prevResults, activeItersMap } = ref.current;
-
-  useEffect(() => {
-    return () => {
-      for (const it of activeItersMap.values()) {
-        it.destroy();
-      }
-    };
-  }, []);
-
-  const optsNormed = {
+  const currValues = useAsyncItersImperatively(inputs, () => update(), {
     initialValues: opts?.initialValues ?? [],
     defaultInitialValue: opts?.defaultInitialValue,
-  };
+  });
 
-  const nextDiffCompId = (ref.current.currDiffCompId = ref.current.currDiffCompId === 0 ? 1 : 0);
-  let numOfPrevRunItersPreserved = 0;
-  const numOfPrevRunIters = activeItersMap.size;
+  const currValuesTypePatched = currValues as IterationResultSet<
+    TValues,
+    MaybeFunctions<TInitValues>,
+    TDefaultInitValue
+  >;
 
-  const nextResults = inputs.map((input, i) => {
-    if (!isAsyncIter(input)) {
-      return {
-        value: input,
-        pendingFirst: false as const,
-        done: false as const,
-        error: undefined,
-      };
-    }
-
-    const { baseIter, formatFn } = parseReactAsyncIterable(input);
-
-    const existingIterState = activeItersMap.get(baseIter);
-
-    if (existingIterState) {
-      numOfPrevRunItersPreserved++;
-      existingIterState.diffCompId = nextDiffCompId;
-      existingIterState.formatFn = formatFn;
-      return existingIterState.currState;
-    }
-
-    const formattedIter: AsyncIterable<unknown> = (() => {
-      let iterationIdx = 0;
-      return asyncIterSyncMap(baseIter, value => newIterState.formatFn(value, iterationIdx++));
-    })();
-
-    const inputWithMaybeCurrentValue = input as typeof input & {
-      value?: AsyncIterableSubject<unknown>['value'];
-    };
-
-    let startingValue;
-    let pendingFirst;
-    if (inputWithMaybeCurrentValue.value) {
-      startingValue = inputWithMaybeCurrentValue.value.current;
-      pendingFirst = false;
-    } else {
-      startingValue =
-        i < prevResults.length
-          ? prevResults[i].value
-          : callOrReturn(
-              i < optsNormed.initialValues.length
-                ? optsNormed.initialValues[i]
-                : optsNormed.defaultInitialValue
-            );
-      pendingFirst = true;
-    }
-
-    const destroyFn = iterateAsyncIterWithCallbacks(formattedIter, startingValue, next => {
-      newIterState.currState = { pendingFirst: false, ...next };
-      update();
-    });
-
-    const newIterState = {
-      diffCompId: nextDiffCompId,
-      destroy: destroyFn,
-      formatFn,
-      currState: {
-        value: startingValue,
-        pendingFirst,
-        done: false as const,
-        error: undefined,
-      } as IterationResult<unknown, unknown>,
-    };
-
-    activeItersMap.set(baseIter, newIterState);
-
-    return newIterState.currState;
-  }) as IterationResultSet<TValues, MaybeFunctions<TInitValues>, TDefaultInitValue>;
-
-  const numOfPrevRunItersDisappeared = numOfPrevRunIters - numOfPrevRunItersPreserved;
-
-  if (numOfPrevRunItersDisappeared > 0) {
-    let i = 0;
-    for (const { 0: iter, 1: state } of activeItersMap) {
-      if (state.diffCompId !== nextDiffCompId) {
-        activeItersMap.delete(iter);
-        state.destroy();
-        if (++i === numOfPrevRunItersDisappeared) {
-          break;
-        }
-      }
-    }
-  }
-
-  ref.current.prevResults = nextResults;
-
-  return nextResults;
+  return currValuesTypePatched;
 }
 
 type IterationResultSet<
