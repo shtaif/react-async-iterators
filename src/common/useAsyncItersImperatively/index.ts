@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { type IterationResult } from '../../useAsyncIter/index.js';
 import { type AsyncIterableSubject } from '../../AsyncIterableSubject/index.js';
-import { type IterationResultSet } from '../../useAsyncIterMulti/index.js';
 import { type Writable } from '../Writable.js';
 import { useRefWithInitialValue } from '../hooks/useRefWithInitialValue.js';
 import { isAsyncIter } from '../isAsyncIter.js';
@@ -12,20 +11,61 @@ import { iterateAsyncIterWithCallbacks } from '../iterateAsyncIterWithCallbacks.
 
 export { useAsyncItersImperatively, type IterationResultSet };
 
-// TODO: Move the `IterationResultSet` type's home to sit together with this function here instead next to `useAsyncIterMulti` as currently
+const useAsyncItersImperatively: {
+  <const TInputs extends readonly unknown[]>(
+    inputs: TInputs,
+    onYieldCb: (vals: IterationResultSet<TInputs>) => void,
+    opts?: {
+      initialValues?: undefined;
+      defaultInitialValue?: undefined;
+    }
+  ): IterationResultSet<TInputs>;
 
-function useAsyncItersImperatively<
+  <
+    const TInputs extends readonly unknown[],
+    const TInitVals extends readonly unknown[] = readonly [],
+  >(
+    inputs: TInputs,
+    onYieldCb: (vals: IterationResultSet<TInputs>) => void,
+    opts: {
+      initialValues: TInitVals;
+      defaultInitialValue?: undefined;
+    }
+  ): IterationResultSet<TInputs, TInitVals>;
+
+  <const TInputs extends readonly unknown[], const TDefaultInitValue = undefined>(
+    inputs: TInputs,
+    onYieldCb: (vals: IterationResultSet<TInputs>) => void,
+    opts: {
+      initialValues?: undefined;
+      defaultInitialValue: TDefaultInitValue;
+    }
+  ): IterationResultSet<TInputs, [], TDefaultInitValue>;
+
+  <
+    const TInputs extends readonly unknown[],
+    const TInitVals extends readonly unknown[] = readonly [],
+    const TDefaultInitValue = undefined,
+  >(
+    inputs: TInputs,
+    onYieldCb: (vals: IterationResultSet<TInputs>) => void,
+    opts: {
+      initialValues: TInitVals;
+      defaultInitialValue: TDefaultInitValue;
+    }
+  ): IterationResultSet<TInputs, TInitVals, TDefaultInitValue>;
+} = <
   const TInputs extends readonly unknown[],
   const TInitVals extends readonly unknown[] = readonly [],
   const TDefaultInitValue = undefined,
 >(
   inputs: TInputs,
-  onYieldCb: (vals: IterationResultSet<TInputs>) => void,
+  onYieldCb: (vals: IterationResultSet<TInputs, TInitVals, TDefaultInitValue>) => void,
   opts?: {
     initialValues?: TInitVals;
     defaultInitialValue?: TDefaultInitValue;
   }
-): IterationResultSet<TInputs> {
+): IterationResultSet<TInputs, TInitVals, TDefaultInitValue> => {
   const optsNormed = {
     initialValues: opts?.initialValues ?? [],
     defaultInitialValue: opts?.defaultInitialValue,
@@ -33,7 +73,7 @@ function useAsyncItersImperatively<
 
   const ref = useRefWithInitialValue(() => ({
     currDiffCompId: 0,
-    currResults: [] as IterationResultSet<TInputs>,
+    currResults: [] as IterationResultSet<TInputs, TInitVals, TDefaultInitValue>,
     activeItersMap: new Map<
       AsyncIterable<unknown>,
       {
@@ -130,7 +170,7 @@ function useAsyncItersImperatively<
     activeItersMap.set(baseIter, iterState);
 
     return iterState.currState;
-  }) as Writable<IterationResultSet<TInputs>>;
+  }) as Writable<IterationResultSet<TInputs, TInitVals, TDefaultInitValue>>;
 
   // TODO: If the consumers of `useAsyncItersImperatively` within the library are intending to use it in conjunction with `React.useEffect` (e.g. `useAsyncIterEffect`) - do we really need to do such individual length comparisons and cleanups like the following? `React.useEffect` enforces strict static-length deps anyways
   const numOfPrevRunItersDisappeared = numOfPrevRunIters - numOfPrevRunItersPreserved;
@@ -149,4 +189,15 @@ function useAsyncItersImperatively<
   }
 
   return ref.current.currResults;
-}
+};
+
+type IterationResultSet<
+  TValues extends readonly unknown[],
+  TInitValues extends readonly unknown[] = readonly [],
+  TDefaultInitValue = undefined,
+> = {
+  [I in keyof TValues]: IterationResult<
+    TValues[I],
+    I extends keyof TInitValues ? TInitValues[I] : TDefaultInitValue
+  >;
+};
