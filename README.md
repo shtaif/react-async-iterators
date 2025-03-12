@@ -13,11 +13,17 @@
 
 </p>
 
-A React.js library that makes it __easy and satisfying__ to integrate and render JS async iterators across and throughout your app's components. Expanding from that, it allows you to describe and propagate various aspects and states of your app in actual async iterator form, letting it tap into the full benefits and flexibility in this JS construct.
+A React.js library that makes it __easy and satisfying__ to integrate and render JS async iterators across and throughout your app's components. Expanding from that, it enables you to describe and propagate states and various aspects of your app in actual async iterator form, tapping into the full benefits and flexibility of this JS construct.
+
+To facilitate this, `react-async-iterators` offers a set of tools specifically tailored for the frontend and React while embracing composability with the upcoming standardization of [Async Iterator Helpers proposal](https://github.com/tc39/proposal-async-iterator-helpers) as well as utility libraries such as [iter-tools](https://github.com/iter-tools/iter-tools), [IxJS](https://github.com/ReactiveX/IxJS) and more. You may use this library as a one-off in your code; e.g got an async iterable from a third-party SDK and just need to consume it. You may also employ it throughout your entire app. That's up to you. The library just aims to be _"everything async iterators and React"_ and is fully tree-shakable.
+
+The goal behind this library is to promote a mental model where every piece of data in a JavaScript program can be expressed either in a plain and static form, or in a ___dynamic, self-evolving___ form - an async iterable. That by simply wrapping a value in an async iterator or iterable, it becomes a self-updating entity while remaining first-class data. From this, it follows naturally that interfaces should and could intuitively accommodate either kind as received input, and seamlessly adapt to any changes over time just as you'd expect.
+
+The library will continue to expand with new tools over time.
 
 
 
-### Illustration:
+### Illustration
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-3?file=src%2FApp.tsx)
 
@@ -27,7 +33,7 @@ import { It } from 'react-async-iterators';
 const randoms = {
   async *[Symbol.asyncIterator]() {
     while (true) {
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 500));
       const x = Math.random();
       yield Math.round(x * 10);
     }
@@ -58,11 +64,23 @@ const randoms = {
 //   etc.
 ```
 
-Below is another interactive demo showing how to consume the `EventSource` web API (A.K.A [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)) converted into async iterable using the [`iterified`](https://github.com/shtaif/iterified) package:
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-5?file=src%2FApp.tsx)
 
 
+### More examples
+
+  - Interactive demo showing how to consume the `EventSource` web API ([Server-Sent-Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)) converted into async iterable using the [`iterified`](https://github.com/shtaif/iterified) package:
+  <br/><br/>[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-5?file=src%2FApp.tsx)
+
+  - Interactive demo showing how to consume a [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) converted into async iterable using the [`iterified`](https://github.com/shtaif/iterified) package:
+  <br/><br/>[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/react-async-iterators-example-6?file=src%2FApp.tsx)
+
+
+
+## 🔥 🔥 🔥
+
+If you find this package helpful, please consider giving it a star! ⭐️<br/>
+Something isn't right? don't hesitate to open an issue! 👍<br/>
+Thanks a lot for viewing this project! 🙏🏻
 
 <!-- 
 ```tsx
@@ -141,6 +159,7 @@ function LiveUserProfile(props: { userId: string }) {
   - [Hooks](#hooks)
     - [`useAsyncIter`](#useasynciter)
     - [`useAsyncIterMulti`](#useasyncitermulti)
+    - [`useAsyncIterEffect`](#useasyncitereffect)
     - [`useAsyncIterState`](#useasynciterstate)
     - [`useSharedAsyncIter`](#usesharedasynciter)
   - [Utils](#utils)
@@ -173,7 +192,7 @@ Slightly obvious to say, the React ecosystem is featuring many methods and tools
 
 - When apps involve any _asynchronously-generated series_ of data, such as data updated via recurring timers, WebSocket messages, GraphQL subscriptions, Geolocation watching and more...
 
-- When rendering a complex form or dynamic widget with large nested component tree for which UI updates might impact UI performance.
+- When rendering a complex form or dynamic widget with large nested component tree for which updates might impact UI performance.
 
 
 
@@ -223,7 +242,7 @@ import { It, type IterationResult } from 'react-async-iterators';
 
 Async iterables can be hooked into your components and consumed using [`<It>`](#it) and [`<ItMulti>`](#itmulti), or their hook counterparts [`useAsyncIter`](#useasynciter) and [`useAsyncIterMulti`](#useasyncitermulti) respectively.
 
-The iteration values and states are expressed via a consistent structure (see exaustive list in [this breakdown](#iteration-state-object-detailed-breakdown)).<br/>
+The iteration values and states are expressed via a consistent structure (see exaustive list in [this breakdown](#iteration-state-properties-breakdown)).<br/>
 They may be accessed as follows:
 
 ```tsx
@@ -1189,6 +1208,76 @@ const [nextNum, nextStr, nextArr] = useAsyncIterMulti([numberIter, stringIter, a
   }
   ```
 </details>
+
+
+
+### `useAsyncIterEffect`
+
+Given some async iterables, a side-effect function and a computed list of dependencies - runs the provided side-effect whenever any of the provided dependencies change from the previously seen ones, letting you derive them from the values yielded by the async iterables.
+
+This hook is like an _async-iterable-aware_ version for [`React.useEffect`](https://react.dev/reference/react/useEffect), allowing dependencies to be also computed from values yielded by the given async iterables each time, and letting the effect fire directly in reaction to particular async iterable yields rather than only just component scope values being changed across re-renders (as does the classic [`React.useEffect`](https://react.dev/reference/react/useEffect)).
+
+```tsx
+useAsyncIterEffect(
+  [fooIter, barIter],
+  (foo, bar) => [
+    () => {
+      runMyEffect(foo.value, bar.value, otherValue);
+    },
+    [foo.value, bar.value, otherValue],
+  ]
+);
+
+// Or if returning an effect destructor function:
+useAsyncIterEffect(
+  [fooIter, barIter],
+  (foo, bar) => [
+    () => {
+      runMyEffect(foo.value, bar.value, otherValue);
+      return () => {
+        cancelMyEffect();
+      }
+    },
+    [foo.value, bar.value, otherValue],
+  ]
+);
+```
+
+This hook is a consuming hook; any given item on the base deps array (first argument) that is async iterable will immediately start being iterated internally and continue for as long as its underlying iterable remains present in the array. Like most other hooks - plain (non async iterable) values can also be provided within the base deps at any time be conveyed as if are immediate, singular yields.
+
+Whenever either of following events occur;
+
+- Any of the base deps yields a value
+- Hook is called again due to component re-render
+
+-> the hook will call the effect resolver function (second argument) again, providing all the last states of the actively iterated items as individual arguments corresponding to their order within the base deps array. From there, you use it exactly like [`React.useEffect`](https://react.dev/reference/react/useEffect) while having the last yields accesible to use for your actual effect dependencies and/or your effect function's logic itself. The hook supports returning from the effect function an optional function to serve as the effect tear down/destructor, like the original [`React.useEffect`](https://react.dev/reference/react/useEffect).
+
+### Parameters
+
+- `baseDeps`:
+  An array of zero or more async iterable or plain values (mixable). In response to their yields, effect dependencies will re-evaluate and possibly fire the effect.
+
+- `effectResolverFn`:
+  A user-provided function to be called by the hook whenever any yield occurres, getting the last states of all the actively iterated base deps as arguments. It should return a tuple with the effect function as the first item (_required_) and the next array of dependencies as the second (_optional_). The effect function may _optionally_ itself return a function to serve as a effect teardown/destructor.
+
+
+### Returns
+
+<ul>
+
+  _Nothing_
+
+</ul>
+
+### Notes
+
+<ul>
+
+  > <br/>ℹ️ While you may optionally omit the dependency array in the effect resolver function's returned tuple as mentioned, note that this produces a similar behavior to calling [`React.useEffect`](https://react.dev/reference/react/useEffect) with dependencies omitted - the effect will be fired __on every re-render__ and __on every yield__ by the async iterable base dependencies.<br/><br/>
+
+  > <br/>ℹ️ It's important to remember that when using [`useAsyncIterEffect`](#useasyncitereffect) and [`<It>`](#it) to operate on the same async iterable, whether across components or within the same one - each of these two consumers would individually attempt to obtain an iterator from the same source iterable. Depending on how the source iterable's implementation it could lead to duplicate resources (e.g. WebSocket connections) being started. If this is undesirable, just ensure to pass that source iterable through a [`useSharedAsyncIter`](#usesharedasynciter) call anywhere along its route, ___before___ it encounters any consuming hooks like the latter ones.<br/><br/>
+
+</ul>
 
 
 

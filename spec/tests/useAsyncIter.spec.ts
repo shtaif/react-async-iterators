@@ -619,7 +619,7 @@ describe('`useAsyncIter` hook', () => {
 
   it(
     gray(
-      'When given a `ReactAsyncIterable` yielding `undefined`s or `null`s that wraps an iter which originally yields non-nullable values, returns the `undefined`s and `null`s in the result as expected (https://github.com/shtaif/react-async-iterators/pull/32)'
+      'When given a formatted iterable yielding `undefined`s or `null`s that wraps a source iter yielding non-null values, returns the `undefined`s and `null`s in the result as expected (https://github.com/shtaif/react-async-iterators/pull/32)'
     ),
     async () => {
       const channel = new IteratorChannelTestHelper<string>();

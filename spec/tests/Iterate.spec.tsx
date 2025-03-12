@@ -857,7 +857,7 @@ describe('`Iterate` component', () => {
 
   it(
     gray(
-      'When given a `ReactAsyncIterable` yielding `undefined`s or `null`s that wraps an iter which originally yields non-nullable values, processes the `undefined`s and `null` values expected'
+      'When given a formatted iterable yielding `undefined`s or `null`s that wraps a source iter yielding non-null values, processes the `undefined`s and `null` values as expected'
     ),
     async () => {
       const channel = new IteratorChannelTestHelper<string>();
