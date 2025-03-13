@@ -11,6 +11,7 @@ import {
 } from '../common/ReactAsyncIterable.js';
 import { iterateAsyncIterWithCallbacks } from '../common/iterateAsyncIterWithCallbacks.js';
 import { callOrReturn } from '../common/callOrReturn.js';
+import { asyncIterSyncMap } from '../common/asyncIterSyncMap.js';
 import { type Iterate } from '../Iterate/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { type iterateFormatted } from '../iterateFormatted/index.js'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -148,19 +149,19 @@ const useAsyncIter: {
   const iterSourceRefToUse =
     latestInputRef.current[reactAsyncIterSpecialInfoSymbol]?.origSource ?? latestInputRef.current;
 
-  useMemo((): void => {
-    const latestInputRefCurrent = latestInputRef.current!;
+  const latestInputRefCurrent = latestInputRef.current!;
 
-    let value;
+  useMemo((): void => {
     let pendingFirst;
+    let value;
 
     if (latestInputRefCurrent.value) {
-      value = latestInputRefCurrent.value.current;
       pendingFirst = false;
+      value = latestInputRefCurrent.value.current;
     } else {
       const prevSourceLastestVal = stateRef.current.value;
-      value = prevSourceLastestVal;
       pendingFirst = true;
+      value = prevSourceLastestVal;
     }
 
     stateRef.current = {
@@ -172,22 +173,23 @@ const useAsyncIter: {
   }, [iterSourceRefToUse]);
 
   useEffect(() => {
-    let iterationIdx = 0;
+    const formattedIter = (() => {
+      let iterationIdx = latestInputRefCurrent.value ? 1 : 0; // If source has a current value, it should have been the "first iteration" already, so in that case the right up next one here is *the second* already (index of 1)
 
-    return iterateAsyncIterWithCallbacks(iterSourceRefToUse, stateRef.current.value, next => {
-      const possibleGivenFormatFn =
-        latestInputRef.current?.[reactAsyncIterSpecialInfoSymbol]?.formatFn;
+      return asyncIterSyncMap(iterSourceRefToUse, value => {
+        const possibleGivenFormatFn =
+          latestInputRef.current?.[reactAsyncIterSpecialInfoSymbol]?.formatFn;
 
-      const formattedValue = possibleGivenFormatFn
-        ? possibleGivenFormatFn(next.value, iterationIdx++)
-        : next.value;
+        const formattedValue = possibleGivenFormatFn
+          ? possibleGivenFormatFn(value, iterationIdx++)
+          : value;
 
-      stateRef.current = {
-        ...next,
-        pendingFirst: false,
-        value: formattedValue,
-      };
+        return formattedValue;
+      });
+    })();
 
+    return iterateAsyncIterWithCallbacks(formattedIter, stateRef.current.value, next => {
+      stateRef.current = { ...next, pendingFirst: false };
       rerender();
     });
   }, [iterSourceRefToUse]);

@@ -434,7 +434,7 @@ describe('`useAsyncIter` hook', () => {
     gray(
       'When given an iterable with a `.value.current` property at any point, uses that as the current value and skips the pending stage'
     ),
-    () =>
+    () => {
       ([{ initialValue: undefined }, { initialValue: '_' }] as const).forEach(
         ({ initialValue }) => {
           it(
@@ -454,28 +454,21 @@ describe('`useAsyncIter` hook', () => {
 
               const results: any[] = [];
 
-              for (const run of [
+              for (const next of [
+                () => renderedHook.rerender({ value: channel1 }),
+                () => channel1.put('a'),
                 () =>
-                  act(() =>
-                    renderedHook.rerender({
-                      value: channel1,
-                    })
-                  ),
-                () => act(() => channel1.put('a')),
-                () =>
-                  act(() =>
-                    renderedHook.rerender({
-                      value: iterateFormatted(channel2, (val, i) => `${val}_formatted_${i}`),
-                    })
-                  ),
-                () => act(() => channel2.put('b')),
+                  renderedHook.rerender({
+                    value: iterateFormatted(channel2, (val, i) => `${val}_formatted_${i}`),
+                  }),
+                () => channel2.put('b'),
               ]) {
-                await run();
+                await act(next);
                 results.push(renderedHook.result.current);
               }
 
               expect(results).toStrictEqual(
-                ['a_current', 'a', 'b_current_formatted_0', 'b_formatted_0'].map(value => ({
+                ['a_current', 'a', 'b_current_formatted_0', 'b_formatted_1'].map(value => ({
                   value,
                   pendingFirst: false,
                   done: false,
@@ -485,7 +478,38 @@ describe('`useAsyncIter` hook', () => {
             }
           );
         }
-      )
+      );
+
+      it(gray('with a formatted iterable'), async () => {
+        let timesRerendered = 0;
+        const channel = Object.assign(new IteratorChannelTestHelper<string>(), {
+          value: { current: 'a_current' },
+        });
+
+        const renderedHook = await act(() =>
+          renderHook(() => {
+            timesRerendered++;
+            return useAsyncIter(iterateFormatted(channel, (val, i) => `${val}_formatted_${i}`));
+          })
+        );
+        expect(timesRerendered).toStrictEqual(1);
+        expect(renderedHook.result.current).toStrictEqual({
+          value: 'a_current_formatted_0',
+          pendingFirst: false,
+          done: false,
+          error: undefined,
+        });
+
+        await act(() => channel.put('a_next'));
+        expect(timesRerendered).toStrictEqual(2);
+        expect(renderedHook.result.current).toStrictEqual({
+          value: 'a_next_formatted_1',
+          pendingFirst: false,
+          done: false,
+          error: undefined,
+        });
+      });
+    }
   );
 
   it(gray('When unmounted will close the last active iterator it held'), async () => {
@@ -627,19 +651,19 @@ describe('`useAsyncIter` hook', () => {
 
       const renderedHook = await act(() =>
         renderHook(
-          ({ formatInto }) => {
+          ({ formatTo }) => {
             timesRerendered++;
-            return useAsyncIter(iterateFormatted(channel, _ => formatInto));
+            return useAsyncIter(iterateFormatted(channel, _ => formatTo));
           },
           {
-            initialProps: { formatInto: '' as string | null | undefined },
+            initialProps: { formatTo: '' as string | null | undefined },
           }
         )
       );
 
       await act(() => {
         channel.put('a');
-        renderedHook.rerender({ formatInto: null });
+        renderedHook.rerender({ formatTo: null });
       });
       expect(timesRerendered).toStrictEqual(3);
       expect(renderedHook.result.current).toStrictEqual({
@@ -651,7 +675,7 @@ describe('`useAsyncIter` hook', () => {
 
       await act(() => {
         channel.put('b');
-        renderedHook.rerender({ formatInto: undefined });
+        renderedHook.rerender({ formatTo: undefined });
       });
       expect(timesRerendered).toStrictEqual(5);
       expect(renderedHook.result.current).toStrictEqual({

@@ -632,7 +632,7 @@ describe('`useAsyncIterMulti` hook', () => {
                   { value: 'a', pendingFirst: false, done: false, error: undefined },
                 ],
                 [
-                  { value: 'b_formatted_0', pendingFirst: false, done: false, error: undefined },
+                  { value: 'b_formatted_1', pendingFirst: false, done: false, error: undefined },
                   { value: 'a', pendingFirst: false, done: false, error: undefined },
                 ],
               ]);
