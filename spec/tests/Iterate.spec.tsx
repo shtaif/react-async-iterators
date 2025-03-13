@@ -672,7 +672,7 @@ describe('`Iterate` component', () => {
               }
 
               expect(renderFn.mock.calls.flat()).toStrictEqual(
-                ['a_current', 'a', 'b_current_formatted_0', 'b_formatted_0'].map(value => ({
+                ['a_current', 'a', 'b_current_formatted_0', 'b_formatted_1'].map(value => ({
                   value,
                   pendingFirst: false,
                   done: false,

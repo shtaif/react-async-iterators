@@ -120,22 +120,20 @@ const useAsyncItersImperatively: {
       return existingIterState.currState;
     }
 
-    const formattedIter: AsyncIterable<unknown> = (() => {
-      let iterationIdx = 0;
-      return asyncIterSyncMap(baseIter, value => iterState.formatFn(value, iterationIdx++));
-    })();
-
     const inputWithMaybeCurrentValue = input as typeof input & {
       value?: AsyncIterableSubject<unknown>['value'];
     };
 
-    let pendingFirst;
+    let iterationIdx: number;
+    let pendingFirst: boolean;
     let startingValue;
 
     if (inputWithMaybeCurrentValue.value) {
+      iterationIdx = 1; // If source has a current value, it should have been the "first iteration" already, so in that case the right up next one here is *the second* already (index of 1)
       pendingFirst = false;
       startingValue = inputWithMaybeCurrentValue.value.current;
     } else {
+      iterationIdx = 0;
       pendingFirst = true;
       startingValue =
         i < ref.current.currResults.length
@@ -147,11 +145,17 @@ const useAsyncItersImperatively: {
             );
     }
 
+    const formattedIter: AsyncIterable<unknown> = asyncIterSyncMap(baseIter, value =>
+      iterState.formatFn(value, iterationIdx++)
+    );
+
     const destroyFn = iterateAsyncIterWithCallbacks(formattedIter, startingValue, next => {
       iterState.currState = { pendingFirst: false, ...next };
-      const newPrevResults = ref.current.currResults.slice(0); // Using `.slice(0)` in attempt to copy the array faster than `[...ref.current.currResults]` would
-      newPrevResults[i] = iterState.currState;
-      ref.current.currResults = newPrevResults as typeof ref.current.currResults;
+      ref.current.currResults = (() => {
+        const newResults = ref.current.currResults.slice(0); // Using `.slice(0)` in attempt to copy the array faster than `[...ref.current.currResults]` would
+        newResults[i] = iterState.currState;
+        return newResults as typeof ref.current.currResults;
+      })();
       onYieldCb(ref.current.currResults);
     });
 
