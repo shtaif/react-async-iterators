@@ -1,3 +1,5 @@
+<img alt="React Async Iterators Logo" width="200" src="./assets/logo.png" />
+
 # React Async Iterators
 
 > Hooks, components and utilities for working with JavaScript [async iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator) values in React.js.
