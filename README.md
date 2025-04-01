@@ -1,10 +1,7 @@
-<img alt="React Async Iterators Logo" width="200" src="./assets/logo.png" />
+<div align="center">
+  <img alt="React Async Iterators Logo" width="200" src="./assets/logo.png" />
 
-# React Async Iterators
-
-> Hooks, components and utilities for working with JavaScript [async iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator) values in React.js.
-
-<p>
+  # React Async Iterators
 
   [![npm published version](https://img.shields.io/npm/v/react-async-iterators?logo=npm&color=cb3837
   )](https://www.npmjs.com/package/react-async-iterators)
@@ -13,9 +10,12 @@
   [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://semver.org)
   [![MIT License](https://img.shields.io/npm/l/react-async-iterators?color=3178c6&style=flat-square)](https://github.com/shtaif/react-async-iterators/blob/master/LICENSE.txt)
 
-</p>
+  ___Hooks, components and utilities for working with JavaScript [async iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator) values in React.js.___
+</div>
 
-A React.js library that makes it __easy and satisfying__ to integrate and render JS async iterators across and throughout your app's components. Expanding from that, it enables you to describe and propagate states and various aspects of your app in actual async iterator form, tapping into the full benefits and flexibility of this JS construct.
+<br/>
+
+A React.js library that makes it __easy and satisfying__ to integrate and render JS async iterators __within and across__ your app's components. Expanding from that, it enables you to describe and propagate states and various aspects of your app in actual async iterator form, unlocking the full benefits and flexibility of this JS construct.
 
 To facilitate this, `react-async-iterators` offers a set of tools specifically tailored for the frontend and React while embracing composability with the upcoming standardization of [Async Iterator Helpers proposal](https://github.com/tc39/proposal-async-iterator-helpers) as well as utility libraries such as [iter-tools](https://github.com/iter-tools/iter-tools), [IxJS](https://github.com/ReactiveX/IxJS) and more. You may use this library as a one-off in your code; e.g. got an async iterable from a third-party SDK and just need to consume it. You may also employ it throughout your entire app. That's up to you. The library just aims to be _"everything async iterators and React"_ and is fully tree-shakable.
 
